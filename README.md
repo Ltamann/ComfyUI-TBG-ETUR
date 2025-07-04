@@ -20,7 +20,7 @@ The CE (Community Edition) nodes are free and standalone, suitable for any type 
 https://api.ylab.es/login.php 
 
 
-**TBG Enhanced Tiled Upscaler and Refiner Pro** is an advanced, modular enhancement suite for **tiled image generation and refinement** in ComfyUI. It introduces neuro generative tile fusion, interactive tile-based editing, and multi-path processing pipelines designed for extreme resolution workflows ut to but not limitet to 100MP, high fidelity, and adaptive post-generation control.
+**TBG Enhanced Tiled Upscaler and Refiner Pro** is an advanced, modular enhancement suite for **tiled image generation and refinement** in ComfyUI. It introduces neuro generative tile fusion, interactive tile-based editing, and multi-path processing pipelines designed for extreme resolution workflows up to but not limitet to 100MP, high fidelity, and adaptive post-generation control.
 
 ## 1. New Fusion Techniques
 
