@@ -27,7 +27,7 @@ https://api.ylab.es/login.php
 TBG Enhanced Tiled Upscaler and Refiner Pro introduces tree next-generation tile fusion processes that go far beyond traditional blending:
 
 ### Smart Merge CE
-Choose between adaptive blending strategies compatible with common upscalers like ESRGAN, SwinIR, and others. It intelligently handles tile overlaps, avoiding ghosting and seams.
+Choose between adaptive blending strategies compatible with common upscalers like USDU,and others. It intelligently handles tile overlaps, avoiding ghosting and seams.
 
 ### PRO Tile Diffusion  
 A novel approach where each tile is generated while considering surrounding tile information — perfect for mid-denoise levels. This enables:
