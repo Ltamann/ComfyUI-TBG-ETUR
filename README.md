@@ -22,7 +22,8 @@ for our Patreon supporters and free community members!
 
 Please help us to find all Bugs and open an issue here !!!
 
-You can download the latest version of our software [here]([https://github.com/Pk07-cpu/ComfyUI-TBG-ETUR/releases](https://github.com/Ltamann/ComfyUI-TBG-ETUR/releases). 
+You can download the latest version of our software [here]([https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR). 
+
 
 ## Early_Access
 Get early access by joining us at:
