@@ -4,10 +4,10 @@
 
 ## Table of Contents
 - [Overview](#overview)
-- [Early Access](#earlyaccess)
+- [Early_Access](#Early_Access)
 - [Features](#features)
 - [Installation](#installation)
-- [API PRO Access](#apiaccess)
+- [API_Access](#API_Access)
 - [Usage](#usage)
 
 ## Overview
@@ -25,7 +25,7 @@ Please help us to find all Bugs and open an issue here !!!
 
 You can download the latest version of our software [here]([https://github.com/Pk07-cpu/ComfyUI-TBG-ETUR/releases](https://github.com/Ltamann/ComfyUI-TBG-ETUR/releases). 
 
-## Early Access
+## Early_Access
 Get early access by joining us at:
 https://www.patreon.com/TB_LAAR
 
@@ -123,7 +123,7 @@ o Download the Software and Copy the folder 'ComfyUI-TBG-ETUR' into your ComfyUI
    and then run from  ..\ComfyUI\custom_nodes\ComfyUI-TBG-ETUR\
    pip install -r requirements.txt
 
-## API PRO Access
+## API_Access
    If you like to test theh PRO feachers get early access by joining us at:
    https://www.patreon.com/TB_LAAR
 
