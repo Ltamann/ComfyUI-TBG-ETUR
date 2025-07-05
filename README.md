@@ -115,13 +115,17 @@ Tiled generation now supports unlimited ControlNet inputs per tile, unlocking:
 To install the TBG Enhanced Tiled Upscaler and Refiner Pro, follow these steps:
 
 **Install from Comfyui Manager**:
+
    Open Manager->Install missing custom nodes->Install via Git URL>
+   
    [https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR)
 
 **Manual Install**:
+
 **Download the Software**  [https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR)
 
 **Unpack and Copy to folder** ..\ComfyUI\custom_nodes\
+
 **Install requirements** ..\ComfyUI\custom_nodes\ComfyUI-TBG-ETUR\pip install -r requirements.txt
 
 
