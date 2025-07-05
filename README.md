@@ -115,6 +115,8 @@ or Copy the folder 'ComfyUI-TBG-ETUR' into your ComfyUI custom_nodes directory:
    
    You can paste it directly into the TBG Tiler node, but keep in mind that doing so will embed it into your images and workflow metadata, making it easy to share unintentionally.
    For better security, consider adding the key to your environment variables using TBG_ETUR_API_KEY instead.
+
+   ![environment_var.png](img/environment_var.png)
    
 --------------------------------------------------------------
 
