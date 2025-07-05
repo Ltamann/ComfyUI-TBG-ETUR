@@ -132,16 +132,15 @@ To install the TBG Enhanced Tiled Upscaler and Refiner Pro, follow these steps:
 
 
 ## API_Access
-   If you like to test theh PRO feachers get early access by joining us at:
-   https://www.patreon.com/TB_LAAR
-
-   You must be a TB_LAAR Patreon supporter or free member to get an API key which you can get here:
-   https://api.ylab.es/login.php
+If you like to test the PRO feachers get early access by joining us at:
+ - joining us at: https://www.patreon.com/TB_LAAR
+ - get your API key from here:  https://api.ylab.es/login.php
+ - add environment variables using TBG_ETUR_API_KEY = your api key
+    ![environment_var.png](img/environment_var.png)
    
-   You can paste it directly into the TBG Tiler node, but keep in mind that doing so will embed it into your images and workflow metadata, making it easy to share unintentionally.
-   For better security, consider adding the key to your environment variables using TBG_ETUR_API_KEY instead.
+You can paste the API key directly into the TBG Tiler node, but keep in mind that doing so will embed it into your images and workflow metadata, making it easy to share unintentionally.
+For better security, consider adding the key to your environment variables using TBG_ETUR_API_KEY instead.
 
-   ![environment_var.png](img/environment_var.png)
    
 --------------------------------------------------------------
 ## Usage
