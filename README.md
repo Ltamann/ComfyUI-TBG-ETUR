@@ -116,7 +116,7 @@ To install the TBG Enhanced Tiled Upscaler and Refiner Pro, follow these steps:
 
 **Install from Comfyui Manager**:
 
- -  Open Manager
+ - Open Manager
  - select Install missing custom nodes
  - select Install via Git URL
  - copy and paste this url:   [https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR)
@@ -125,11 +125,8 @@ To install the TBG Enhanced Tiled Upscaler and Refiner Pro, follow these steps:
 **Manual Install**:
 
  - Download the Software:  [https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR)
-
  - Unpack and Copy to folder: ..\ComfyUI\custom_nodes\
-
  - Install requirements: ..\ComfyUI\custom_nodes\ComfyUI-TBG-ETUR\pip install -r requirements.txt
-
 
 ## API_Access
 If you like to test the PRO feachers get early access by joining us at:
