@@ -111,14 +111,13 @@ or Copy the folder 'ComfyUI-TBG-ETUR' into your ComfyUI custom_nodes directory:
    https://www.patreon.com/TB_LAAR
 
    You must be a TB_LAAR Patreon supporter or free member to get an API key which you can get here:
-   https://api.ylab.es/login.php 
-   Paste it directly into the TBG Tiler node
+   https://api.ylab.es/login.php
+   
+   You can paste it directly into the TBG Tiler node, but keep in mind that doing so will embed it into your images and workflow metadata, making it easy to share unintentionally.
+   For better security, consider adding the key to your environment variables using TBG_ETUR_API_KEY instead.
    
 --------------------------------------------------------------
 
-Important:
-To use PRO features, you must stay connected to the internet.
-If you're offline, you can still use all the Community Edition features for free.
 
 Recommended Workflow:
 Do your setup and testing with PRO features turned OFF,
