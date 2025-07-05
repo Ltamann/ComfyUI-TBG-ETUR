@@ -10,6 +10,7 @@ from ..inc.image import MS_Image
 from ..inc.sigmas import inject_noise, _get_sigmas
 
 
+
 class TBG_sampler():
     @staticmethod
     def getSampler(self,positive,negative,sigmas,latent_image,index):
@@ -85,6 +86,8 @@ class TBG_sampler():
     @staticmethod
     def getClownSampler(self):
 
+
+
         noise_type_sde = "gaussian"  # "brownian"
         noise_type_sde_substep = "gaussian"  # "gaussian"
         noise_mode_sde = "soft"  # "hard"
@@ -127,39 +130,46 @@ class TBG_sampler():
         frame_weights_grp = None
         eta_substep = 0.5
         noise_mode_sde_substep = "hard"
+        try:
+            sampler = comfy.samplers.ksampler("rk",
+                                                            {"eta": eta, "eta_var": eta_var, "s_noise": s_noise,
+                                                             "d_noise": d_noise, "alpha": alpha_sde, "k": k_sde,
+                                                             "c1": c1, "c2": c2, "c3": c3, "cfgpp": cfgpp,
+                                                             "noise_sampler_type": noise_type_sde,
+                                                             "noise_mode": noise_mode_sde,
+                                                             "noise_seed": noise_seed_sde,
+                                                             "rk_type": sampler_name,
+                                                             "implicit_sampler_name": implicit_sampler_name,
+                                                             "t_fn_formula": t_fn_formula,
+                                                             "sigma_fn_formula": sigma_fn_formula,
+                                                             "implicit_steps": implicit_steps,
+                                                             "latent_guide": latent_guide,
+                                                             "latent_guide_inv": latent_guide_inv,
+                                                             "mask": latent_guide_mask,
+                                                             "mask_inv": latent_guide_mask_inv,
+                                                             "latent_guide_weights": latent_guide_weights,
+                                                             "latent_guide_weights_inv": latent_guide_weights_inv,
+                                                             "guide_mode": guide_mode,
+                                                             "LGW_MASK_RESCALE_MIN": rescale_floor,
+                                                             "sigmas_override": sigmas_override,
+                                                             "sde_noise": sde_noise,
+                                                             "extra_options": extra_options,
+                                                             "etas": etas, "s_noises": s_noises,
+                                                             "unsample_resample_scales": unsample_resample_scales,
+                                                             "regional_conditioning_weights": regional_conditioning_weights,
+                                                             "guides": guides,
+                                                             "frame_weights_grp": frame_weights_grp,
+                                                             "eta_substep": eta_substep,
+                                                             "noise_mode_sde_substep": noise_mode_sde_substep,
+                                                             })
 
-        sampler = comfy.samplers.ksampler("rk",
-                                                        {"eta": eta, "eta_var": eta_var, "s_noise": s_noise,
-                                                         "d_noise": d_noise, "alpha": alpha_sde, "k": k_sde,
-                                                         "c1": c1, "c2": c2, "c3": c3, "cfgpp": cfgpp,
-                                                         "noise_sampler_type": noise_type_sde,
-                                                         "noise_mode": noise_mode_sde,
-                                                         "noise_seed": noise_seed_sde,
-                                                         "rk_type": sampler_name,
-                                                         "implicit_sampler_name": implicit_sampler_name,
-                                                         "t_fn_formula": t_fn_formula,
-                                                         "sigma_fn_formula": sigma_fn_formula,
-                                                         "implicit_steps": implicit_steps,
-                                                         "latent_guide": latent_guide,
-                                                         "latent_guide_inv": latent_guide_inv,
-                                                         "mask": latent_guide_mask,
-                                                         "mask_inv": latent_guide_mask_inv,
-                                                         "latent_guide_weights": latent_guide_weights,
-                                                         "latent_guide_weights_inv": latent_guide_weights_inv,
-                                                         "guide_mode": guide_mode,
-                                                         "LGW_MASK_RESCALE_MIN": rescale_floor,
-                                                         "sigmas_override": sigmas_override,
-                                                         "sde_noise": sde_noise,
-                                                         "extra_options": extra_options,
-                                                         "etas": etas, "s_noises": s_noises,
-                                                         "unsample_resample_scales": unsample_resample_scales,
-                                                         "regional_conditioning_weights": regional_conditioning_weights,
-                                                         "guides": guides,
-                                                         "frame_weights_grp": frame_weights_grp,
-                                                         "eta_substep": eta_substep,
-                                                         "noise_mode_sde_substep": noise_mode_sde_substep,
-                                                         })
-        return sampler
+            return sampler
+        except Exception as e:
+            raise Exception(
+                f"Enrichment Pipes [Sampler side noise injection] failed: {e}\n"
+                f"RES4LYF custom node might be missing: https://github.com/ClownsharkBatwing/RES4LYF"
+                f"install https://github.com/ClownsharkBatwing/RES4LYF or set [Sampler side noise injection] = 0"
+            )
 
     @staticmethod
     def inject_noise(samples, noise_std, mask, pixel_scale=1):
