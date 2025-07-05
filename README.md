@@ -1,5 +1,5 @@
 # ComfyUI-TBG-ETUR: Enhance Your Images with TBG's Upscaler
-**TBG_Enhanced Tiled Upscaler & Refiner PRO**
+**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO**
 
 ## Table of Contents
 - [Overview](#overview)
