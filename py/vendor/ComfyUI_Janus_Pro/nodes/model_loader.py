@@ -33,14 +33,15 @@ class JanusModelLoader:
         except RuntimeError:
             dtype = torch.float16
 
-        # 获取ComfyUI根目录
-        comfy_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-        # 构建模型路径
+
+        comfy_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))))
+
         model_dir = os.path.join(comfy_path, 
                                "models", 
                                "Janus-Pro",
                                os.path.basename(model_name))
-        model_dir = "A:\SD\ComfyUI5090\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-1B"
+        #To change to model 1B 
+        #model_dir = "A:\SD\ComfyUI5090\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-1B"
         if not os.path.exists(model_dir):
             raise ValueError(f"Local model not found at {model_dir}. Please download the model and place it in the ComfyUI/models/Janus-Pro folder.")
             
