@@ -14,8 +14,6 @@ PRESETS_CE = [
 PRESETS_PRO = [
     'NONE',
     'Soft Merge',
-    'PRO_Tile_Fusion',
-    'PRO_Tile_Fusion + Soft Merge',
     'PRO_Neuro_Generative_Tile_Fusion',
     'PRO_Neuro_Generative_Tile_Fusion + Soft Merge',
     'Full size Image no Tiles',
@@ -50,10 +48,10 @@ def get_presets(min_tile_size, **kwargs):
             kwargs["PRO_Neuro_Generative_Tile_Fusion"] = True
             kwargs["PRO_Tile_Fusion_Mode"] = 'Neuro_Generative_Tile_Fusion'
             kwargs["compositing_mask_blur"] = 0
-            kwargs["PRO_Tile_Fusion_blur_margin"] = minimum_unit * 6
-            kwargs["PRO_Tile_Fusion_shift_in_out"] =  minimum_unit * -6
+            kwargs["PRO_Tile_Fusion_blur_margin"] = minimum_unit * 4
+            kwargs["PRO_Tile_Fusion_shift_in_out"] =  0
             kwargs["PRO_Tile_Fusion_shift_top_left"] = 0
-            kwargs["PRO_Tile_Fusion_border_margin"] =minimum_unit * 8
+            kwargs["PRO_Tile_Fusion_border_margin"] =minimum_unit * 4
 
 
         elif kwargs["presets"] == 'PRO_Neuro_Generative_Tile_Fusion + Soft Merge':
@@ -61,10 +59,10 @@ def get_presets(min_tile_size, **kwargs):
             kwargs["PRO_Neuro_Generative_Tile_Fusion"] = True
             kwargs["PRO_Tile_Fusion_Mode"] = 'Neuro_Generative_Tile_Fusion'
             kwargs["compositing_mask_blur"] = minimum_unit * 2
-            kwargs["PRO_Tile_Fusion_blur_margin"] = minimum_unit * 6
+            kwargs["PRO_Tile_Fusion_blur_margin"] = minimum_unit * 4
             kwargs["PRO_Tile_Fusion_shift_in_out"] = 0
             kwargs["PRO_Tile_Fusion_shift_top_left"] = 0
-            kwargs["PRO_Tile_Fusion_border_margin"] = minimum_unit * 2
+            kwargs["PRO_Tile_Fusion_border_margin"] = minimum_unit * 4
 
 
         elif kwargs["presets"] == 'PRO_Tile_Fusion':
