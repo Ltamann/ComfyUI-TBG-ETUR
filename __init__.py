@@ -21,11 +21,11 @@ import sys
 import folder_paths
 from .patreon_node import register_routes
 from .py.utils.version import VERSION
-#from .py.vendor.ComfyUI_MaraScott_Nodes.py.inc.lib.llm import MS_Llm
+from .py.vendor.ComfyUI_MaraScott_Nodes.py.inc.lib.llm import MS_Llm
 
 register_routes()
 
-#MS_Llm.prestartup_script()
+MS_Llm.prestartup_script()
 
 python = sys.executable
 p310_plus = (sys.version_info >= (3, 10))
