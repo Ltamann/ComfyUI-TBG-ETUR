@@ -163,3 +163,37 @@ Thank you for your support and happy tiling!
 - stable-diffusion
 - tbg-enhanced-tiled-upscaler-and-refiner-pro
 - tiled-upscaling
+
+## Update 1.04 alfa
+New Feature: FLUX KONTEXT Integration in CNETpipe
+The biggest highlight is the introduction of FLUX KONTEXT, offering a fully adaptive context pipeline that chains and stiches with ControlNetPipe Depth and Canny.
+
+Mask Attention Completely Overhauled
+Mask Attention has been rewritten from the ground up. It now works across both Pro and Community editions. A new border margin setting lets you fine-tune the mask's outer influence zone, and the segment sampling is now fully neuro-generative fusion capable, providing smoother, more organic blending between segments.
+
+Fusion Fixes & Tile Improvements
+We've patched several bugs in the Neuro Generative Fusion and Tile Fusion systems. Some users experienced glitches when tile sizes and border areas overlapped teh fusion area - that’s now resolved. Expect cleaner results and better alignment.
+
+Color Glitch Compensation
+Color artifacts caused by latent encode/decode are now handled much better. A new feature compensates for these VAE latent color glitches. It was generating faint lines along the tile joints when using high denoise settings.
+
+LLM Switching: Janus 1B and Janus 7B Now Supported
+You can now choose your preferred LLM directly from the node interface. Currently supported: Janus 1B and Janus/B — with more coming soon.
+
+Other Fixes and Tweaks
+Many small bugs and glitches reported by the community have been addressed — thank you for your feedback! This includes improvements to node stability, UI tweaks, and general robustness across the board.
+
+Give it a spin and let me know how it works for you. Your feedback always helps shape the next version so don’t hesitate to reach out!
+
+New Tile Cache
+We've updated the cache function for Soft Merge and Tile Fusion. You can now toggle the cache on or off at any time and choose between two modes:
+
+Full Cache Mode: Uses cached images for everything — including input tiles — allowing you to refine over previous refinements.
+
+Fusion-Only Cache Mode: Uses the original input tile but applies cached tiles only for surrounding areas during fusion.
+
+Due to the complex structure of Neuro Generative Tile Fusion (NGTF), the cache feature isn't yet fully effective for repairing individual tiles in NGTF. This is because overlapping areas from one tile don't directly affect the surrounding tiles without recalculating them too, especially when using higher denoise settings, resulting in imperfect blending.
+
+We're actively working to improve this behavior and aim to address it in the next release.
+
+And we add new WORKFLOWS for 1.04 alfa
