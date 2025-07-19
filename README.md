@@ -8,7 +8,7 @@
 - [Installation](#installation)
 - [API_Access](#API_Access)
 - [Usage](#usage)
-- [Update 1.04 alfa](#Update_1.04_alfa)
+- [Update 1.04 alfa](#Update)
 
 ## Overview
 
@@ -165,7 +165,7 @@ Thank you for your support and happy tiling!
 - tbg-enhanced-tiled-upscaler-and-refiner-pro
 - tiled-upscaling
 
-## Update_1.04_alfa
+## Update 1.04 alfa
 New Feature: FLUX KONTEXT Integration in CNETpipe
 The biggest highlight is the introduction of FLUX KONTEXT, offering a fully adaptive context pipeline that chains and stiches with ControlNetPipe Depth and Canny.
 
