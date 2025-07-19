@@ -227,6 +227,8 @@ class TBG_enrichment_pipe:
 
 
 
+
+
 class TBG_TilePrompter_v1():
     NAME = "TBG Tile Prompt Pipe"
 
@@ -235,13 +237,12 @@ class TBG_TilePrompter_v1():
         return {
             "hidden": {
                 "id":"UNIQUE_ID",
-                "requeue": ("INT", {"label": "requeue (automatic or manual)", "default": 0, "min": 0, "max": 99999999999, "step": 1}),
-
             },
             "required":{    
                 "Tile_Prompt_Pipe": ("Tile_Prompt_Pipe", {"label": "Tile Prompt Pipe" }),
             },
             "optional": {
+                "requeue": ("INT", { "label": "requeue (automatic or manual)", "default": 0, "min": 0, "max": 99999999999, "step": 1}),                
                 **NodePrompt.ENTRIES,
             }
         }
@@ -257,7 +258,7 @@ class TBG_TilePrompter_v1():
     @classmethod    
     def fn(self, **kwargs):
                         
-        input_prompts, input_tiles, segment_tiles = kwargs.get('Tile_Prompt_Pipe', ("", None,None))
+        input_prompts, input_tiles, segment_tiles = kwargs.get('Tile_Prompt_Pipe', (None, None))
         input_denoises = ('', ) * len(input_prompts)
 
         self.init(**kwargs)
@@ -473,8 +474,8 @@ async def tile_prompt(request):
         request.query["filename"]
     ))
 
-    #log(target_dir, None, None, f"Node {self.INFO.id}")
-    #log(image_path, None, None, f"Node {self.INFO.id}")
+    log(target_dir, None, None, f"Node {self.INFO.id}")
+    log(image_path, None, None, f"Node {self.INFO.id}")
 
     c = os.path.commonpath((image_path, target_dir))
     if c != target_dir:
@@ -484,6 +485,7 @@ async def tile_prompt(request):
         return web.Response(status=404)
 
     return web.json_response(f"here is the prompt \n{image_path}")
+    #http://localhost:8188/TBG/McBoaty/v5/tile_prompt?filename=example.png&type=output
     #IMAGE_DIR = r"A:\\SD\\ComfyUI\\ComfyUI_windows_portable\\ComfyUI\temp\\TBG"
     #CACHE_DIR = r"A:\\SD\\ComfyUI\\ComfyUI_windows_portable\\ComfyUI\temp\\TBG\\cache"
 
