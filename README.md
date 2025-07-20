@@ -123,12 +123,20 @@ To install the TBG Enhanced Tiled Upscaler and Refiner Pro, follow these steps:
  - select Install via Git URL
  - copy and paste this url:   [https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR)
  - Install and Restart ComfyUI
+ - Download LLM models from https://github.com/deepseek-ai/Janus?tab=readme-ov-file#janus-pro
+   Janus-Pro-1B	and or Janus-Pro-7B
+   copy  Janus-Pro-1B to ...ComfyUI_344\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-1B\
+   copy  Janus-Pro-7B to ...ComfyUI_344\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-7B\ 
    
 **Manual Install**:
 
  - Download the Software:  [https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR)
  - Unpack and Copy to folder: ..\ComfyUI\custom_nodes\
  - Install requirements: ..\ComfyUI\custom_nodes\ComfyUI-TBG-ETUR\pip install -r requirements.txt
+ - Download LLM models from https://github.com/deepseek-ai/Janus?tab=readme-ov-file#janus-pro
+   Janus-Pro-1B	and or Janus-Pro-7B
+   copy  Janus-Pro-1B to ...ComfyUI_344\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-1B\
+   copy  Janus-Pro-7B to ...ComfyUI_344\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-7B\ 
 
 ## API_Access
 If you like to test the PRO feachers get early access by joining us at:
