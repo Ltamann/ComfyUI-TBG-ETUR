@@ -93,7 +93,10 @@ class TBG_Tiled_Upscaler_CE():
                 "upscale_by": ("FLOAT", {"default": 2, "min": 0.05, "max": 4, "step": 0.05}),
                 "upscaler_method": (self.UPSCALE_METHODS, {"label": "Upscale Method", "default": 'lanczos'}),
                 "LLMPrompt": (self.LLM, {"label": "Upscale Type", "default": "NONE"}),
-                "LLMPrompt_Prompt": ("STRING",{"multiline": True, "label": "LLMPrompt Prompt","default": "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Include a comprehensive list of all visible objects with precise and vivid descriptions. Write the result as a Flux image generation prompt, without any introductory."}),
+                "LLMPrompt_Prompt": ("STRING", {"multiline": True, "label": "LLMPrompt Prompt",
+                                                "default": "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Include a comprehensive list of all visible objects with precise and vivid descriptions. Write the result as a Flux image generation prompt, without any introductory."}),
+
+
                 "compositing_mask_blur": ("INT", {"label": "Manual Feather Mask for Tile Overlapping", "default": 32, "min": 0, "max": 1024, "step": 8}),
 
             },
