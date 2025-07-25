@@ -171,7 +171,7 @@ class TBG_sampler():
             )
 
     @staticmethod
-    def inject_noise(samples, noise_std, mask, pixel_scale=1):
+    def inject_noise(samples, noise_std): #, mask, pixel_scale=1):
         s = samples.copy()
         img = s["samples"]  # shape: [B, C, H, W]
 
