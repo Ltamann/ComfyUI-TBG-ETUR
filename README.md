@@ -274,11 +274,15 @@ However, you can achieve the same results using the TBG Enhanced Upscaler and Re
 
 ## Update
 1.05 alfa
+
 Added the TBG Magnific Magnifier feature exclusively for Pro users.
+
 Fixed bug causing shadow lines on the last tile rows.
+
 Addressed and resolved all Groq-related bug reports.
 
 1.04 alfa
+
 New Feature: FLUX KONTEXT Integration in CNETpipe
 The biggest highlight is the introduction of FLUX KONTEXT, offering a fully adaptive context pipeline that chains and stiches with ControlNetPipe Depth and Canny.
 
