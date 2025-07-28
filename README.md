@@ -281,6 +281,8 @@ Fixed bug causing shadow lines on the last tile rows.
 
 Addressed and resolved all Groq-related bug reports.
 
+We removed the cropped tile approach on the last column and last row — these smaller tiles produced less accurate results due to missing fusion information. Now, all tiles maintain the full tile size for better consistency.
+
 1.04 alfa
 
 New Feature: FLUX KONTEXT Integration in CNETpipe
