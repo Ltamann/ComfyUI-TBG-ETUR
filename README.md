@@ -266,11 +266,9 @@ Reassemblance dynamically adapts to Redux/ControlNet inputs.
 - ⚠️ **Requires significantly more GPU memory** than standard steps.
 
 **Use with caution** if you're on limited VRAM. Consider disabling it or optimizing other parameters to save memory.
-![TBG Magnific Magnifier Example](img/wrappernode.png)  
 
-This combination of technologies empowers the TBG Magnific Magnifier node to deliver high-quality, large-scale image generation and refinement workflows that maintain both detail and cohesion at massive resolutions — all while keeping the user experience smooth and accessible.
-
-The TBG ETUR Magnific Magnifier requires a Pro, Premium, or Unlimited membership. However, you can achieve the same results using the TBG Enhanced Upscaler and Refiner PRO with manual settings and a Free membership.
+**The TBG ETUR Magnific Magnifier requires a Pro, Premium, or Unlimited membership.** 
+However, you can achieve the same results using the TBG Enhanced Upscaler and Refiner PRO with manual settings and a Free membership.
 
 
 
