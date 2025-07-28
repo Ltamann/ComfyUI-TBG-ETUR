@@ -1,0 +1,28 @@
+Instructions for Installing TBG_upscaler_Alfa_1.02p for ComfyUI
+--------------------------------------------------------------
+
+1. Copy the folder 'TBG_upscaler_Alfa_1.02p' into your ComfyUI custom_nodes directory:
+   ..\ComfyUI\custom_nodes\
+
+2. Open your ComfyUI Python environment and run the following command:
+   ..\ComfyUI\custom_nodes\TBG_upscaler_Alfa_1.02p\python -m install.py
+
+   This will install the required packages from requirements.txt
+   and download the model file: depth_anything_v2_vitl.pth
+
+--------------------------------------------------------------
+
+Alternative Manual Installation:
+
+1. Download the model file manually from:
+   https://huggingface.co/depth-anything/Depth-Anything-V2-Large/resolve/cbbb86a30ce19b5684b7a05155dc7e6cbc7685b9/depth_anything_v2_vitl.pth
+
+2. Copy the downloaded file to the following folder:
+   ..\ComfyUI\custom_nodes\TBG_upscaler_Alfa_1.02p\py\vendor\comfyui_controlnet_aux\ckpts\depth-anything\Depth-Anything-V2-Large
+
+3. Install the required Python packages by running:
+   ..\ComfyUI\custom_nodes\TBG_upscaler_Alfa_1.02p\python -m pip install -r requirements.txt
+
+--------------------------------------------------------------
+
+You’re all set! If you encounter any issues, please check your Python environment paths and permissions.
