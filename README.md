@@ -177,8 +177,11 @@ Thank you for your support and happy tiling!
 - tbg-enhanced-tiled-upscaler-and-refiner-pro
 - tiled-upscaling
 
+  
+## TBG_Magnific_Magnifier_Node PRO members Nodes
+
 ![TBG Magnific Magnifier Example](img/TBG_magnific_upscalser_still.jpg)  
-## TBG_Magnific_Magnifier_Node
+
 
 The **TBG Magnific Magnifier** node is an advanced yet simple-to-use enhancement tool designed for tiled image generation and refinement within ComfyUI. It uses cutting-edge neuro-generative tile fusion and multi-path processing pipelines tailored for extreme resolution workflows — supporting images up to (but not limited to) 100 megapixels with high fidelity or high freedom.
 
