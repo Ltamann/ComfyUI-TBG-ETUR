@@ -108,6 +108,15 @@ The Provider reserves the right to modify, update, or discontinue any aspect of 
 These changes may be made without prior notice and at the sole discretion of the Provider.
 Continued access to the Service after any change constitutes acceptance of the new terms or tier structure.
 
+13. Termination of Access Upon Membership End
+
+Access to the Service is conditional on an active Patreon membership in a qualifying tier.
+If your membership ends, is downgraded, suspended, or canceled for any reason, your access to the API or related services may be revoked immediately, without notice.
+The Provider is under no obligation to maintain access, data, or service continuity after membership ends.
+
+
+
+
 Privacy Policy
 
 Effective Date: 2025
