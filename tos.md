@@ -97,6 +97,16 @@ These Terms may be updated at any time without prior notice. Continued use of th
 
 By using the Service in any capacity, you confirm that you have read, understood, and agree to these Terms of Service.
 
+12. Membership Tiers and Changes
+
+The Provider reserves the right to modify, update, or discontinue any aspect of the membership offering at any time, including:
+	•	Access rights
+	•	API rate limits or compute units
+	•	Pricing or tier structure
+	•	Features and benefits associated with each tier
+
+These changes may be made without prior notice and at the sole discretion of the Provider.
+Continued access to the Service after any change constitutes acceptance of the new terms or tier structure.
 
 Privacy Policy
 
