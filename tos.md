@@ -190,7 +190,6 @@ To exercise your rights, contact: [Insert your contact email]
 
 For privacy-related inquiries, please contact:
 
-Laarmann
 Email: tbg@ylab.es
 
 ⸻
