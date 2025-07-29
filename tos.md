@@ -83,7 +83,7 @@ Breaching these Terms may result in immediate termination of access.
 
 9. Governing Law
 
-These Terms shall be governed by and construed in accordance with the laws of Spain. Any disputes shall be subject to the exclusive jurisdiction of the courts of [Insert City or Region in Spain].
+These Terms shall be governed by and construed in accordance with the laws of Spain. Any disputes shall be subject to the exclusive jurisdiction of the courts of Barcelona.
 
 ⸻
 
