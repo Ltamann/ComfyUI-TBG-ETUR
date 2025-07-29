@@ -161,6 +161,7 @@ We retain your data only for as long as necessary to:
 	•	Comply with legal or operational requirements
 
 Data may be anonymized or deleted periodically.
+Access levels and data processing may vary depending on your membership tier, which may change over time at the Provider’s discretion.
 
 ⸻
 
