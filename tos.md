@@ -71,10 +71,9 @@ To manage access to the Service, the Provider collects and processes information
 This data is collected for the sole purpose of managing access, preventing abuse, and ensuring fair use of the Service.
 The Provider does not sell or share your personal data with third parties.
 Data is stored securely and retained only for as long as necessary to operate the Service.
+Termination of access does not automatically result in deletion of personal data. See our Privacy Policy for information on data retention and deletion requests.
 By using the Service, you consent to the processing of your Patreon and technical data as described above.
-Personal data collected for access control and API usage (e.g. Patreon ID, email, access logs) is retained for as long as necessary to operate the Service and maintain security.
-Canceling your membership does not automatically trigger deletion of your data. However, you may request deletion at any time by contacting us at tbg@ylab.es.
-Certain data may be retained longer if required for legitimate interests such as fraud prevention, abuse mitigation, or legal obligations.
+
 ⸻
 
 8. Termination
@@ -174,6 +173,9 @@ We retain your data only for as long as necessary to:
 
 Data may be anonymized or deleted periodically.
 Access levels and data processing may vary depending on your membership tier, which may change over time at the Provider’s discretion.
+Personal data collected for access control and API usage (e.g. Patreon ID, email, access logs) is retained for as long as necessary to operate the Service and maintain security.
+Canceling your membership does not automatically trigger deletion of your data. 
+Certain data may be retained longer if required for legitimate interests such as fraud prevention, abuse mitigation, or legal obligations.
 
 ⸻
 
