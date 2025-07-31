@@ -279,6 +279,10 @@ However, you can achieve the same results using the TBG Enhanced Upscaler and Re
 
 
 ## Update
+1.05 alfa V2
+
+SDXL and negative conditioning support have been added to the TBG Magnific Magnifier.
+
 1.05 alfa
 
 Added the TBG Magnific Magnifier feature exclusively for Pro users.
