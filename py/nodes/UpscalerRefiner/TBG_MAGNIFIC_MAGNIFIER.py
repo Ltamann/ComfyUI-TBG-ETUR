@@ -134,7 +134,7 @@ class TBG_magnific_ETUR ():
                 "Creativity": ("FLOAT", {"label": "inpaint_max", "default": 0.5, "min": 0, "max": 1, "step": 0.01}),
                 "Inventivity": ("FLOAT", {"label": "inpaint_max", "default": 0, "min": 0, "max": 1, "step": 0.01}),
                 "Resemblance": ("FLOAT", {"label": "inpaint_max", "default": 0.5, "min": 0, "max": 1, "step": 0.01}),
-                "Scale_Factor_per_Step": ("FLOAT", {"default": 1, "min": 0.05, "max": 4, "step": 0.05}),
+                "Scale_Factor_per_Step": ("FLOAT", {"default": 1, "min": 0, "max": 4, "step": 0.01}),
                 "Upscale_Steps": ("INT", {"default": 1, "min": 1, "max": 4, "step": 1}),
                 "Add_Refinement_passes": ("BOOLEAN", {"default": False}),
                 "Save_Steps_to_Temp": ("BOOLEAN", {"label": "Save_Steps_to_Temp", "default": False}),
