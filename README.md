@@ -52,23 +52,29 @@ https://api.ylab.es/login.php
 TBG Enhanced Tiled Upscaler and Refiner Pro introduces tree next-generation tile fusion processes that go far beyond traditional blending:
 
 ### Smart Merge CE
-Choose between adaptive blending strategies compatible with common upscalers like USDU,and others. It intelligently handles tile overlaps, avoiding ghosting and seams.
+Choose between adaptive blending strategies compatible with common upscalers like USDU,and others. It intelligently handles tile compositing recommended for low denoise workflows.
+A quick and solid method for getting consistent, high-quality upscales but limited in x factor.
 
 ### PRO Tile Diffusion  
 A novel approach where each tile is generated while considering surrounding tile information — perfect for mid-denoise levels. This enables:
 - Context-aware detail consistency  
 - Smooth transitions across tile borders  
 - Better handling of textures and patterns  
+- Better color consistency between Tiles
+An intermediate option ideal for consistent upscales, focusing all processing on the original image to stay as close as your settings allow. Best used with mid-scale freedom for steady refinement, minimizing hallucinations. For optimal results, keep creativity or denoise below 0.5.
 
 ### PRO Neuro-Generative Tile Fusion (NGTF)  
 An advanced generative system that remembers newly generated surroundings and adapts subsequent sampling steps accordingly. This makes high-denoise tile refinement possible while maintaining:
-- Global consistency  
+- Global consistency  / color / strukture/ now need vor blended borders / no seams
 - Sharp, coherent details  
 - Memory of contextual relationships across tiles  
+- Adds the possibility to generate tiled ultra high res images
+- Seamless result's while adding high amount of new details and creative freedom.
+Ideal for transforming your image into something new and elevated, without simply recreating what was already there.
 
 ## 2. Design Suite
 
-TBG_Enhanced is not only about quality — it's about flexible, editable workflows over time:
+TBG_Enhanced isn’t just about quality — it’s about flexible, curated, and controlled image refinement, where the art director guides the outcome, not the algorithm.
 
 ### One-Tile Preview & Smart Presets  
 Quickly generate single-tile previews to fine-tune the right settings before running the full job. Presets adapt intelligently to image dimensions and desired resolution.
@@ -80,9 +86,9 @@ You can resample only the tiles you don’t like — no need to regenerate the f
 
 ### Resume Tile Refinement  
 Modify or refine individual tiles days later while keeping the original input image and final result. The system supports:
-- Saved tile maps and settings  
-- Re-injection of noise and conditioning  
-- Fully restorable editing workflows  
+- Saved all single tiles for postproduction 
+- Re-injection of noise and conditioning over single tiles
+
 
 ## 3. Pipeline Structure
 
@@ -90,17 +96,16 @@ TBG_Enhanced is powered by a flexible pipeline architecture built around tile-aw
 
 ### TBG Tile Prompter Pipe  
 Access prompt and denoise settings per tile. Enables:
-- Per-region storytelling  
-- Adaptive text-to-image behavior  
+- Per-tile Promt editing    
 - Denoising strength by tile  
 
 ### TBG Tile Enrichment Pipe  
 Control multiple sampling and model-level features:
-- Model-side: Use DemonTools for deep model manipulation  
-- Sampler-side: Inject custom noise at specific steps, or apply sigma curves to selected steps  
-- Sampler-internal: Enable per-step sampler-side noise injection  
-- Built-in noise reduction  
-- Optional tile up/downscaling during sampling  
+- Model-side: Use DemonTools for additional detail creation 
+- Sampler-side: Inject custom noise at specific steps, or apply a noise injection curves to enhance you image in a more creative way.
+- Sampler-internal: Enable per-step sampler-side noise injection eta - gives rhe sampler on each step new addition noise to keep reinventing and defining detail
+- Built-in noise reduction: A preprocessing step that softly blurs the image before refinement begins, allowing the model more freedom to generate improved results—especially on broken, noisy, overly sharp, or imperfect inputs.
+- Optional tile up/downscaling during sampling to scale higher detailed content and extra sharp final image results
 
 ### ControlNet Pipe  
 Tiled generation now supports unlimited ControlNet inputs per tile, unlocking:
