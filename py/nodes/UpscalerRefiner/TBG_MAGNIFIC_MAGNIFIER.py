@@ -353,7 +353,7 @@ class TBG_magnific_ETUR ():
                 if kwargs["Inventivity"]:
                     kwargs["Enrichment_Pipe"][0]["detail_daemon_active"] = "True"
                     kwargs["Enrichment_Pipe"][0]["tile_upscale_plus"] = kwargs["Inventivity"] / mi
-                    kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Inventivity"] / 10 / mi
+                    kwargs["Enrichment_Pipe"][0]["eta"] = 0# kwargs["Inventivity"] / 10 / mi
                 if kwargs["Inventivity"] > 0.9:
                     kwargs["Enrichment_Pipe"][0]["SplitSteps"] = True
                     kwargs["Enrichment_Pipe"][0]["SplitSteps_noise"] = kwargs["Inventivity"] - 0.5
