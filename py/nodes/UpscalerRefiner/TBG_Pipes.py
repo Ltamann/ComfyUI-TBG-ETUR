@@ -150,7 +150,7 @@ class TBG_enrichment_pipe:
                 "SplitStepsStart": ("INT", {"default": 5, "min": 0, "max": 1000, "step": 1}),
                 "SplitStepsEnd": ("INT", {"default": 5, "min": 0, "max": 1000, "step": 1}),
 
-                "Sampler_side_noise_injection": ("FLOAT", {"label": "ETA", "default": 0.00, "min": 0, "max": 1, "step": 0.01, "round": 0.01}),
+                #"Sampler_side_noise_injection": ("FLOAT", {"label": "ETA", "default": 0.00, "min": 0, "max": 1, "step": 0.01, "round": 0.01}),
                 "RF_inversion": ("FLOAT", {"label": "RF_inversion", "default": 0, "min": 0, "max": 1, "step": 0.1, "round": 0.1}),
                 "tile_upscale_plus": (cls.INNERUPSCALE_METHODS, {"label": "tile_upscale_plus", "default": 'none'}),
                 "upscaler_method_inpainting": (cls.UPSCALE_METHODS, {"label": "Upscale Method", "default": 'lanczos'}),
@@ -209,7 +209,7 @@ class TBG_enrichment_pipe:
             "SplitStepsSigmasCurve": SplitStepsSigmasCurve,
             "SplitStepsStart": SplitStepsStart,
             "SplitStepsEnd": SplitStepsEnd,
-            "eta": Sampler_side_noise_injection,
+            "eta": 0, #Sampler_side_noise_injection,
             "RF_inversion": RF_inversion,
             "tile_upscale_plus": tile_upscale_plus,
             "upscaler_method_inpainting": upscaler_method_inpainting,
