@@ -137,21 +137,9 @@ class TBG_enrichment_pipe:
                 "detail_daemon_fade": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.05}),
                 "detail_daemon_smooth": ("BOOLEAN", {"default": True}),
                 "detail_daemon_cfg_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 100.0, "step": 0.5, "round": 0.01}),
-                "latentupscale": ("BOOLEAN", {"label": "latentupscale", "default": False, "label_on": "Enabled", "label_off": "Disabled"}),
-                "latentupscale_noise": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),
-                "latentupscale_steps": ("INT", {"default": 10, "min": 0, "max": 1000, "step": 1}),
-                "latentupscale_denoise": ("FLOAT", {"default": 0.56, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),      
-                "SplitSteps": ("BOOLEAN", {"label": "latentupscale", "default": False, "label_on": "Enabled", "label_off": "Disabled"}),
-                "SplitSteps_noise": ("FLOAT", {"default": 0.7, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),
-                "SplitSteps_steps": ("INT", {"default": 5, "min": 0, "max": 1000, "step": 1}),
-                "SplitStepsSigmas": ("BOOLEAN", {"label": "SplitStepsSigmas", "default": False, "label_on": "Enabled", "label_off": "Disabled"}),
-                "SplitStepsMultiplyer": ("FLOAT", {"SplitStepsMultiplyer": 0.7, "min": 0.0, "max": 100.0, "step": 0.0001, "round": 0.0001}),
 
-                "SplitStepsStart": ("INT", {"default": 5, "min": 0, "max": 1000, "step": 1}),
-                "SplitStepsEnd": ("INT", {"default": 5, "min": 0, "max": 1000, "step": 1}),
 
-                #"Sampler_side_noise_injection": ("FLOAT", {"label": "ETA", "default": 0.00, "min": 0, "max": 1, "step": 0.01, "round": 0.01}),
-                "RF_inversion": ("FLOAT", {"label": "RF_inversion", "default": 0, "min": 0, "max": 1, "step": 0.1, "round": 0.1}),
+
                 "tile_upscale_plus": (cls.INNERUPSCALE_METHODS, {"label": "tile_upscale_plus", "default": 'none'}),
                 "upscaler_method_inpainting": (cls.UPSCALE_METHODS, {"label": "Upscale Method", "default": 'lanczos'}),
                 "upscale_model_inpainting": (folder_paths.get_filename_list("upscale_models"),
@@ -163,7 +151,11 @@ class TBG_enrichment_pipe:
 
             },
             "optional": {
-                "SplitStepsSigmasCurve": ("SIGMAS", {"label": "SplitStepsSigmasCurve"}),
+            },
+            "hidden": {
+                 "Sampler_side_noise_injection": ("FLOAT", {"label": "ETA", "default": 0.00, "min": 0, "max": 1, "step": 0.01, "round": 0.01}),
+                 "SplitStepsSigmasCurve": ("SIGMAS", {"label": "SplitStepsSigmasCurve"}),
+                 "RF_inversion": ("FLOAT", {"label": "RF_inversion", "default": 0, "min": 0, "max": 1, "step": 0.1, "round": 0.1}),
             }
         }
 
@@ -176,13 +168,27 @@ class TBG_enrichment_pipe:
     def update_pipe(self, detail_daemon_active, detail_amount, detail_daemon_start, detail_daemon_end, detail_daemon_bias,
                     detail_daemon_exponent, detail_daemon_start_offset, detail_daemon_end_offset,
                     detail_daemon_fade, detail_daemon_smooth, detail_daemon_cfg_scale,
-                    latentupscale, latentupscale_noise, SplitSteps, SplitSteps_noise, SplitSteps_steps, latentupscale_steps, latentupscale_denoise,
-                    SplitStepsSigmas, SplitStepsMultiplyer, SplitStepsSigmasCurve, SplitStepsStart, SplitStepsEnd,Sampler_side_noise_injection, RF_inversion,tile_upscale_plus,upscaler_method_inpainting,upscale_model_inpainting, upscale_tiles_by,upscale_segments_by
+                    tile_upscale_plus,upscaler_method_inpainting,upscale_model_inpainting, upscale_tiles_by,upscale_segments_by
                     ):
 
 
 
         Enrichment_Pipe = []
+        SplitStepsSigmasCurve = None
+        latentupscale = False
+        latentupscale_noise = 0
+        latentupscale_steps = 10
+        latentupscale_denoise = 0
+        SplitSteps =  False
+        SplitSteps_noise = 0.7
+        SplitSteps_steps = 5
+        SplitStepsSigmas = False
+        SplitStepsMultiplyer = 0.7
+        SplitStepsStart = 5
+        SplitStepsEnd = 5
+        RF_inversion = 0
+
+
 
         # Append new ControlNet settings
         Enrichment_Pipe.append({
