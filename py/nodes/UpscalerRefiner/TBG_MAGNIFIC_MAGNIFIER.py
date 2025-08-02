@@ -273,7 +273,7 @@ class TBG_magnific_ETUR ():
             kwargs["Enrichment_Pipe"][0]["eta"] = 0 #kwargs["Inventivity"] / 10
 
         if kwargs["Inventivity"] > 0.9:
-            kwargs["Enrichment_Pipe"][0]["SplitSteps"] = True
+            kwargs["Enrichment_Pipe"][0]["SplitSteps"] = False
             kwargs["Enrichment_Pipe"][0]["SplitSteps_noise"] = kwargs["Inventivity"] -0.5
             kwargs["Enrichment_Pipe"][0]["SplitSteps_steps"] = int(kwargs["steps"] / 4)
 
@@ -435,5 +435,6 @@ class TBG_magnific_ETUR ():
 
 
             return Enrichment_Pipe
+
 
 
