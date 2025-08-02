@@ -286,6 +286,15 @@ However, you can achieve the same results using the TBG Enhanced Upscaler and Re
 
 
 ## Update
+1.05 alfa V3
+
+Resolved issues with membership recognition and ComputeUnit calculation
+Fixed guest user access issues
+Fixed CE node access for regular users
+Fixed an error in the TilerNode that occurred when the input image was smaller than the tile size
+Fixed EnhancementPipe — reduced dependency on external custom nodes by trimming features from DeamonTool and FinerDetails
+Fixed TBG Magnific Magnifier error related to missing installation of RES4LYF; temporarily replaced RES4LYF's ETA noise injection with DeamonTool
+
 1.05 alfa V2
 
 SDXL and negative conditioning support have been added to the TBG Magnific Magnifier.
