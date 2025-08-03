@@ -292,6 +292,23 @@ class TBG_magnific_ETUR ():
         if kwargs["Upscale_Steps"] == 1:
             _, tbg_pipe, _, _ , _ = TBG_Upscaler_v1.fn(**kwargs)
             kwargs["TBG_Pipe"] = tbg_pipe
+
+            kwargs["Enrichment_Pipe"] =  self.Enrichment_Pipe()
+            kwargs["Enrichment_Pipe"][0]["tile_upscale_plus"] = "none"
+            if kwargs["Inventivity"]:
+                kwargs["Enrichment_Pipe"][0]["detail_daemon_active"] = True
+                kwargs["Enrichment_Pipe"][0]["tile_upscale_plus"] = kwargs["Inventivity"]
+                kwargs["Enrichment_Pipe"][0]["eta"] = 0 #kwargs["Inventivity"] / 10
+    
+            if kwargs["Inventivity"] > 0.9:
+                kwargs["Enrichment_Pipe"][0]["SplitSteps"] = False
+                kwargs["Enrichment_Pipe"][0]["SplitSteps_noise"] = kwargs["Inventivity"] -0.5
+                kwargs["Enrichment_Pipe"][0]["SplitSteps_steps"] = int(kwargs["steps"] / 4)
+            
+            kwargs["Controlnet_Pipe_strength"] = kwargs["Resemblance"]
+            kwargs["Redux_strength"] = kwargs["Resemblance"]
+
+            
             result = TBG_Refiner_v1.fn(**kwargs)
             finalimages.append(result[2])
             refined_image = result[2]
@@ -435,5 +452,6 @@ class TBG_magnific_ETUR ():
 
 
             return Enrichment_Pipe
+
 
 
