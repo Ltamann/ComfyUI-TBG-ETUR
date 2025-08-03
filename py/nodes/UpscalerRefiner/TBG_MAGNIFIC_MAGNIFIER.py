@@ -357,7 +357,7 @@ class TBG_magnific_ETUR ():
 
                 # Reduce Guidance on each upscale
                 if  kwargs["Flux_Guidance"] > 1.5:
-                    kwargs["Flux_Guidance"] = min(kwargs["Flux_Guidance"] - 0.5, 1)
+                    kwargs["Flux_Guidance"] = max(kwargs["Flux_Guidance"] - 0.35, 1)
 
                 kwargs["Tile_Fusion_Blend"] =  0.5# kwargs["denoise"]
 
@@ -452,6 +452,7 @@ class TBG_magnific_ETUR ():
 
 
             return Enrichment_Pipe
+
 
 
 
