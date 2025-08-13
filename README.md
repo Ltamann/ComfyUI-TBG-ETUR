@@ -250,12 +250,11 @@ Creativity is automatically **scaled down** during **multi-step upscaling** to m
 
 ---
 
-### 🔹 **Inventivity**
+### 🔹 **Resharpen**
+Resharpen
 
-> Boosts micro-detail creation and enhances or invents textures.
-
-- Adds realistic or artistic **small-scale details** that may not exist in the original.  
-- Particularly useful in **low-resolution** areas or flat surfaces.
+### 🔹 **Add Detail**
+Adds small Detail
 
 **Impact:**  
 Inventivity enhances perceived richness in skin, fabric, nature, and more.  
@@ -296,6 +295,7 @@ However, you can achieve the same results using the TBG Enhanced Upscaler and Re
 -Added TBG Detail Enhancer node
 
 -Modified TBG Magnific Magnifier and Enrichment Pipeline to include the Detail Enhancer
+-split inventivity in adddetail and resharpen
 
 1.06 alfa V1
 
