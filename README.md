@@ -2,6 +2,8 @@
 # ComfyUI-TBG-ETUR: 100MP Enhanced Tiled Upscaler & Refiner FLUX Pro. Enhance Your Images with TBG's Upscaler
 **TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO**
 
+**+ Comfyui TBG_Detail_Enhancer node **
+
 !!! The 1.06v2 version has been tested on **ComfyUI 0.3.49** !!!
 
 **Keep in mind this is still an alpha version, and we're updating and fine-tuning it daily. So do the same**
