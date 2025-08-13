@@ -1,36 +1,8 @@
-# This is only a test version we are working on right now 
-
-working on and uploaded:
-Cleaned up vendor code to minimize namespace conflicts with ComfyUI manager and custom nodes. [ https://github.com/Ltamann/ComfyUI-TBG-ETUR/tree/alfa-1.0.5.3-and-TBG-magnific-magnifier-PRO_v2/py/vendor](https://github.com/Ltamann/ComfyUI-TBG-ETUR/tree/alfa-1.06-test-ground/py/vendor)
-
-working on:
-
-Finetuned Inventivity of TBG Magnific Magnifier
-In 1.0.5 versions, external custom nodes were required to inject noise into the sampling process. With the latest **Rebuild Inventivity** update, this is now integrated directly via the `Inventivity` slider. The `Inventivity` slider introduces dynamic noise behavior based on both the **Inventivity** and **Denoise** settings. It combines:
-- Per-step latent noise injection  
-- Log-sigma manipulation at the model level  
-- A poly-exponential curve applied to the sigma tail for controlled creative deviation
-  
-The effect is **non-linear**, meaning low and high values produce very different results:
-- **Low Inventivity values (0.1–0.5):**  
-  Softens the output while enhancing subtle details. Useful for maintaining realism with light creative variation.
-- **High Inventivity values (0.6–1.0+):**  
-  Sharpens the image and enhances crisp, bold features. Great for stylized or high-impact results.
-Results change a lot depending on denoise and cnets ...
-You can also plug in a `Float` node to push the `Inventivity` value above `1.0` if needed for more experimental outcomes.
-
-working on:
-
-TBG Magnific Magnifier's color correction is now responsive to the denoise setting: at high denoise levels, color correction is minimal or disabled; at low denoise levels, full color correction is applied.
-
-TBG Magnific Magnifier's tiled and fulltimage refinment switch
-
-TBG Magnific Magnifier increments the seed for the next pass to prevent pattern overlays caused by using the same noise in all samples (only affects images that are refined without upscaling).
-
-
 
 # ComfyUI-TBG-ETUR: 100MP Enhanced Tiled Upscaler & Refiner FLUX Pro. Enhance Your Images with TBG's Upscaler
 **TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO**
+
+!!! The 1.06v2 version has been tested on **ComfyUI 0.3.49** !!!
 
 **Keep in mind this is still an alpha version, and we're updating and fine-tuning it daily. So do the same**
 
@@ -317,9 +289,45 @@ However, you can achieve the same results using the TBG Enhanced Upscaler and Re
 
 
 ## Update
+1.06 alfa V2
+
+-Added TBG Detail Enhancer node
+
+-Modified TBG Magnific Magnifier and Enrichment Pipeline to include the Detail Enhancer
+
 1.06 alfa V1
 
-Cleaned up vendor code to minimize namespace conflicts with ComfyUI manager and custom nodes.
+Cleaned up vendor code to reduce namespace conflicts with the ComfyUI manager and custom nodes. Please note that the conflicts shown in the manager are pulled from a static list on the ComfyUI manager’s website and don’t necessarily reflect the actual code installed. I’m also unsure why this node is already listed in the manager’s custom node list, as I never registered it there.
+
+Finetuned Inventivity of TBG Magnific Magnifier
+In 1.0.5 versions, external custom nodes were required to inject noise into the sampling process. With the latest **Rebuild Inventivity** update, this is now integrated directly via the `Inventivity` slider. The `Inventivity` slider introduces dynamic noise behavior based on both the **Inventivity** and **Denoise** settings. It combines:
+- Per-step latent noise injection  
+- Log-sigma manipulation at the model level  
+- A poly-exponential curve applied to the sigma tail for controlled creative deviation
+  
+The effect is **non-linear**, meaning low and high values produce very different results:
+- **Low Inventivity values (0.1–0.5):**  
+  Softens the output while enhancing subtle details. Useful for maintaining realism with light creative variation.
+- **High Inventivity values (0.6–1.0+):**  
+  Sharpens the image and enhances crisp, bold features. Great for stylized results.
+Results change a lot depending on denoise and cnets ...
+You can also plug in a `Float` node to push the `Inventivity` value above `1.0` if needed for more experimental outcomes.
+
+TBG Magnific Magnifier's color correction is now responsive to the denoise setting: at high denoise levels, color correction is minimal or disabled; at low denoise levels, full color correction is applied.
+
+TBG Magnific Magnifier now lets you switch between tiled and full-image refinement (full-image mode depends on your GPU memory and works fine for images up to around 3K resolution).
+
+TBG Magnific Magnifier increments the seed for the next pass to prevent pattern overlays caused by using the same noise in all samples (only affects images that are refined without upscaling).
+
+We’ve rebuilt the enrichment pipeline for TBG ETUR, which serves as the foundation for the inventiveness of the TBG Magnific Magnifier. This update introduces the Resharpener to improve image sharpness, a Creative Sigma Tail to boost creativity in later steps, and a remodified ETA value to inject noise into each sampling process. Activating this node will automatically switch the sampler to Euler Ancestral, or to RES2M if the RES4LYF node is installed. The upcoming Tile Upscale Plus will be available in two variations, one featuring a noise-reduction option that blurs input images before upscaling. Both versions upscale tiles in pixel space before sampling—by the specified factor—and then downsample after sampling to the chosen upscale resolution, resulting in finer detail and increased sampling time.
+
+We removed the split-sigma noise injection and latent-space noise injection methods, as both can be used only fot soft-merge sampling. However, they are incompatible with Tile Fusion and Neuro-Generative Tile Fusion so we removed it from the UI.
+
+**working on now:**
+testing and rebuilding workflows, searching for bug's ...
+
+**whats next:**
+The ETUR denoise map input allows assigning custom denoise levels per object or mask using a grayscale map. This enables a new upscale behavior where you can define high-creativity regions and consistency-focused areas for both tiled and full-image upscales.
 
 
 1.05 alfa V3
