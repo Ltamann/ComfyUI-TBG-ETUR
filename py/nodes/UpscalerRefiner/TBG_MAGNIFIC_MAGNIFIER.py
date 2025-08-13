@@ -314,7 +314,7 @@ class TBG_magnific_ETUR:
                     kwargs["Enrichment_Pipe"][0]["detail_amount"] = detail_amount_add
                     kwargs["Enrichment_Pipe"][0]["detail_daemon_end"] = detail_daemon_end
                     kwargs["Enrichment_Pipe"][0]["eta_active"] = True
-                    kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"] #cls.compute_eta(kwargs["Add_Details"], kwargs["denoise"])
+                    kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"] / 2 #cls.compute_eta(kwargs["Add_Details"], kwargs["denoise"])
                 else:
                     kwargs["Enrichment_Pipe"][0]["detail_daemon_active"] = False
                     kwargs["Enrichment_Pipe"][0]["Sigmas_creative_tail_active"] = False
@@ -385,7 +385,7 @@ class TBG_magnific_ETUR:
                     kwargs["Enrichment_Pipe"][0]["detail_amount"] = detail_amount_add / mi
                     kwargs["Enrichment_Pipe"][0]["detail_daemon_end"] = detail_daemon_end
                     kwargs["Enrichment_Pipe"][0]["eta_active"] = True
-                    kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"] #max(cls.compute_eta(kwargs["Add_Details"], kwargs["denoise"]) / mi, 0)
+                    kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"] / 2 #max(cls.compute_eta(kwargs["Add_Details"], kwargs["denoise"]) / mi, 0)
 
                     if mi > 2:  # Step 3+4 without noise from here
                         kwargs["Enrichment_Pipe"][0]["eta_active"] = False
@@ -551,4 +551,5 @@ class TBG_magnific_ETUR:
             "upscale_segments_by": 1.5,
         })
         return Enrichment_Pipe
+
 
