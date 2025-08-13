@@ -282,7 +282,7 @@ class TBG_magnific_ETUR:
         Sigmas_creative_tail_active = True
         Sigmas_creative_tail_strength= kwargs["Add_Details"]
 
-        Resharpener = kwargs["Resharpener"]*10
+        Resharpener = kwargs["Resharpener"]
         kwargs['Color_Match_Str'] = 1 - kwargs["denoise"]
 
         kwargs["Enrichment_Pipe"][0]["eta_starta"] = 0
@@ -551,3 +551,4 @@ class TBG_magnific_ETUR:
             "upscale_segments_by": 1.5,
         })
         return Enrichment_Pipe
+
