@@ -277,7 +277,7 @@ class TBG_magnific_ETUR:
 
         # Creative control variables for loop
         detail_daemon_active = True
-        detail_amount_add = kwargs["Add_Details"] * 2
+        detail_amount_add = kwargs["Add_Details"]# * 2
         detail_daemon_end = max(0.4, 0.2)
         Sigmas_creative_tail_active = True
         Sigmas_creative_tail_strength= kwargs["Add_Details"]
@@ -551,5 +551,6 @@ class TBG_magnific_ETUR:
             "upscale_segments_by": 1.5,
         })
         return Enrichment_Pipe
+
 
 
