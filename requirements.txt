@@ -1,0 +1,10 @@
+opencv-python
+matplotlib
+diffusers
+piexif
+ollama
+color-matcher
+grog
+opencv-contrib-python
+color-matcher
+git+https://github.com/deepseek-ai/Janus.git
