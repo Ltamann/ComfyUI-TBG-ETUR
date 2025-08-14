@@ -379,12 +379,12 @@ class TBG_magnific_ETUR:
 
                 # Set noise injection eta - add split step noise injection on high value
                 if kwargs["Add_Details"] != 0:
-                    kwargs["Enrichment_Pipe"][0]["Sigmas_creative_tail_active"] = True
+                    kwargs["Enrichment_Pipe"][0]["Sigmas_creative_tail_active"] = False
                     kwargs["Enrichment_Pipe"][0]["Sigmas_creative_tail_strength"] = Sigmas_creative_tail_strength / mi  # High sigma tail
-                    kwargs["Enrichment_Pipe"][0]["detail_daemon_active"] = True
+                    kwargs["Enrichment_Pipe"][0]["detail_daemon_active"] = False
                     kwargs["Enrichment_Pipe"][0]["detail_amount"] = detail_amount_add / mi
                     kwargs["Enrichment_Pipe"][0]["detail_daemon_end"] = detail_daemon_end
-                    kwargs["Enrichment_Pipe"][0]["eta_active"] = True
+                    kwargs["Enrichment_Pipe"][0]["eta_active"] = False
                     kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"] / 2 #max(cls.compute_eta(kwargs["Add_Details"], kwargs["denoise"]) / mi, 0)
 
                     if mi > 2:  # Step 3+4 without noise from here
@@ -401,7 +401,7 @@ class TBG_magnific_ETUR:
 
 
                 if kwargs["Resharpener"] != 0:
-                    kwargs["Enrichment_Pipe"][0]["Resharpener_active"] = True
+                    kwargs["Enrichment_Pipe"][0]["Resharpener_active"] = False
                     kwargs["Enrichment_Pipe"][0]["Resharpener_strength"] =  Resharpener / mi
                     kwargs["Enrichment_Pipe"][0]["resharpen_end"]  = max(0.2, min(1.0, (1-kwargs["denoise"])))
                 else:
@@ -551,6 +551,7 @@ class TBG_magnific_ETUR:
             "upscale_segments_by": 1.5,
         })
         return Enrichment_Pipe
+
 
 
 
