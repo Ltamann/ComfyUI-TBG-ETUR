@@ -153,7 +153,8 @@ To install the TBG Enhanced Tiled Upscaler and Refiner Pro, follow these steps:
    copy  Janus-Pro-1B to ...ComfyUI_344\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-1B\
    copy  Janus-Pro-7B to ...ComfyUI_344\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-7B\
 
-** Used models **
+**Used models**
+
 Hugging Face model download URLs ( for Flux and Redux you need to accept the license before )
 
 https://huggingface.co/black-forest-labs/FLUX.1-Redux-dev/resolve/main/flux1-redux-dev.safetensors?download=true
