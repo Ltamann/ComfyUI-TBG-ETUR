@@ -189,7 +189,7 @@ class TBG_enrichment_pipe:
                     eta_start,eta_end,resharpen_start,resharpen_end
                     ):
 
-
+    # Enrichment Pipe overwrites 
         Enrichment_Pipe = []
         SplitStepsSigmasCurve = None
         latentupscale = False
@@ -205,6 +205,10 @@ class TBG_enrichment_pipe:
         SplitStepsEnd = 5
         RF_inversion = 0
 
+        if Resharpener_active == False:
+            Resharpener_strength = 0
+        if eta_active == False:
+            eta = 0
 
 
         # Append new ControlNet settings
@@ -515,4 +519,5 @@ async def tile_prompt(request):
     # http://localhost:8188/TBG/McBoaty/v5/tile_prompt?filename=example.png&type=output
     # IMAGE_DIR = r"A:\\SD\\ComfyUI\\ComfyUI_windows_portable\\ComfyUI\temp\\TBG"
     # CACHE_DIR = r"A:\\SD\\ComfyUI\\ComfyUI_windows_portable\\ComfyUI\temp\\TBG\\cache"
+
 

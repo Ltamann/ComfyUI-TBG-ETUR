@@ -136,8 +136,7 @@ To install the TBG Enhanced Tiled Upscaler and Refiner Pro, follow these steps:
 
  - Open Manager (In the "config.ini" file located in the ComfyUI\custom_nodes\ComfyUI-Manager\ folder, make sure the **security_level** is set to **weak** if it's not already done.)
  - select Install missing custom nodes
- - select Install via Git URL
- - copy and paste this url:   [https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR)
+ - search for TGB and install TGB enhancend Upscaler node set or  - copy and paste this url:   [https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR)
  - Install and Restart ComfyUI
  - Download LLM models from https://github.com/deepseek-ai/Janus?tab=readme-ov-file#janus-pro
    Janus-Pro-1B	and or Janus-Pro-7B
@@ -152,7 +151,30 @@ To install the TBG Enhanced Tiled Upscaler and Refiner Pro, follow these steps:
  - Download LLM models from https://github.com/deepseek-ai/Janus?tab=readme-ov-file#janus-pro
    Janus-Pro-1B	and or Janus-Pro-7B
    copy  Janus-Pro-1B to ...ComfyUI_344\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-1B\
-   copy  Janus-Pro-7B to ...ComfyUI_344\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-7B\ 
+   copy  Janus-Pro-7B to ...ComfyUI_344\ComfyUI_windows_portable\ComfyUI\models\Janus-Pro\Janus-Pro-7B\
+
+**Used models**
+
+Hugging Face model download URLs ( for Flux and Redux you need to accept the license before )
+
+https://huggingface.co/black-forest-labs/FLUX.1-Redux-dev/resolve/main/flux1-redux-dev.safetensors?download=true
+
+https://huggingface.co/Comfy-Org/sigclip_vision_384/resolve/main/sigclip_vision_patch14_384.safetensors?download=true
+
+https://huggingface.co/lllyasviel/flux1_dev/resolve/main/flux1-dev-fp8.safetensors?download=true
+
+https://huggingface.co/Shakker-Labs/FLUX.1-dev-ControlNet-Union-Pro-2.0/resolve/main/diffusion_pytorch_model.safetensors?download=true
+
+https://huggingface.co/jasperai/Flux.1-dev-Controlnet-Upscaler/resolve/main/diffusion_pytorch_model.safetensors?download=true
+
+https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/model.safetensors?download=true
+
+https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors?download=true
+
+https://huggingface.co/alimama-creative/FLUX.1-Turbo-Alpha/resolve/main/diffusion_pytorch_model.safetensors?download=true
+
+https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/vae/diffusion_pytorch_model.safetensors?download=true
+   
 
 ## API_Access
 If you like to test the PRO feachers get early access by joining us at:
