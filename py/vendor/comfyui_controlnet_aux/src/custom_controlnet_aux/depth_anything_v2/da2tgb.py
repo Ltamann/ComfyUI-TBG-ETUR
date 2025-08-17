@@ -28,7 +28,7 @@ class DepthAnythingV2Detector:
             pretrained_model_or_path = DEPTH_ANYTHING_V2_MODEL_NAME_DICT[filename]
         model_path = custom_hf_download(pretrained_model_or_path, filename)
         model = DepthAnythingV2(**model_configs[filename])
-        model.load_state_dict(torch.load(model_path, map_location="cpu"))
+        model.load_state_dict(torch.load(model_path, map_location="cpu",weights_only=False))
         model = model.eval()
         return cls(model, filename)
 
