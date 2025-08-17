@@ -2,6 +2,7 @@
 Open runPod
 
 create a pod with min 60 GB of disk space
+
 open Terminal
 
 paste:
@@ -12,7 +13,9 @@ export HF_TOKEN= your huggingface api token from https://huggingface.co/docs/hub
 
 
  create start file:
+ 
 cd ComfuUI
+
  echo '#!/bin/bash
 cd /workspace/ComfyUI || exit 1
 source /workspace/ComfyUI/venv/bin/activate
