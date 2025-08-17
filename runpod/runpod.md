@@ -21,6 +21,10 @@ cd /workspace/ComfyUI || exit 1
 source /workspace/ComfyUI/venv/bin/activate
 python /workspace/ComfyUI/main.py --listen 0.0.0.0 --port 7777' > start.sh && chmod +x start.sh
 
+Fix for comfyui error for model load pytone 2.6....
+cd comfy
+sed -i '/pl_sd = torch.load(ckpt, map_location=device, pickle_module=comfy.checkpoint_pickle)/c\pl_sd = torch.load(ckpt, map_location=device, pickle_module=comfy.checkpoint_pickle, weights_only=False)' utils.py
+
 
  edit pod settings
  Container Start Command
