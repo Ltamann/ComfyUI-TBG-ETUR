@@ -312,6 +312,9 @@ However, you can achieve the same results using the TBG Enhanced Upscaler and Re
 
 
 ## Update
+1.06 alfa V2.1
+add Python 3.13 support for ComfyUI 0.3.50 
+
 1.06 alfa V2
 
 -Added TBG Detail Enhancer node
