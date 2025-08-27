@@ -9,6 +9,9 @@
 
 Tutorials and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@TBG_AI)). 
 
+and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)). 
+
+
 
 ## Table of Contents
 - [Overview](#overview)
