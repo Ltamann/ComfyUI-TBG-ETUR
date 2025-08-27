@@ -8,6 +8,7 @@ color-matcher
 grog
 opencv-contrib-python
 color-matcher
+numba
 # For Janus
 git+https://github.com/deepseek-ai/Janus.git
 
@@ -19,3 +20,4 @@ qwen-vl-utils
 bitsandbytes
 optimum
 git+https://github.com/huggingface/transformers
+
