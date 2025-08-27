@@ -319,17 +319,17 @@ However, you can achieve the same results using the TBG Enhanced Upscaler and Re
 # TGB Tile Prompter 
 We’re working on a new test build of the **Tile Prompter** and it just got a big update!  
 
-    ## 🔹 What’s New  
-    - **New UI** – cleaner and easier to use  
-    - **Per-tile settings** – each tile can now store its own:  
-      - `prompt`  
-      - `denoise`  
-      - `seed`  
-      - `cnet-strength`  
-    - **Preview mode for tiles** – test one tile, and if you like the result, apply its values (`seed`, `denoise`, `cnet-strength`, `prompt`) to the actual tile  
-    - **Seed for segments** – finally added! Now it feels like a perfect mix of tiled upscaling + inpainting  
-    - **Workflow persistence** – inputs (`prompt`, `denoise`, `seed`, `cnet-strength`) are saved to the workflow JSON → you won’t lose them when reloading the browser  
-    - **Smaller tile previews** – more compact and efficient  
+## 🔹 What’s New  
+- **New UI** – cleaner and easier to use  
+- **Per-tile settings** – each tile can now store its own:  
+  - `prompt`  
+  - `denoise`  
+  - `seed`  
+  - `cnet-strength`  
+- **Preview mode for tiles** – test one tile, and if you like the result, apply its values (`seed`, `denoise`, `cnet-strength`, `prompt`) to the actual tile  
+- **Seed for segments** – finally added! Now it feels like a perfect mix of tiled upscaling + inpainting  
+- **Workflow persistence** – inputs (`prompt`, `denoise`, `seed`, `cnet-strength`) are saved to the workflow JSON → you won’t lose them when reloading the browser  
+- **Smaller tile previews** – more compact and efficient  
 
 ## 🔹 New Features & Integrations  
 - **Qwen 2.5 VL + Skycaptioner V1 support**  
