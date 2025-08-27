@@ -3,7 +3,7 @@
 
 **+ Comfyui TBG_Detail_Enhancer node**
 
-# !!! The 1.07v1 version Requires at least **ComfyUI 0.3.52** with QWEN images support!!! 
+# !!! The 1.07v1 version Requires at least **ComfyUI 0.3.52** with QWEN images support !!! 
 
 **Keep in mind this is still an alpha version, and we're updating and fine-tuning it daily. So do the same**
 
