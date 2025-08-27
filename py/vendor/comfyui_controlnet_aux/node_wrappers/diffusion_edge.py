@@ -11,18 +11,6 @@ def install_deps():
         run_script([sys.executable, '-s', '-m', 'pip', 'install', 'scikit-learn'])
 
 class DiffusionEdge_Preprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(
-            environment=INPUT.COMBO(["indoor", "urban", "natrual"]),
-            patch_batch_size=INPUT.INT(default=4, min=1, max=16),
-            resolution=INPUT.RESOLUTION()
-        )
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "execute"
-
-    CATEGORY = "ControlNet Preprocessors/Line Extractors"
 
     def execute(self, image, environment="indoor", patch_batch_size=4, resolution=512, **kwargs):
         install_deps()
@@ -35,9 +23,3 @@ class DiffusionEdge_Preprocessor:
         del model
         return (out, )
 
-NODE_CLASS_MAPPINGS = {
-    "DiffusionEdge_Preprocessor": DiffusionEdge_Preprocessor,
-}
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "DiffusionEdge_Preprocessor": "Diffusion Edge (batch size ↑ => speed ↑, VRAM ↑)",
-}

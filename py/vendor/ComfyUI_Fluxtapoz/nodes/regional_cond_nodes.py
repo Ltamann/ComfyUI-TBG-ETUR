@@ -34,19 +34,7 @@ class RegionalConditioning(torch.nn.Module):
 
 
 class CreateRegionalCondNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "cond": ("CONDITIONING",),
-            "mask": ("MASK",),
-        }, "optional": {
-            "prev_regions": ("REGION_COND",),
-        }}
 
-    RETURN_TYPES = ("REGION_COND",)
-    FUNCTION = "create"
-
-    CATEGORY = "fluxtapoz"
 
     def create(self, cond, mask, prev_regions=[]):
         prev_regions = [*prev_regions]
@@ -59,22 +47,7 @@ class CreateRegionalCondNode:
 
 
 class ApplyRegionalCondsNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "model": ("MODEL",),
-            "region_conds": ("REGION_COND",),
-            "latent": ("LATENT",),
-            "start_percent": ("FLOAT", {"default": 0, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),
-            "end_percent": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),
-        }, "optional": {
-            "attn_override": ("ATTN_OVERRIDE",)
-        }}
 
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "patch"
-
-    CATEGORY = "fluxtapoz"
 
     def patch(self, model, region_conds, latent, start_percent, end_percent, attn_override=DEFAULT_REGIONAL_ATTN):
         model = model.clone()

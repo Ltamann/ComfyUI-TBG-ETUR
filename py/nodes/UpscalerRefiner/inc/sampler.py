@@ -26,10 +26,18 @@ class TBG_sampler():
     @staticmethod
     def getSampler(self,positive,negative,sigmas,latent_image,index):
 
+        grid_seed = self.OUTPUTS.grid_seed[index]
+        if grid_seed is not None and isinstance(grid_seed, (int)):
+            noise_seed = grid_seed
+
+        else:
+            noise_seed = self.KSAMPLER.noise_seed
+
+
         latent_output = comfy_extras.nodes_custom_sampler.SamplerCustom().sample(
             self.KSAMPLER.model,
             self.KSAMPLER.add_noise,
-            self.KSAMPLER.noise_seed,
+            noise_seed,
             self.KSAMPLER.cfg,
             positive,
             negative,
@@ -96,6 +104,7 @@ class TBG_sampler():
 
     @staticmethod
     def getClownSampler(self, inputsampler):
+
         cs_eta = self.KSAMPLER.eta * 2
         cs_s_noise = self.KSAMPLER.eta * 0.5
         if HAS_CLOWNSAMPLER == True:
@@ -233,12 +242,20 @@ class TBG_sampler():
         return simgasmod
 
     @staticmethod
-    def splitstep(self, positive, negative, latent_image, sigmas):
+    def splitstep(self, positive, negative, latent_image, sigmas, index):
+
+        grid_seed = self.OUTPUTS.grid_seed[index]
+        if grid_seed is not None and isinstance(grid_seed, (int)):
+            noise_seed = grid_seed
+
+        else:
+            noise_seed = self.KSAMPLER.noise_seed
+
 
         latent_image_with_leftover_noise = nodes.KSamplerAdvanced().sample(
             self.KSAMPLER.model,
             "enable",
-            self.KSAMPLER.noise_seed,
+            noise_seed,
             self.KSAMPLER.steps,
             self.KSAMPLER.cfg,
             self.KSAMPLER.sampler,
@@ -259,7 +276,7 @@ class TBG_sampler():
         latent_output = nodes.KSamplerAdvanced().sample(
             self.KSAMPLER.model,
             "disable",
-            self.KSAMPLER.noise_seed,
+            noise_seed,
             self.KSAMPLER.steps,
             self.KSAMPLER.cfg,
             self.KSAMPLER.sampler,
@@ -276,12 +293,20 @@ class TBG_sampler():
 
 
     @staticmethod
-    def splitstep_with_sigmacurve(self, positive, negative, latent_image, mask , sigma_curve, multiplier):
+    def splitstep_with_sigmacurve(self, positive, negative, latent_image, mask , sigma_curve, multiplier, index):
+
+        grid_seed = self.OUTPUTS.grid_seed[index]
+        if grid_seed is not None and isinstance(grid_seed, (int)):
+            noise_seed = grid_seed
+
+        else:
+            noise_seed = self.KSAMPLER.noise_seed
+
         # wrong denoise because KSamplerAdvanced its building its own
         latent = nodes.KSamplerAdvanced().sample(
             self.KSAMPLER.model,
             self.KSAMPLER.add_noise,
-            self.KSAMPLER.noise_seed,
+            noise_seed,
             self.KSAMPLER.steps,
             self.KSAMPLER.cfg,
             self.KSAMPLER.EPsampler,
@@ -308,7 +333,7 @@ class TBG_sampler():
                 latent = nodes.KSamplerAdvanced().sample(
                     self.KSAMPLER.model,
                     self.KSAMPLER.add_noise,
-                    self.KSAMPLER.noise_seed,
+                    noise_seed,
                     self.KSAMPLER.steps,
                     self.KSAMPLER.cfg,
                     self.KSAMPLER.EPsampler,
@@ -324,7 +349,7 @@ class TBG_sampler():
         latent = nodes.KSamplerAdvanced().sample(
             self.KSAMPLER.model,
             self.KSAMPLER.add_noise,
-            self.KSAMPLER.noise_seed,
+            noise_seed,
             self.KSAMPLER.steps,
             self.KSAMPLER.cfg,
             self.KSAMPLER.EPsampler,

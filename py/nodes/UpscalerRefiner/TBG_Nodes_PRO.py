@@ -5,7 +5,8 @@ ______________________________________TBG_Enhanced Tiled Upscaler and Refiner FL
 """
 import math
 import os
-from .inc.api import PatreonAuthNative
+
+
 import comfy
 import comfy.latent_formats
 import comfy.model_sampling
@@ -16,16 +17,11 @@ import comfy.sd
 import comfy.supported_models
 import cv2
 import folder_paths
-import node_helpers
 import numpy as np
 import torch
-from PIL import Image, ImageSequence, ImageOps
-from comfy_extras.nodes_flux import FluxKontextImageScale, PREFERED_KONTEXT_RESOLUTIONS
-from .inc.api import PatreonAuthNative
 from ..UpscalerRefiner.TBG_Refiner import TBG_Refiner_v1
 from ..UpscalerRefiner.TBG_Tiler import TBG_Upscaler_v1
 from ...vendor.ComfyUI_Impact_Pack.masktoseg import MaskToSEGS
-from ...vendor.ComfyUI_MaraScott_Nodes.py.utils.constants import get_category
 from ....TBG_presets import PRESETS_PRO, get_presets
 
 
@@ -69,8 +65,18 @@ class TBG_Upscaler_v1_pro():
     LLM = [
         "NONE",
         "Janus-Pro-1B",
-        "Janus-Pro-7B"
+        "Janus-Pro-7B",
+        "Qwen2.5-VL-3B-Instruct",
+        "Qwen2.5-VL-7B-Instruct",
+        "SkyCaptioner-V1",
+        "Qwen2.5-VL-3B-Instruct_8bit",
+        "Qwen2.5-VL-7B-Instruct_8bit",
+        "SkyCaptioner-V1_8bit",
+        "Qwen2.5-VL-3B-Instruct_4bit",
+        "Qwen2.5-VL-7B-Instruct_4bit",
+        "SkyCaptioner-V1_4bit"
     ]
+
 
     @classmethod
     def INPUT_TYPES(self):
@@ -87,8 +93,8 @@ class TBG_Upscaler_v1_pro():
                 "image": ("IMAGE", {"label": "Image"}),
                 "presets": (self.PRESETS, {"label": "presets", "default": "NONE"}),
                 "Fragmentation":("FLOAT",{"label": "inpaint_max", "default": 1, "min": 0.5, "max": 4, "step": 0.01, "round": 0.01}),
-                "tile_size": ("INT",{"label": "Tile Size height", "default": 1024, "min": 320, "max": 8192, "step": 64}),
-                "tile_size_w": ("INT",{"label": "Tile Size width", "default": 1024, "min": 320, "max": 8192, "step": 64}),
+                "tile_size_w": ("INT",{"label": "Tile Size height", "default": 1024, "min": 320, "max": 8192, "step": 16}),
+                "tile_size_h": ("INT",{"label": "Tile Size width", "default": 1024, "min": 320, "max": 8192, "step": 16}),
                 "max_upscale_size_segment": ("INT", {"label": "max_upscale_size_segment","default": 2048, "min": 256, "max": 4096, "step": 8}),
                 "upscaler": (self.UPSCALE_TYPE, {"label": "Upscale Type", "default": "NONE"}),
                 "upscale_model": (folder_paths.get_filename_list("upscale_models"), {"label": "Upscale Model"}),
@@ -97,7 +103,7 @@ class TBG_Upscaler_v1_pro():
 
                 "LLMPrompt": (self.LLM, {"label": "Upscale Type", "default": "NONE"}),
                 "LLMPrompt_Prompt": ("STRING", {"multiline": True, "label": "LLMPrompt Prompt",
-                                                "default": "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Include a comprehensive list of all visible objects with precise and vivid descriptions. Write the result as a Flux image generation prompt, without any introductory."}),
+                                                "default": "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic."}),
 
                 "compositing_mask_blur": ("INT", {"label": "Manual Feather Mask for Tile Overlapping", "default": 16,"min": 0, "max": 128, "step": 8}),
                 "PRO_activate": ("BOOLEAN", {"label": "api_activate_pro", "default": True, "label_on": "ETUR PRO","label_off": "ETUR"}),
@@ -141,33 +147,21 @@ class TBG_Upscaler_v1_pro():
     )
 
     OUTPUT_NODE = True
-    CATEGORY = get_category("Upscaling")
-    DESCRIPTION = "An \"IMAGE TO TILE \" Node"
+    CATEGORY = "TBG/Enhanced Upscaler PRO"
+    HELP_LINK = "https://www.patreon.com/c/TB_LAAR"
+    DESCRIPTION = 'Upscaler and Tiler to split you images into tiles for TBG ETUR'
     FUNCTION = "fn"
 
 
     @classmethod
     def fn(self, **kwargs):
-        # API login
 
 
+        kwargs["tile_size"] = kwargs.get("tile_size_h")
         if kwargs["Fragmentation"] and  kwargs["Fragmentation"] != 0:
             kwargs["tile_size_w"] = int(kwargs.get("tile_size_w", 1024)*kwargs["Fragmentation"])
-            kwargs["tile_size"] = int(kwargs.get("tile_size", 1024)*kwargs["Fragmentation"])
-        """
-        kwargs["PRO_api_token"] =  kwargs.get("PRO_api_token", None)
-        if kwargs["PRO_api_token"] == "" or kwargs["PRO_api_token"] == None:
-            if  os.environ["TBG_ETUR_API_KEY"]:
-                kwargs["PRO_api_token"] = os.environ["TBG_ETUR_API_KEY"]
-                print("TBG API uses the TBG_ETUR_API_KEY environment variable for authentication")
-            else:
-                print("TBG API: No token found. Pro features disabled.")
-        else:
-                print("TBG API uses your comfyui TBG API_KEY for authentication")
+            kwargs["tile_size"] = int(kwargs.get("tile_size_h", 1024)*kwargs["Fragmentation"])
 
-        #kwargs["PRO_api_info"], kwargs["PRO_api_status"], kwargs["PRO_api_creditsleft"], current_credits = PatreonAuthNative.check_status(0, kwargs["PRO_api_token"])
-        # return result
-        """
         if kwargs["presets"] == 'Add Yours → TBG_presets.py':
             kwargs["presets"] = 'None'
 
@@ -219,11 +213,9 @@ class TBG_Refiner_v1_pro():
     MODEL_TYPE_SIZES = {
         'FLUX1': 1024,
         'FLUX1 Kontext': 1024,
-        'HiDream in next version4': 1024,
-        'SD1 not tested': 512,
-        'SDXL': 1024,
-        'SD3 not tested': 1024,
-        'SVD not tested': 1024,
+        'Qwen Image': 1328,
+        'Qwen Image Edit': 1328,
+        'Others': 1024,
     }
 
 
@@ -357,14 +349,19 @@ class TBG_Refiner_v1_pro():
     OUTPUT_IS_LIST = (False,) * len(RETURN_TYPES)
 
     OUTPUT_NODE = True
-    CATEGORY = get_category("Refiner")
-    DESCRIPTION = "A \"Tile Refiner\" Node"
+    CATEGORY = "TBG/Enhanced Upscaler PRO"
+    HELP_LINK = "https://www.patreon.com/c/TB_LAAR"
+    DESCRIPTION = 'Sampler and Refiner for TBG ETUR'
     FUNCTION = "fn"
 
     @classmethod
     def fn(self, **kwargs):
+        return {
+            "ui": {"value": [f"{kwargs.get('seed', None)}"]},
+            "result": (TBG_Refiner_v1.fn(**kwargs))
+        }
 
-        return TBG_Refiner_v1.fn(**kwargs)
+        #return TBG_Refiner_v1.fn(**kwargs)
 
 class EdgePadNode:
     @classmethod
@@ -416,7 +413,9 @@ class TBG_masked_attention:
 
         }
 
-    CATEGORY = "image"
+    CATEGORY = "TBG/Enhanced Upscaler PRO"
+    HELP_LINK = "https://www.patreon.com/c/TB_LAAR"
+    DESCRIPTION = 'Converts Mask to Tiles for TBG ETUR'
 
     RETURN_TYPES = ("SEGS",)
     FUNCTION = "load_image"

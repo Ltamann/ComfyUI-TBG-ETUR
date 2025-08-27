@@ -3,14 +3,6 @@ from ..utils import common_annotator_call, define_preprocessor_inputs, INPUT
 
 
 class AnimeLineArt_Preprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(resolution=INPUT.RESOLUTION())
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "execute"
-
-    CATEGORY = "ControlNet Preprocessors/Line Extractors"
 
     def execute(self, image, resolution=512, **kwargs):
         from custom_controlnet_aux.lineart_anime import LineartAnimeDetector
@@ -20,9 +12,3 @@ class AnimeLineArt_Preprocessor:
         del model
         return (out, )
 
-NODE_CLASS_MAPPINGS = {
-    "AnimeLineArtPreprocessor": AnimeLineArt_Preprocessor
-}
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "AnimeLineArtPreprocessor": "Anime Lineart"
-}

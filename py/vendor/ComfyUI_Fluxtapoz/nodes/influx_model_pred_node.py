@@ -20,19 +20,7 @@ class InverseCONST:
 
 
 class InFluxModelSamplingPredNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { "model": ("MODEL",),
-                              "max_shift": ("FLOAT", {"default": 1.15, "min": 0.0, "max": 100.0, "step":0.01}),
-                              "base_shift": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 100.0, "step":0.01}),
-                              "width": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 8}),
-                              }}
 
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "patch"
-
-    CATEGORY = "fluxtapoz"
 
     def patch(self, model, max_shift, base_shift, width, height):
         m = model.clone()
@@ -86,20 +74,7 @@ class ReverseCONST:
 
 
 class OutFluxModelSamplingPredNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { "model": ("MODEL",),
-                              "max_shift": ("FLOAT", {"default": 1.15, "min": 0.0, "max": 100.0, "step":0.01}),
-                              "base_shift": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 100.0, "step":0.01}),
-                              "width": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 1024, "min": 16, "max": nodes.MAX_RESOLUTION, "step": 8}),
-                              "reverse_ode": ("BOOLEAN", {"default": False}),
-                              }}
 
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "patch"
-
-    CATEGORY = "fluxtapoz"
 
     def patch(self, model, max_shift, base_shift, width, height, reverse_ode=False):
         m = model.clone()

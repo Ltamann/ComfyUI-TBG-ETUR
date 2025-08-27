@@ -3,15 +3,6 @@ from ..flux.model import inject_flux
 
 
 class ApplyRefFluxNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "model": ("MODEL",),
-        }}
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "apply"
-
-    CATEGORY = "fluxtapoz"
 
     def apply(self, model):
         # if hasattr(model.model.diffusion_model, 'is_ref') and model.model.diffusion_model.is_ref:
@@ -22,20 +13,7 @@ class ApplyRefFluxNode:
 
 
 class ConfigureRefFluxNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "model": ("MODEL",),
-            "latent": ("LATENT",),
-            "start_percent": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
-            "end_percent": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0, "step": 0.01}),
-            "strength": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.001}),
-            "sigmas": ("SIGMAS",)
-        }}
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "apply"
 
-    CATEGORY = "fluxtapoz"
 
     def apply(self, 
               model, 

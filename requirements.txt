@@ -1,3 +1,4 @@
+# For TBG 
 opencv-python
 matplotlib
 diffusers
@@ -7,4 +8,14 @@ color-matcher
 grog
 opencv-contrib-python
 color-matcher
+# For Janus
 git+https://github.com/deepseek-ai/Janus.git
+
+# For Qwen 2.5 VL:
+pillow
+huggingface_hub
+accelerate
+qwen-vl-utils
+bitsandbytes
+optimum
+git+https://github.com/huggingface/transformers

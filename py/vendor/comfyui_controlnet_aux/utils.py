@@ -10,7 +10,6 @@ import cv2
 import numpy as np
 import torch
 import yaml
-from .log import log
 
 here = Path(__file__).parent.resolve()
 
@@ -25,7 +24,7 @@ if os.path.exists(config_path):
     ORT_PROVIDERS = config["EP_list"]
 
     if USE_SYMLINKS is None or type(USE_SYMLINKS) != bool:
-        log.error("USE_SYMLINKS must be a boolean. Using False by default.")
+
         USE_SYMLINKS = False
 
     if TEMP_DIR is None:
@@ -34,14 +33,14 @@ if os.path.exists(config_path):
         try:
             os.makedirs(TEMP_DIR)
         except:
-            log.error("Failed to create custom temp directory. Using default.")
+
             TEMP_DIR = tempfile.gettempdir()
 
     if not os.path.isdir(annotator_ckpts_path):
         try:
             os.makedirs(annotator_ckpts_path)
         except:
-            log.error("Failed to create config ckpts directory. Using default.")
+
             annotator_ckpts_path = str(Path(here, "./ckpts"))
 else:
     annotator_ckpts_path = str(Path(here, "./ckpts"))
@@ -54,9 +53,6 @@ os.environ['AUX_TEMP_DIR'] = os.getenv('AUX_TEMP_DIR', str(TEMP_DIR))
 os.environ['AUX_USE_SYMLINKS'] = os.getenv('AUX_USE_SYMLINKS', str(USE_SYMLINKS))
 os.environ['AUX_ORT_PROVIDERS'] = os.getenv('AUX_ORT_PROVIDERS', str(",".join(ORT_PROVIDERS)))
 
-log.info(f"Using ckpts path: {annotator_ckpts_path}")
-log.info(f"Using symlinks: {USE_SYMLINKS}")
-log.info(f"Using ort providers: {ORT_PROVIDERS}")
 
 # Sync with theoritical limit from Comfy base
 # https://github.com/comfyanonymous/ComfyUI/blob/eecd69b53a896343775bcb02a4f8349e7442ffd1/nodes.py#L45
@@ -182,13 +178,7 @@ def pixel_perfect_resolution(
     else:
         estimation = max(k0, k1) * float(min(raw_H, raw_W))
 
-    log.debug(f"Pixel Perfect Computation:")
-    log.debug(f"resize_mode = {resize_mode}")
-    log.debug(f"raw_H = {raw_H}")
-    log.debug(f"raw_W = {raw_W}")
-    log.debug(f"target_H = {target_H}")
-    log.debug(f"target_W = {target_W}")
-    log.debug(f"estimation = {estimation}")
+
 
     return int(np.round(estimation))
 

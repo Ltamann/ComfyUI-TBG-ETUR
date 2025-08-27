@@ -3,14 +3,6 @@ from ..utils import common_annotator_call, define_preprocessor_inputs, INPUT
 
 
 class SAM_Preprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(resolution=INPUT.RESOLUTION())
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "execute"
-
-    CATEGORY = "ControlNet Preprocessors/others"
 
     def execute(self, image, resolution=512, **kwargs):
         from custom_controlnet_aux.sam import SamDetector
@@ -20,9 +12,3 @@ class SAM_Preprocessor:
         del mobile_sam
         return (out, )
 
-NODE_CLASS_MAPPINGS = {
-    "SAMPreprocessor": SAM_Preprocessor
-}
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "SAMPreprocessor": "SAM Segmentor"
-}

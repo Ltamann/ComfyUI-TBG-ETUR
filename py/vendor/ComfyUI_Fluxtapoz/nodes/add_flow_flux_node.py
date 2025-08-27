@@ -1,14 +1,4 @@
 class AddFluxFlowNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { "model": ("MODEL",),
-                              "flow": ("FLOW",),
-                              }}
-
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "patch"
-
-    CATEGORY = "fluxtapoz"
 
     def patch(self, model, flow):
         m = model.clone()

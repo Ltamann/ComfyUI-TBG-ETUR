@@ -23,20 +23,6 @@ class FlowEditGuider(CFGGuider):
 
 
 class FlowEditGuiderNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required":
-                    {
-                        "model": ("MODEL",),
-                        "source_cond": ("CONDITIONING", ),
-                        "target_cond": ("CONDITIONING", ),
-                     }
-                }
-
-    RETURN_TYPES = ("GUIDER",)
-
-    FUNCTION = "get_guider"
-    CATEGORY = "fluxtapoz"
 
     def get_guider(self, model, source_cond, target_cond):
         guider = FlowEditGuider(model)
@@ -48,24 +34,6 @@ class FlowEditGuiderNode:
 
 
 class FlowEditCFGGuiderNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required":
-                    {
-                        "model": ("MODEL",),
-                        "source_pos": ("CONDITIONING", ),
-                        "source_neg": ("CONDITIONING", ),
-                        "target_pos": ("CONDITIONING", ),
-                        "target_neg": ("CONDITIONING", ),
-                        "source_cfg": ("FLOAT", {"default": 3.5, "min": 0, "max": 0xffffffffffffffff, "step": 0.01 }),
-                        "target_cfg": ("FLOAT", {"default": 13.5, "min": 0, "max": 0xffffffffffffffff, "step": 0.01 }),
-                     }
-                }
-
-    RETURN_TYPES = ("GUIDER",)
-
-    FUNCTION = "get_guider"
-    CATEGORY = "fluxtapoz"
 
     def get_guider(self, model, source_pos, source_neg, target_pos, target_neg, source_cfg, target_cfg):
         guider = FlowEditGuider(model)
@@ -126,18 +94,6 @@ def get_flowedit_sample(skip_steps, refine_steps, seed):
 
 
 class FlowEditSamplerNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "skip_steps": ("INT", {"default": 4, "min": 0, "max": 0xffffffffffffffff }),
-            "refine_steps": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff }),
-            "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff }),
-        }, "optional": {
-        }}
-    RETURN_TYPES = ("SAMPLER",)
-    FUNCTION = "build"
-
-    CATEGORY = "fluxtapoz"
 
     def build(self, skip_steps, refine_steps, seed):
         sampler = KSAMPLER(get_flowedit_sample(skip_steps, refine_steps, seed))

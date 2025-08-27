@@ -141,17 +141,7 @@ def get_sample_reverse(latent_image, eta, start_time, end_time, eta_trend):
 
 
 class FluxForwardODESamplerNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "gamma": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 100.0, "step": 0.01}),
-        }, "optional": {
-            "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff }),
-        }}
-    RETURN_TYPES = ("SAMPLER",)
-    FUNCTION = "build"
 
-    CATEGORY = "fluxtapoz"
 
     def build(self, gamma, seed=0):
         sampler = KSAMPLER(get_sample_forward(gamma, seed))
@@ -160,21 +150,6 @@ class FluxForwardODESamplerNode:
 
 
 class FluxReverseODESamplerNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "model": ("MODEL",),
-            "latent_image": ("LATENT",),
-            "eta": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 100.0, "step": 0.01}),
-            "start_step": ("INT", {"default": 0, "min": 0, "max": 1000, "step": 1}),
-            "end_step": ("INT", {"default": 5, "min": 0, "max": 1000, "step": 1}),
-        }, "optional": {
-            "eta_trend": (['constant', 'linear_increase', 'linear_decrease'],)
-        }}
-    RETURN_TYPES = ("SAMPLER",)
-    FUNCTION = "build"
-
-    CATEGORY = "fluxtapoz"
 
     def build(self, model, latent_image, eta, start_step, end_step, eta_trend='constant', sde=True):
         process_latent_in = model.get_model_object("process_latent_in")

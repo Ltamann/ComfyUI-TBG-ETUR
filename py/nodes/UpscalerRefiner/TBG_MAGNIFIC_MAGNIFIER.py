@@ -30,8 +30,8 @@ class TBG_magnific_ETUR:
     NAME = "TBG Magnific Magnifier PRO"
     HELP_LINK = "https://www.patreon.com/c/TB_LAAR"
     OUTPUT_NODE = True
-    CATEGORY = get_category("Upscaling")
-    DESCRIPTION = 'An "IMAGE TO TILE" Node'
+    CATEGORY = "TBG/Magnific Magnifier Upscaler"
+    DESCRIPTION = 'An multistep upscaler and refiner Node'
     FUNCTION = "fn"
 
     # ────────────────────────── Static Tables ─────────────────────────── #
@@ -277,14 +277,15 @@ class TBG_magnific_ETUR:
 
         # Creative control variables for loop
         detail_daemon_active = True
-        detail_amount_add = kwargs["Add_Details"] # * 2
+        detail_amount_add = kwargs["Add_Details"]
+        eta = kwargs["Add_Details"] / 2
         detail_daemon_end = max(0.4, 0.2)
         Sigmas_creative_tail_active = True
         Sigmas_creative_tail_strength= kwargs["Add_Details"]
 
         Resharpener = kwargs["Resharpener"]
         kwargs['Color_Match_Str'] = 1 - kwargs["denoise"]
-
+        kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"]
         kwargs["Enrichment_Pipe"][0]["eta_starta"] = 0
         kwargs["Enrichment_Pipe"][0]["eta_end"] = 0.5
         kwargs["Enrichment_Pipe"][0]["resharpen_start"] = 0
@@ -314,7 +315,7 @@ class TBG_magnific_ETUR:
                     kwargs["Enrichment_Pipe"][0]["detail_amount"] = detail_amount_add
                     kwargs["Enrichment_Pipe"][0]["detail_daemon_end"] = detail_daemon_end
                     kwargs["Enrichment_Pipe"][0]["eta_active"] = True
-                    kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"] / 2 #cls.compute_eta(kwargs["Add_Details"], kwargs["denoise"])
+                    kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"] / 2#cls.compute_eta(kwargs["Add_Details"], kwargs["denoise"])
                 else:
                     kwargs["Enrichment_Pipe"][0]["detail_daemon_active"] = False
                     kwargs["Enrichment_Pipe"][0]["Sigmas_creative_tail_active"] = False
@@ -379,13 +380,13 @@ class TBG_magnific_ETUR:
 
                 # Set noise injection eta - add split step noise injection on high value
                 if kwargs["Add_Details"] != 0:
-                    kwargs["Enrichment_Pipe"][0]["Sigmas_creative_tail_active"] = False
+                    kwargs["Enrichment_Pipe"][0]["Sigmas_creative_tail_active"] = True
                     kwargs["Enrichment_Pipe"][0]["Sigmas_creative_tail_strength"] = Sigmas_creative_tail_strength / mi  # High sigma tail
-                    kwargs["Enrichment_Pipe"][0]["detail_daemon_active"] = False
+                    kwargs["Enrichment_Pipe"][0]["detail_daemon_active"] = True
                     kwargs["Enrichment_Pipe"][0]["detail_amount"] = detail_amount_add / mi
                     kwargs["Enrichment_Pipe"][0]["detail_daemon_end"] = detail_daemon_end
-                    kwargs["Enrichment_Pipe"][0]["eta_active"] = False
-                    kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"] / 2 #max(cls.compute_eta(kwargs["Add_Details"], kwargs["denoise"]) / mi, 0)
+                    kwargs["Enrichment_Pipe"][0]["eta_active"] = True
+                    kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"] / 2#max(cls.compute_eta(kwargs["Add_Details"], kwargs["denoise"]) / mi, 0)
 
                     if mi > 2:  # Step 3+4 without noise from here
                         kwargs["Enrichment_Pipe"][0]["eta_active"] = False
@@ -401,7 +402,7 @@ class TBG_magnific_ETUR:
 
 
                 if kwargs["Resharpener"] != 0:
-                    kwargs["Enrichment_Pipe"][0]["Resharpener_active"] = False
+                    kwargs["Enrichment_Pipe"][0]["Resharpener_active"] = True
                     kwargs["Enrichment_Pipe"][0]["Resharpener_strength"] =  Resharpener / mi
                     kwargs["Enrichment_Pipe"][0]["resharpen_end"]  = max(0.2, min(1.0, (1-kwargs["denoise"])))
                 else:
@@ -551,8 +552,3 @@ class TBG_magnific_ETUR:
             "upscale_segments_by": 1.5,
         })
         return Enrichment_Pipe
-
-
-
-
-

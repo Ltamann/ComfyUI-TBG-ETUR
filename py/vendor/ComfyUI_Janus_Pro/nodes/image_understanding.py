@@ -4,44 +4,6 @@ from PIL import Image
 
 
 class JanusImageUnderstanding:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "model": ("JANUS_MODEL",),
-                "processor": ("JANUS_PROCESSOR",),
-                "image": ("IMAGE",),
-                "question": ("STRING", {
-                    "multiline": True,
-                    "default": "Describe this image in detail."
-                }),
-                "seed": ("INT", {
-                    "default": 666666666666666,
-                    "min": 0,
-                    "max": 0xffffffffffffffff
-                }),
-                "temperature": ("FLOAT", {
-                    "default": 0.1,
-                    "min": 0.0,
-                    "max": 1.0
-                }),
-                "top_p": ("FLOAT", {
-                    "default": 0.95,
-                    "min": 0.0,
-                    "max": 1.0
-                }),
-                "max_new_tokens": ("INT", {
-                    "default": 512,
-                    "min": 1,
-                    "max": 2048
-                }),
-            },
-        }
-
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("text",)
-    FUNCTION = "analyze_image"
-    CATEGORY = "Janus-Pro"
 
     def analyze_image(self, model, processor, image, question, seed, temperature, top_p, max_new_tokens):
         try:

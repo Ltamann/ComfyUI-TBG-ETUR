@@ -5,20 +5,6 @@ from ..utils import common_annotator_call, define_preprocessor_inputs, INPUT
 
 
 class OpenPose_Preprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(
-            detect_hand=INPUT.COMBO(["enable", "disable"]),
-            detect_body=INPUT.COMBO(["enable", "disable"]),
-            detect_face=INPUT.COMBO(["enable", "disable"]),
-            resolution=INPUT.RESOLUTION(),
-            scale_stick_for_xinsr_cn=INPUT.COMBO(["disable", "enable"])
-        )
-        
-    RETURN_TYPES = ("IMAGE", "POSE_KEYPOINT")
-    FUNCTION = "estimate_pose"
-
-    CATEGORY = "ControlNet Preprocessors/Faces and Poses Estimators"
 
     def estimate_pose(self, image, detect_hand="enable", detect_body="enable", detect_face="enable", scale_stick_for_xinsr_cn="disable", resolution=512, **kwargs):
         from custom_controlnet_aux.open_pose import OpenposeDetector
@@ -41,10 +27,3 @@ class OpenPose_Preprocessor:
             'ui': { "openpose_json": [json.dumps(self.openpose_dicts, indent=4)] },
             "result": (out, self.openpose_dicts)
         }
-
-NODE_CLASS_MAPPINGS = {
-    "OpenposePreprocessor": OpenPose_Preprocessor,
-}
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "OpenposePreprocessor": "OpenPose Pose",
-}

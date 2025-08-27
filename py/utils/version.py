@@ -3,5 +3,5 @@
 # from ComfyUI/custom_nodes/TBG_upscaler/py/vendor/ComfyUI_MaraScott_Nodes check licence here
 ###
 
-VERSION = "alfa 1.06v2"
+VERSION = "beta 1.07v1"
 

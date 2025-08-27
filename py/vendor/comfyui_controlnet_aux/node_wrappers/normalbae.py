@@ -3,14 +3,6 @@ from ..utils import common_annotator_call, define_preprocessor_inputs, INPUT
 
 
 class BAE_Normal_Map_Preprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(resolution=INPUT.RESOLUTION())
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "execute"
-
-    CATEGORY = "ControlNet Preprocessors/Normal and Depth Estimators"
 
     def execute(self, image, resolution=512, **kwargs):
         from custom_controlnet_aux.normalbae import NormalBaeDetector
@@ -20,9 +12,3 @@ class BAE_Normal_Map_Preprocessor:
         del model
         return (out,)
 
-NODE_CLASS_MAPPINGS = {
-    "BAE-NormalMapPreprocessor": BAE_Normal_Map_Preprocessor
-}
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "BAE-NormalMapPreprocessor": "BAE Normal Map"
-}

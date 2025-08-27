@@ -3,50 +3,6 @@ import torch
 
 
 class JanusImageGeneration:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "model": ("JANUS_MODEL",),
-                "processor": ("JANUS_PROCESSOR",),
-                "prompt": ("STRING", {
-                    "multiline": True,
-                    "default": "A beautiful photo of"
-                }),
-                "seed": ("INT", {
-                    "default": 666666666666666,
-                    "min": 0,
-                    "max": 0xffffffffffffffff
-                }),
-                "batch_size": ("INT", {
-                    "default": 1,
-                    "min": 1,
-                    "max": 16
-                }),
-                "cfg_weight": ("FLOAT", {
-                    "default": 5.0,
-                    "min": 1.0,
-                    "max": 10.0,
-                    "step": 0.5
-                }),
-                "temperature": ("FLOAT", {
-                    "default": 1.0,
-                    "min": 0.1,
-                    "max": 2.0,
-                    "step": 0.1
-                }),
-                "top_p": ("FLOAT", {
-                    "default": 0.95,
-                    "min": 0.0,
-                    "max": 1.0
-                }),
-            },
-        }
-    
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("images",)
-    FUNCTION = "generate_images"
-    CATEGORY = "Janus-Pro"
 
     def generate_images(self, model, processor, prompt, seed, batch_size=1, temperature=1.0, cfg_weight=5.0, top_p=0.95):
         try:

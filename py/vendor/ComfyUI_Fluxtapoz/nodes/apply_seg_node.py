@@ -34,24 +34,6 @@ def gaussian_blur_2d(img, kernel_size, sigma):
 
 
 class SEGAttentionNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "model": ("MODEL",),
-                "scale": ("FLOAT", {"default": 3.0, "min": 0.0, "max": 100.0, "step": 0.01, "round": 0.01}),
-                "blur": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 999.0, "step": 0.01, "round": 0.01}),
-                "inf_blur": ("BOOLEAN", {"default": False} ),
-            },
-            "optional": {
-                "attn_override": ("ATTN_OVERRIDE",)
-            }
-        }
-
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "patch"
-
-    CATEGORY = "fluxtapoz/attn"
 
     def patch(self, model, scale, blur, inf_blur, attn_override=DEFAULT_SEG_FLUX):
         m = model.clone()

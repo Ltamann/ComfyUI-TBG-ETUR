@@ -41,23 +41,6 @@ def expand_mask(mask, expand, tapered_corners):
     return torch.stack(out, dim=0)
 
 class Mesh_Graphormer_Depth_Map_Preprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(
-            mask_bbox_padding=("INT", {"default": 30, "min": 0, "max": 100}),
-            resolution=INPUT.RESOLUTION(),
-            mask_type=INPUT.COMBO(["based_on_depth", "tight_bboxes", "original"]),
-            mask_expand=INPUT.INT(default=5, min=-MAX_RESOLUTION, max=MAX_RESOLUTION),
-            rand_seed=INPUT.INT(default=88, min=0, max=0xffffffffffffffff),
-            detect_thr=INPUT.FLOAT(default=0.6, min=0.1),
-            presence_thr=INPUT.FLOAT(default=0.6, min=0.1)
-        )
-
-    RETURN_TYPES = ("IMAGE", "MASK")
-    RETURN_NAMES = ("IMAGE", "INPAINTING_MASK")
-    FUNCTION = "execute"
-
-    CATEGORY = "ControlNet Preprocessors/Normal and Depth Estimators"
 
     def execute(self, image, mask_bbox_padding=30, mask_type="based_on_depth", mask_expand=5, resolution=512, rand_seed=88, detect_thr=0.6, presence_thr=0.6, **kwargs):
         install_deps()
@@ -94,29 +77,6 @@ def normalize_size_base_64(w, h):
     return short_side - remainder + (64 if remainder > 0 else 0)
 
 class Mesh_Graphormer_With_ImpactDetector_Depth_Map_Preprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        types = define_preprocessor_inputs(
-            # Impact pack
-            bbox_threshold=INPUT.FLOAT(default=0.5, min=0.1),
-            bbox_dilation=INPUT.INT(default=10, min=-512, max=512),
-            bbox_crop_factor=INPUT.FLOAT(default=3.0, min=1.0, max=10.0),
-            drop_size=INPUT.INT(default=10, min=1, max=MAX_RESOLUTION),
-            # Mesh Graphormer
-            mask_bbox_padding=INPUT.INT(default=30, min=0, max=100),
-            mask_type=INPUT.COMBO(["based_on_depth", "tight_bboxes", "original"]),
-            mask_expand=INPUT.INT(default=5, min=-MAX_RESOLUTION, max=MAX_RESOLUTION),
-            rand_seed=INPUT.INT(default=88, min=0, max=0xffffffffffffffff),
-            resolution=INPUT.RESOLUTION()
-        )
-        types["required"]["bbox_detector"] = ("BBOX_DETECTOR", )
-        return types
-     
-    RETURN_TYPES = ("IMAGE", "MASK")
-    RETURN_NAMES = ("IMAGE", "INPAINTING_MASK")
-    FUNCTION = "execute"
-
-    CATEGORY = "ControlNet Preprocessors/Normal and Depth Estimators"
 
     def execute(self, image, bbox_detector, bbox_threshold=0.5, bbox_dilation=10, bbox_crop_factor=3.0, drop_size=10, resolution=512, **mesh_graphormer_kwargs):
         install_deps()
@@ -148,11 +108,3 @@ class Mesh_Graphormer_With_ImpactDetector_Depth_Map_Preprocessor:
             
         return (torch.cat(depth_maps), torch.cat(masks))
     
-NODE_CLASS_MAPPINGS = {
-    "MeshGraphormer-DepthMapPreprocessor": Mesh_Graphormer_Depth_Map_Preprocessor,
-    "MeshGraphormer+ImpactDetector-DepthMapPreprocessor": Mesh_Graphormer_With_ImpactDetector_Depth_Map_Preprocessor
-}
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "MeshGraphormer-DepthMapPreprocessor": "MeshGraphormer Hand Refiner",
-    "MeshGraphormer+ImpactDetector-DepthMapPreprocessor": "MeshGraphormer Hand Refiner With External Detector"
-}

@@ -8,19 +8,6 @@ def is_integer(string):
     
 
 class FluxAttnOverrideNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "double_blocks": ("STRING", { "multiline": True }),
-                "single_blocks": ("STRING", { "multiline": True }),
-            }
-        }
-
-    RETURN_TYPES = ("ATTN_OVERRIDE", "DOUBLE_LAYERS", "SINGLE_LAYERS")
-    FUNCTION = "build"
-
-    CATEGORY = "fluxtapoz/attn"
 
     def build(self, double_blocks, single_blocks):
         
@@ -46,34 +33,13 @@ class FluxAttnOverrideNode:
     
 
 class RFSingleBlocksOverrideNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        layers = {}
-        for i in range(38):
-            layers[f'{i}'] = ("BOOLEAN", { "default": i > 19 })
-        return {"required": layers}
-
-    RETURN_TYPES = ("SINGLE_LAYERS",)
-    FUNCTION = "build"
-
-    CATEGORY = "fluxtapoz"
 
     def build(self, *args, **kwargs):
         return (kwargs,)
 
 
 class RFDoubleBlocksOverrideNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        layers = {}
-        for i in range(19):
-            layers[f'{i}'] = ("BOOLEAN", { "default": False })
-        return {"required": layers}
 
-    RETURN_TYPES = ("DOUBLE_LAYERS",)
-    FUNCTION = "build"
-
-    CATEGORY = "fluxtapoz"
 
     def build(self, *args, **kwargs):
         return (kwargs,)

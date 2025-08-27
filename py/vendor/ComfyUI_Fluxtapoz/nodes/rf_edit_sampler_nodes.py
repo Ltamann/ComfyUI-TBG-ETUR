@@ -136,20 +136,7 @@ def get_sample_reverse(attn_bank, inject_steps, single_layers, double_layers, or
 
 
 class FlowEditForwardSamplerNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "save_steps": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff }),
-        },           
-            "optional": {
-                "single_layers": ("SINGLE_LAYERS",),
-                "double_layers": ("DOUBLE_LAYERS",),
-                "order": (["second", "fireflow",],),
-        }}
-    RETURN_TYPES = ("SAMPLER","ATTN_INJ")
-    FUNCTION = "build"
 
-    CATEGORY = "fluxtapoz"
 
     def build(self, save_steps, single_layers=DEFAULT_SINGLE_LAYERS, double_layers=DEFAULT_DOUBLE_LAYERS, order="second"):
         attn_bank = AttentionBank()
@@ -159,21 +146,7 @@ class FlowEditForwardSamplerNode:
 
 
 class FlowEditReverseSamplerNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "attn_inj": ("ATTN_INJ",),
-            "inject_steps": ("INT", {"default": 0, "min": 0, "max": 1000, "step": 1}),
-        },           
-            "optional": {
-                "single_layers": ("SINGLE_LAYERS",),
-                "double_layers": ("DOUBLE_LAYERS",),
-                "order": (["second", "fireflow",],),
-        }}
-    RETURN_TYPES = ("SAMPLER",)
-    FUNCTION = "build"
 
-    CATEGORY = "fluxtapoz"
 
     def build(self, attn_inj, inject_steps, single_layers=DEFAULT_SINGLE_LAYERS, double_layers=DEFAULT_DOUBLE_LAYERS, order="second"):
         sampler = KSAMPLER(get_sample_reverse(attn_inj, inject_steps, single_layers, double_layers, order))
@@ -181,18 +154,7 @@ class FlowEditReverseSamplerNode:
 
 
 class PrepareAttnBankNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-            "latent": ("LATENT",),
-            "attn_inj": ("ATTN_INJ",),
-        }
-        }
 
-    RETURN_TYPES = ("LATENT", "ATTN_INJ")
-    FUNCTION = "prepare"
-
-    CATEGORY = "fluxtapoz"
 
     def prepare(self, latent, attn_inj):
         # Hack to force order of operations in ComfyUI graph

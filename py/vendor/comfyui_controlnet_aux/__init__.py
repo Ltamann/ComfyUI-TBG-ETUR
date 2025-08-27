@@ -4,9 +4,9 @@ import sys
 import traceback
 from pathlib import Path
 
-from .hint_image_enchance import NODE_CLASS_MAPPINGS as HIE_NODE_CLASS_MAPPINGS
-from .hint_image_enchance import NODE_DISPLAY_NAME_MAPPINGS as HIE_NODE_DISPLAY_NAME_MAPPINGS
-from .log import log, blue_text, cyan_text, get_summary, get_label
+#from .hint_image_enchance import NODE_CLASS_MAPPINGS as HIE_NODE_CLASS_MAPPINGS
+#from .hint_image_enchance import NODE_DISPLAY_NAME_MAPPINGS as HIE_NODE_DISPLAY_NAME_MAPPINGS
+#from .log import log, blue_text, cyan_text, get_summary, get_label
 from .utils import here, define_preprocessor_inputs, INPUT
 
 #Ref: https://github.com/comfyanonymous/ComfyUI/blob/76d53c4622fc06372975ed2a43ad345935b8a551/nodes.py#L17
@@ -37,7 +37,7 @@ def load_nodes():
             if hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS"):
                 node_display_name_mappings.update(getattr(module, "NODE_DISPLAY_NAME_MAPPINGS"))
 
-            log.debug(f"Imported {module_name} nodes")
+            #log.debug(f"Imported {module_name} nodes")
 
         except AttributeError:
             pass  # wip nodes
@@ -52,21 +52,15 @@ def load_nodes():
     if len(shorted_errors) > 0:
         full_err_log = '\n\n'.join(full_error_messages)
         print(f"\n\nFull error log from comfyui_controlnet_aux: \n{full_err_log}\n\n")
-        log.info(
-            f"Some nodes failed to load:\n\t"
-            + "\n\t".join(shorted_errors)
-            + "\n\n"
-            + "Check that you properly installed the dependencies.\n"
-            + "If you think this is a bug, please report it on the github page (https://github.com/Fannovel16/comfyui_controlnet_aux/issues)"
-        )
+
     return node_class_mappings, node_display_name_mappings
 
 AUX_NODE_MAPPINGS, AUX_DISPLAY_NAME_MAPPINGS = load_nodes()
 
 #For nodes not mapping image to image or has special requirements
-AIO_NOT_SUPPORTED = ["InpaintPreprocessor", "MeshGraphormer+ImpactDetector-DepthMapPreprocessor", "DiffusionEdge_Preprocessor"]
-AIO_NOT_SUPPORTED += ["SavePoseKpsAsJsonFile", "FacialPartColoringFromPoseKps", "UpperBodyTrackingFromPoseKps", "RenderPeopleKps", "RenderAnimalKps"]
-AIO_NOT_SUPPORTED += ["Unimatch_OptFlowPreprocessor", "MaskOptFlow"]
+AIO_NOT_SUPPORTED = []
+AIO_NOT_SUPPORTED += []
+AIO_NOT_SUPPORTED += []
 
 def preprocessor_options():
     auxs = list(AUX_NODE_MAPPINGS.keys())
@@ -80,17 +74,6 @@ def preprocessor_options():
 PREPROCESSOR_OPTIONS = preprocessor_options()
 
 class AIO_Preprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(
-            preprocessor=INPUT.COMBO(PREPROCESSOR_OPTIONS, default="none"),
-            resolution=INPUT.RESOLUTION()
-        )
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "execute"
-
-    CATEGORY = "ControlNet Preprocessors"
 
     def execute(self, preprocessor, image, resolution=512):
         if preprocessor == "none":
@@ -128,15 +111,7 @@ class AIO_Preprocessor:
             return getattr(aux_class(), aux_class.FUNCTION)(**params)
 
 class ControlNetAuxSimpleAddText:
-    @classmethod
-    def INPUT_TYPES(s):
-        return dict(
-            required=dict(image=INPUT.IMAGE(), text=INPUT.STRING())
-        )
-    
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "execute"
-    CATEGORY = "ControlNet Preprocessors"
+
     def execute(self, image, text):
         from PIL import Image, ImageDraw, ImageFont
         import numpy as np
@@ -148,13 +123,6 @@ class ControlNetAuxSimpleAddText:
         return (torch.from_numpy(np.array(img)).unsqueeze(0) / 255.,)
 
 class ExecuteAllControlNetPreprocessors:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(resolution=INPUT.RESOLUTION())
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "execute"
-
-    CATEGORY = "ControlNet Preprocessors"
 
     def execute(self, image, resolution=512):
         try:
@@ -186,37 +154,6 @@ class ExecuteAllControlNetPreprocessors:
         }
 
 class ControlNetPreprocessorSelector:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "preprocessor": (PREPROCESSOR_OPTIONS,),
-            }
-        }
-
-    RETURN_TYPES = (PREPROCESSOR_OPTIONS,)
-    RETURN_NAMES = ("preprocessor",)
-    FUNCTION = "get_preprocessor"
-
-    CATEGORY = "ControlNet Preprocessors"
 
     def get_preprocessor(self, preprocessor: str):
         return (preprocessor,)
-
-
-NODE_CLASS_MAPPINGS = {
-    **AUX_NODE_MAPPINGS,
-    "AIO_Preprocessor": AIO_Preprocessor,
-    "ControlNetPreprocessorSelector": ControlNetPreprocessorSelector,
-    **HIE_NODE_CLASS_MAPPINGS,
-    "ExecuteAllControlNetPreprocessors": ExecuteAllControlNetPreprocessors,
-    "ControlNetAuxSimpleAddText": ControlNetAuxSimpleAddText
-}
-
-NODE_DISPLAY_NAME_MAPPINGS = {
-    **AUX_DISPLAY_NAME_MAPPINGS,
-    "AIO_Preprocessor": "AIO Aux Preprocessor",
-    "ControlNetPreprocessorSelector": "Preprocessor Selector",
-    **HIE_NODE_DISPLAY_NAME_MAPPINGS,
-    "ExecuteAllControlNetPreprocessors": "Execute All ControlNet Preprocessors"
-}

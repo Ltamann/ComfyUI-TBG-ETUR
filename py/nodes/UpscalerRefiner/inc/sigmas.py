@@ -15,7 +15,7 @@ import comfy
 import nodes
 
 # Relative imports - local module
-from ..inc.prompt import Node as NodePrompt
+from ..inc.tileprompter_helpers import Node as NodePrompt
 from ....utils.log import log, COLORS
 
 import math
@@ -97,10 +97,12 @@ def inject_noise( samples, noise_std):
 def set_tiles_to_process(tiles_to_process_active, tiles, tiles_to_process=''):
 
     max_tiles = len(tiles)
-    max = max_tiles if max_tiles > 0 else NodePrompt.INPUT_QTY
+
+    max = max_tiles if max_tiles > 0 else 500
     
-    def is_valid_index(index, max = NodePrompt.INPUT_QTY):
+    def is_valid_index(index, max = 500):
         return 1 <= index <= max
+
     def to_computer_index(human_index):
         return human_index - 1
 

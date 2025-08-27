@@ -19,15 +19,6 @@ def sample_inverse(model, x, sigmas, extra_args=None, callback=None, disable=Non
 
 
 class FluxInverseSamplerNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": { 
-        }, "optional": {
-        }}
-    RETURN_TYPES = ("SAMPLER",)
-    FUNCTION = "build"
-
-    CATEGORY = "fluxtapoz"
 
     def build(self):
 

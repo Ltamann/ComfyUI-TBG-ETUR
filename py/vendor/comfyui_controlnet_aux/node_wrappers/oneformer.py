@@ -3,14 +3,6 @@ from ..utils import common_annotator_call, define_preprocessor_inputs, INPUT
 
 
 class OneFormer_COCO_SemSegPreprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(resolution=INPUT.RESOLUTION())
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "semantic_segmentate"
-
-    CATEGORY = "ControlNet Preprocessors/Semantic Segmentation"
 
     def semantic_segmentate(self, image, resolution=512):
         from custom_controlnet_aux.oneformer import OneformerSegmentor
@@ -22,14 +14,6 @@ class OneFormer_COCO_SemSegPreprocessor:
         return (out,)
 
 class OneFormer_ADE20K_SemSegPreprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(resolution=INPUT.RESOLUTION())
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "semantic_segmentate"
-
-    CATEGORY = "ControlNet Preprocessors/Semantic Segmentation"
 
     def semantic_segmentate(self, image, resolution=512):
         from custom_controlnet_aux.oneformer import OneformerSegmentor
@@ -40,12 +24,3 @@ class OneFormer_ADE20K_SemSegPreprocessor:
         del model
         return (out,)
 
-NODE_CLASS_MAPPINGS = {
-    "OneFormer-COCO-SemSegPreprocessor": OneFormer_COCO_SemSegPreprocessor,
-    "OneFormer-ADE20K-SemSegPreprocessor": OneFormer_ADE20K_SemSegPreprocessor
-}
-
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "OneFormer-COCO-SemSegPreprocessor": "OneFormer COCO Segmentor",
-    "OneFormer-ADE20K-SemSegPreprocessor": "OneFormer ADE20K Segmentor"
-}

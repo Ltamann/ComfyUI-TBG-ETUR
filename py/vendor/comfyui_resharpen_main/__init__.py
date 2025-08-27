@@ -40,10 +40,10 @@ if comfyui_version_is_at_least("0.3.48"):
 
     @wraps(original_validate)
     async def hijack_validate(prompt_id, prompt: dict, partial_execution_list: Optional[list[str]] = None):
-        print("Inside hijack_validate", flush=True)
+        #print("Inside hijack_validate", flush=True)
         try:
             if not find_node(prompt):
-                print("TBG_DetailEnhancer node not found, disabling resharpen", flush=True)
+                #print("TBG_DetailEnhancer node not found, disabling resharpen", flush=True)
                 disable_resharpen()
             return await original_validate(prompt_id, prompt, partial_execution_list)
         except Exception as e:

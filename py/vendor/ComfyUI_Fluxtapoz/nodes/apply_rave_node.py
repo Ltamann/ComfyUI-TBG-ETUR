@@ -9,23 +9,6 @@ default_attn = {
 
 
 class ApplyFluxRaveAttentionNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required":
-                {
-                    "model": ("MODEL",),
-                    "grid_size": ("INT", {"default": 3, "min": 1, "max": 10}),
-                    "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-                },
-                "optional": {
-                    "attn_override": ("ATTN_OVERRIDE",)
-                }
-                }
-
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "apply"
-
-    CATEGORY = "fluxtapoz"
 
     def apply(self, model, grid_size, seed, attn_override=default_attn):
         model = model.clone()

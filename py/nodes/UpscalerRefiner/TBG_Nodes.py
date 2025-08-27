@@ -15,9 +15,9 @@ import comfy.samplers
 import comfy.sd
 import comfy.supported_models
 import folder_paths
+from math import gcd
 from ..UpscalerRefiner.TBG_Refiner import TBG_Refiner_v1
 from ..UpscalerRefiner.TBG_Tiler import TBG_Upscaler_v1
-from ...vendor.ComfyUI_MaraScott_Nodes.py.utils.constants import get_category
 from ....TBG_presets import PRESETS_CE, get_presets
 
 
@@ -59,7 +59,16 @@ class TBG_Tiled_Upscaler_CE():
     LLM = [
         "NONE",
         "Janus-Pro-1B",
-        "Janus-Pro-7B"
+        "Janus-Pro-7B",
+        "Qwen2.5-VL-3B-Instruct",
+        "Qwen2.5-VL-7B-Instruct",
+        "SkyCaptioner-V1",
+        "Qwen2.5-VL-3B-Instruct_8bit",
+        "Qwen2.5-VL-7B-Instruct_8bit",
+        "SkyCaptioner-V1_8bit",
+        "Qwen2.5-VL-3B-Instruct_4bit",
+        "Qwen2.5-VL-7B-Instruct_4bit",
+        "SkyCaptioner-V1_4bit"
     ]
 
     @classmethod
@@ -74,8 +83,8 @@ class TBG_Tiled_Upscaler_CE():
                 "PRO_Tile_Fusion_shift_top_left": ("INT",{"label": "PRO_Tile_Fusion_shift_top_left", "default": 0, "min": -1024,"max": 1024,"step": 8}),
                 "PRO_Tile_Fusion_border_margin": ("INT", {"label": "shift_mask", "default": 0, "min": -1024, "max": 1024,"step": 8}),
                 "PRO_Fusion_Space_Denoise": ("FLOAT",{"label": "inpaint_max", "default": 0.00, "min": -10, "max": 10, "step": 0.01, "round": 0.01}),
-                "tile_size_w": ("INT",{"label": "Tile Size width", "default": 1024, "min": 320, "max": 8192, "step": 8}),
-                "max_upscale_size_segment": ("INT", {"label": "max_upscale_size_segment","default": 2048, "min": 256, "max": 4096, "step": 8}),
+                "tile_size_w": ("INT",{"label": "Tile Size width", "default": 1024, "min": 320, "max": 8192, "step": 16}),
+                "max_upscale_size_segment": ("INT", {"label": "max_upscale_size_segment","default": 2048, "min": 256, "max": 4096, "step": 16}),
                 "Optimize_Tile_Size": (self.ROUND_METHODS, {"label": "Optimize_Tile_Size", "default": "Disabled"}),
                 "upscaler": (self.UPSCALE_TYPE, {"label": "Upscale Type", "default": "NONE"}),
                 "PRO_api_token": ("STRING", {"default": ""}),
@@ -87,14 +96,14 @@ class TBG_Tiled_Upscaler_CE():
                 "image": ("IMAGE", {"label": "Image"}),
                 "presets": (self.PRESETS, {"label": "presets", "default": "NONE"}),
                 "Fragmentation": ("FLOAT", {"label": "inpaint_max", "default": 0, "min": -5, "max": 5, "step": 0.01, "round": 0.01}),
-                "tile_size": ("INT",{"label": "Tile Size height", "default": 1024, "min": 320, "max": 8192, "step": 8}),
+                "tile_size": ("INT",{"label": "Tile Size height", "default": 1024, "min": 320, "max": 8192, "step": 16}),
                 "upscaler": (self.UPSCALE_TYPE, {"label": "Upscale Type", "default": "NONE"}),
                 "upscale_model": (folder_paths.get_filename_list("upscale_models"), {"label": "Upscale Model"}),
                 "upscale_by": ("FLOAT", {"default": 2, "min": 0.05, "max": 4, "step": 0.05, "round": 0.01}),
                 "upscaler_method": (self.UPSCALE_METHODS, {"label": "Upscale Method", "default": 'lanczos'}),
                 "LLMPrompt": (self.LLM, {"label": "Upscale Type", "default": "NONE"}),
                 "LLMPrompt_Prompt": ("STRING", {"multiline": True, "label": "LLMPrompt Prompt",
-                                                "default": "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Include a comprehensive list of all visible objects with precise and vivid descriptions. Write the result as a Flux image generation prompt, without any introductory."}),
+                                                "default": "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic."}),
 
 
                 "compositing_mask_blur": ("INT", {"label": "Manual Feather Mask for Tile Overlapping", "default": 32, "min": 0, "max": 1024, "step": 8}),
@@ -130,8 +139,9 @@ class TBG_Tiled_Upscaler_CE():
     )
 
     OUTPUT_NODE = True
-    CATEGORY = get_category("Upscaling")
-    DESCRIPTION = "An \"IMAGE TO TILE \" Node"
+    CATEGORY = "TBG/Enhanced Upscaler CE"
+    HELP_LINK = "https://www.patreon.com/c/TB_LAAR"
+    DESCRIPTION = 'Upscaler and Tiler to split you images into tiles for TBG ETUR'
     FUNCTION = "fn"
 
     @classmethod
@@ -175,12 +185,11 @@ class TBG_Refiner_CE():
     MODEL_TYPE_SIZES = {
         'FLUX1': 1024,
         'FLUX1 Kontext': 1024,
-        'HiDream in next version4': 1024,
-        'SD1 not tested': 512,
-        'SDXL': 1024,
-        'SD3 not tested': 1024,
-        'SVD not tested': 1024,
+        'Qwen Image': 1328,
+        'Qwen Image Edit': 1328,
+        'Others': 1024,
     }
+
 
     MODEL_TYPES = list(MODEL_TYPE_SIZES.keys())
 
@@ -296,8 +305,10 @@ class TBG_Refiner_CE():
     OUTPUT_IS_LIST = (False,) * len(RETURN_TYPES)
 
     OUTPUT_NODE = True
-    CATEGORY = get_category("Refiner")
-    DESCRIPTION = "A \"Tile Refiner\" Node"
+    CATEGORY = "TBG/Enhanced Upscaler CE"
+    NAME = "TBG ETUR Refiner"
+    HELP_LINK = "https://www.patreon.com/c/TB_LAAR"
+    DESCRIPTION = 'Sampler and Refiner for TBG ETUR'
     FUNCTION = "fn"
 
     @classmethod
@@ -318,3 +329,138 @@ class TBG_Refiner_CE():
 
 
         return TBG_Refiner_v1.fn(**kwargs)
+
+
+
+from typing import Tuple, List
+from nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
+
+# Preferred resolutions for Flux Kontext (from your list)
+KONTEXT_RESOLUTIONS: List[Tuple[int, int]] = [
+    (672, 1568),
+    (688, 1504),
+    (720, 1456),
+    (752, 1392),
+    (800, 1328),
+    (832, 1248),
+    (880, 1184),
+    (944, 1104),
+    (1024, 1024),
+    (1104, 944),
+    (1184, 880),
+    (1248, 832),
+    (1328, 800),
+    (1392, 752),
+    (1456, 720),
+    (1504, 688),
+    (1568, 672),
+]
+
+
+QWENEDIT_RESOLUTIONS: List[Tuple[int, int]] = [
+    (1328, 1328), (1088, 1632), (1632, 1088),
+    (1152, 1536), (1536, 1152), (1008, 1792),
+    (1792, 1008), (768, 2304), (2304, 768),(1024, 1024), (832, 1248), (1248, 832), (864, 1152), (1152, 864), (720, 1280), (1280, 720), (592, 1776), (1776, 592)
+]
+
+def ratio_label(w: int, h: int) -> str:
+    divisor = gcd(w, h)
+    rw = w // divisor
+    rh = h // divisor
+    approx = round(w * h / 1_000_000, 2)
+
+    name = ""
+    if rw == rh:
+        name = " (square)"
+    elif (rw, rh) not in [(16, 9), (9, 16), (3, 2), (2, 3), (4, 3), (3, 4), (21, 9), (9, 21)]:
+        name = " (custom)"
+
+    return f"{w}x{h} • {rw}:{rh} (≈{approx}MP){name}"
+
+def to_labels(pairs: List[Tuple[int, int]]) -> List[str]:
+    return [ratio_label(w, h) for (w, h) in pairs]
+
+def parse_wh(label: str) -> Tuple[int, int]:
+    raw = label.split("•", 1)[0].strip()
+    raw = raw.lower().replace("×", "x")
+    w_str, h_str = [s.strip() for s in raw.split("x", 1)]
+    return int(w_str), int(h_str)
+
+class QwenEditResolution:
+    @classmethod
+    def INPUT_TYPES(cls):
+        labels = to_labels(QWENEDIT_RESOLUTIONS)
+        return {
+            "required": {
+                "resolution": (labels, {
+                    "default": labels[0],  # must be a single string
+                    "display": "dropdown",
+                }),
+            }
+        }
+
+    RETURN_TYPES = ("INT", "INT")
+    RETURN_NAMES = ("width", "height")
+    FUNCTION = "run"
+    CATEGORY = "TBG/Helpers"
+    OUTPUT_NODE = False
+
+    def run(self, resolution: str):
+        w, h = parse_wh(resolution)
+        return (w, h)
+
+class FluxKontextResolution:
+    @classmethod
+    def INPUT_TYPES(cls):
+        labels = to_labels(KONTEXT_RESOLUTIONS)
+        return {
+            "required": {
+                "resolution": (labels, {
+                    "default": labels[0],  # must be a single string
+                    "display": "dropdown",
+                }),
+            }
+        }
+
+    RETURN_TYPES = ("INT", "INT")
+    RETURN_NAMES = ("width", "height")
+    FUNCTION = "run"
+    CATEGORY = "TBG/Helpers"
+    OUTPUT_NODE = False
+
+    def run(self, resolution: str):
+        w, h = parse_wh(resolution)
+        return (w, h)
+
+class IncrementBatch:
+    @classmethod
+    def INPUT_TYPES(cls):
+
+        return {
+            "required": {
+                "seed": ("INT", {"label": "Seed", "default": 4, "min": 0, "max": 0xffffffffffffffff}),
+
+            }
+        }
+
+    RETURN_TYPES = ("INT",)
+    RETURN_NAMES = ("INT",)
+    FUNCTION = "run"
+    CATEGORY = "TBG/Helpers"
+    OUTPUT_NODE = False
+
+    def run(self,seed):
+        return (seed,)
+
+
+
+# Register
+NODE_CLASS_MAPPINGS["FluxKontextResolution"] = FluxKontextResolution
+NODE_CLASS_MAPPINGS["IncrementBatch"] = IncrementBatch
+NODE_DISPLAY_NAME_MAPPINGS["FluxKontextResolution"] = "Flux Kontext Resolution"
+NODE_DISPLAY_NAME_MAPPINGS["IncrementBatch"] = "IncrementBatch"
+NODE_CLASS_MAPPINGS["QwenEditResolution"] = QwenEditResolution
+NODE_DISPLAY_NAME_MAPPINGS["QwenEditResolution"] = "Qwen Edit Resolution"
+
+
+

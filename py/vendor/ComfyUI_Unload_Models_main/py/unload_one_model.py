@@ -14,20 +14,6 @@ class AnyType(str):
 any = AnyType("*")
 
 class UnloadOneModelNode:
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {"value": (any, )},
-            "optional": {"model": (any, )},
-        }
-
-    @classmethod
-    def VALIDATE_INPUTS(s, **kwargs):
-        return True
-
-    RETURN_TYPES = (any, )
-    FUNCTION = "route"
-    CATEGORY = "Unload Modules"
 
     def route(self, **kwargs):
         
@@ -50,11 +36,3 @@ class UnloadOneModelNode:
 
         return (list(kwargs.values()))
    
-
-NODE_CLASS_MAPPINGS = {
-    "UnloadOneModel": UnloadOneModelNode,
-}
-
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "UnloadOneModel": "Unload One Model",
-}

@@ -3,19 +3,6 @@ import os
 class JanusModelLoader:
     def __init__(self):
         pass
-        
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "model_name": (["deepseek-ai/Janus-Pro-1B", "deepseek-ai/Janus-Pro-7B"],),
-            },
-        }
-    
-    RETURN_TYPES = ("JANUS_MODEL", "JANUS_PROCESSOR")
-    RETURN_NAMES = ("model", "processor")
-    FUNCTION = "load_model"
-    CATEGORY = "Janus-Pro"
 
     def load_model(self, model_name):
         try:

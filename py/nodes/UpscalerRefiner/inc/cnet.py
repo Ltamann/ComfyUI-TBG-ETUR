@@ -1,19 +1,17 @@
-import numpy as np
 
+import comfy.utils
+import math
 import comfy.model_management as model_management
 import nodes
 import comfy_extras
 from comfy_extras.nodes_edit_model import ReferenceLatent
-from .image import TBG_Image
 from ..inc.sigmas import process_image_to_tiles
 from ....vendor.comfyui_controlnet_aux.src.custom_controlnet_aux.canny.canny import CannyDetector
 from ....vendor.comfyui_controlnet_aux.src.custom_controlnet_aux.depth_anything_v2.da2tgb import DepthAnythingV2Detector
 from ....vendor.comfyui_controlnet_aux.utils import common_annotator_call
 
-import torch
-import torch.nn.functional as F
 
-def apply_controlnets_from_pipe(self, cnetpipe, positive, negative, full_image, tile_image, vae):
+def apply_controlnets_from_pipe(self, cnetpipe, positive, negative, full_image, tile_image, vae, index):
 
     controlnet_node = nodes.ControlNetApplyAdvanced()
     for control in cnetpipe:
@@ -33,7 +31,13 @@ def apply_controlnets_from_pipe(self, cnetpipe, positive, negative, full_image, 
             if isinstance(cnet_image, tuple):
                 cnet_image = np.array(cnet_image)
 
-        strength = strength*self.KSAMPLER.cnet_multiply
+        grid_cnetstrength = self.OUTPUTS.grid_cnetstrength[index]
+        if grid_cnetstrength is not None and isinstance(grid_cnetstrength, (float, int)):
+            strength = strength * grid_cnetstrength
+            #print("Using Tile cnet_strength: ",grid_cnetstrength)
+        else:
+            strength = strength*self.KSAMPLER.cnet_multiply
+            #print("Using General cnet_strength: ", grid_cnetstrength)
         # Preprocessero
 
         if preprocessor=="DepthAnythingV2":  
@@ -46,6 +50,7 @@ def apply_controlnets_from_pipe(self, cnetpipe, positive, negative, full_image, 
             positive, negative, controlnet_model, cnet_image, strength, start, end, vae
         )
     return positive, negative
+
 
 
 
@@ -110,9 +115,92 @@ def get_Kontext_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
     positive = ReferenceLatent.append(0, positive, kontext_latent_image)[0]
     return positive
 
-import torch
-import torch.nn.functional as F
-import copy
+def get_qwen_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
+    kontext_img_combined = tile_image
+    cnet_image = tile_image
+    originaladded = False
+
+    print("Using Edit model as Cnet only canny and depth preprocessing supported, cnet_strength ignored")
+    for control in cnetpipe:
+
+        patch_for_Flux_Kontext = control["patch_for_Flux_Kontext"]
+        controlnet_model = control["controlnet"]
+        strength = control["strength"]
+        start = control["start"]
+        end = control["end"]
+        preprocessor = control["preprocessor"]
+        canny_high_threshold = control["canny_high_threshold"]
+        canny_low_threshold = control["canny_low_threshold"]
+        noise_image = control["noise_image"]
+
+        if noise_image is not None:
+            grid_images = process_image_to_tiles(self,noise_image)
+            cnet_image = grid_images[self.KSAMPLER.latent_index]
+            if isinstance(cnet_image, tuple):
+                cnet_image = np.array(cnet_image)
+
+        strength = strength*self.KSAMPLER.cnet_multiply
+        # Preprocessor
+
+        if preprocessor=="DepthAnythingV2":
+            model = DepthAnythingV2Detector.from_pretrained(filename="depth_anything_v2_vitl.pth").to(model_management.get_torch_device())
+            cnet_image = common_annotator_call(model, cnet_image, resolution=1024, max_depth=1)
+            cnet_image = cnet_image * strength + 0.5 * (1 - strength)
+
+            del model
+        if preprocessor=="Canny Edge":
+            cnet_image = common_annotator_call(CannyDetector(), cnet_image, canny_low_threshold=canny_low_threshold, canny_high_threshold=canny_high_threshold, resolution=1024)
+            cnet_image = cnet_image * strength + 0.5 * (1 - strength)
+
+        if patch_for_Flux_Kontext != "NONE" and preprocessor in ("DepthAnythingV2","Canny Edge"):
+            if patch_for_Flux_Kontext == "Stitched":
+                # first stitch images is tile original
+                originaladded = True
+                kontext_img_combined = comfy_extras.nodes_images.ImageStitch.stitch(
+                    0,
+                    kontext_img_combined,
+                    'right',
+                    True,
+                    0,
+                    'white',
+                    cnet_image,
+                )[0]
+            if patch_for_Flux_Kontext == "Chained":
+                if not originaladded:
+                    originaladded = True
+                    # add original
+                    kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, tile_image)[0]
+                    positive = ReferenceLatent.append(0, positive, kontext_latent_image)[0]
+                # add Cnet
+                cnet_image_latent = nodes.VAEEncode().encode(self.KSAMPLER.vae, cnet_image)[0]
+                positive = ReferenceLatent.append(0, positive, cnet_image_latent)[0]
+
+
+
+    if  originaladded == False:
+        positive = ReferenceLatent.append(0, positive, tile_image)[0]
+    # add stitched to chained
+    kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, kontext_img_combined)[0]
+    positive = ReferenceLatent.append(0, positive, kontext_latent_image)[0]
+    return positive
+
+
+def Qwen_Scale_image(self, image=None):
+    ref_latent = None
+    if image is None:
+        images = []
+    else:
+        samples = image.movedim(-1, 1)
+        total = int(1024 * 1024)
+
+        scale_by = math.sqrt(total / (samples.shape[3] * samples.shape[2]))
+        width = round(samples.shape[3] * scale_by)
+        height = round(samples.shape[2] * scale_by)
+
+        s = comfy.utils.common_upscale(samples, width, height, "area", "disabled")
+        image = s.movedim(1, -1)
+    return image
+
 
 def downscale_to_cnet_scale(cond1, cond2, interp_mode='bilinear'):
     """

@@ -9,22 +9,7 @@ def mix(latent_image, noise_image, mix_percent):
 
 
 class FluxNoiseMixerNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {"required": {
-                "latent": ("LATENT", ),
-                "noise": ("LATENT", ),
-                "mix_percent": ("FLOAT", {"default": 0.5, "min": 0, "max": 1.0, "step": 0.01}),
-                "random_noise": ("FLOAT", {"default": 0.0, "min": 0, "max": 100.0, "step": 0.01}),
-                "mix_type": (['mix', 'add'],),
-                "random_mix_type": (['mix', 'add'],),
-                "take_diff": ("BOOLEAN", ),
-            }}
 
-    RETURN_TYPES = ("LATENT",)
-    FUNCTION = "append"
-
-    CATEGORY = "fluxtapoz"
 
     def append(self, latent, noise, mix_percent, random_noise, mix_type, random_mix_type, take_diff):
         latent_image = latent.copy()

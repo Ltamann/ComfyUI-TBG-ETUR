@@ -7,23 +7,7 @@ DEFAULT_PAG_FLUX = { 'double': set([]), 'single': set(['0'])}
 
 
 class PAGAttentionNode:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "model": ("MODEL",),
-                "scale": ("FLOAT", {"default": 3.0, "min": 0.0, "max": 100.0, "step": 0.01, "round": 0.01}),
-            },
-            "optional": {
-                "attn_override": ("ATTN_OVERRIDE",),
-                "rescale": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 100.0, "step": 0.01, "round": 0.01}),
-            }
-        }
 
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "patch"
-
-    CATEGORY = "fluxtapoz/attn"
 
     def patch(self, model, scale, attn_override=DEFAULT_PAG_FLUX, rescale=0):
         m = model.clone()

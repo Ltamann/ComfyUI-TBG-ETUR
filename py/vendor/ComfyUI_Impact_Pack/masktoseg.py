@@ -173,8 +173,9 @@ def mask_to_segs(mask, combined, crop_factor, bbox_fill, drop_size=1, label='A',
                         )
                         result.append(item)
     if not result:
-        print(f"[mask_to_segs] Empty mask.")
-    print(f"# of Detected SEGS: {len(result)}")
+        print(f"TBG Masked Attention Empty mask.")
+    else:
+        print(f"TBG Masked Attention of Detected SEGS: {len(result)}")
     return (mask.shape[1], mask.shape[2]), result
 
 @staticmethod

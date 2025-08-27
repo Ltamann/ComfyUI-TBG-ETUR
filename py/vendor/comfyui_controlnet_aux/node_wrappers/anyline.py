@@ -19,23 +19,6 @@ def combine_layers(base_layer, top_layer):
     return result
 
 class AnyLinePreprocessor:
-    @classmethod
-    def INPUT_TYPES(s):
-        return define_preprocessor_inputs(
-            merge_with_lineart=INPUT.COMBO(["lineart_standard", "lineart_realisitic", "lineart_anime", "manga_line"], default="lineart_standard"),
-            resolution=INPUT.RESOLUTION(default=1280, step=8),
-            lineart_lower_bound=INPUT.FLOAT(default=0),
-            lineart_upper_bound=INPUT.FLOAT(default=1),
-            object_min_size=INPUT.INT(default=36, min=1),
-            object_connectivity=INPUT.INT(default=1, min=1)
-        )
-
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
-
-    FUNCTION = "get_anyline"
-    CATEGORY = "ControlNet Preprocessors/Line Extractors"
-
     def __init__(self):
         self.device = model_management.get_torch_device()
 
@@ -79,9 +62,3 @@ class AnyLinePreprocessor:
         pbar.update(1)
         return (torch.stack(final_result),)
 
-NODE_CLASS_MAPPINGS = {
-    "AnyLineArtPreprocessor_aux": AnyLinePreprocessor
-}
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "AnyLineArtPreprocessor_aux": "AnyLine Lineart"
-}
