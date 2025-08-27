@@ -3,7 +3,7 @@
 
 **+ Comfyui TBG_Detail_Enhancer node**
 
-!!! The 1.07v1 version has been tested on **ComfyUI 0.3.50** !!! 
+# !!! The 1.07v1 version has been tested on **ComfyUI 0.3.52** !!! 
 
 !!! Qwen support needed from latest Comfyui - you need to updated comfyui if you got **comfy_extras.nodes_qwen** missing log !!!
 
