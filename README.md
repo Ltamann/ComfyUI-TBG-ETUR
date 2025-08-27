@@ -18,7 +18,7 @@ Tutorials and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@
 - [API_Access](#API_Access)
 - [Usage](#usage)
 - [TBG_Magnific_Magnifier_Node](#TBG_Magnific_Magnifier_Node)
-- [Update 1.06 alfa](#Update)
+- [Update 1.07 alfa v1](#Update)
 
 ## Overview
 
