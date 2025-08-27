@@ -5,7 +5,7 @@
 
 !!! The 1.07v1 version has been tested on **ComfyUI 0.3.50** !!! 
 
-!!! Qwen suppor needed in latest Comfyui - you need to updated comfyui if you got **comfy_extras.nodes_qwen** missing log !!!
+!!! Qwen support needed feom latest Comfyui - you need to updated comfyui if you got **comfy_extras.nodes_qwen** missing log !!!
 
 **Keep in mind this is still an alpha version, and we're updating and fine-tuning it daily. So do the same**
 
