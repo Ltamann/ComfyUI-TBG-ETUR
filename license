@@ -19,7 +19,7 @@ This software distribution contains TWO SEPARATE PROGRAMS:
 1. "TBG Enhanced Tiled Upscaler and Refiner Pro"  (governed by TBG Custom License below)
 2. GPL-Licensed Components (governed by GNU General Public License v3)
 
-Copyright (c) 2025 TBG
+Copyright (c) 2025 TBG Tobias Laarmann
 
 These are separate and independent programs that communicate through 
 defined interfaces and do not share address space or intimate data structures.
