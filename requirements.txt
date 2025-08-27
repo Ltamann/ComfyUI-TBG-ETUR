@@ -8,7 +8,6 @@ color-matcher
 grog
 opencv-contrib-python
 color-matcher
-numba
 # For Janus
 git+https://github.com/deepseek-ai/Janus.git
 
