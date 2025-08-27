@@ -1,9 +1,7 @@
 # # from ComfyUI/custom_nodes/TBG_upscaler/py/vendor/ComfyUI_MaraScott_Nodes check licence in this folder
 import re
 
-#APIURL ='https://api.ylab.es/'
-#APIURL ='http://localhost:8080/'
-APIURL ='https://dev---tbg-api-oom2umomra-uc.a.run.app/'
+APIURL ='https://api.ylab.es/'
 
 NAMESPACE='TBG'
 ICON=''
