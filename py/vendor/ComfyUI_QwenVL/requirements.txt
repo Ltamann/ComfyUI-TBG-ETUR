@@ -1,0 +1,10 @@
+torch
+torchvision
+numpy
+pillow
+huggingface_hub
+accelerate
+qwen-vl-utils
+bitsandbytes
+optimum
+git+https://github.com/huggingface/transformers
