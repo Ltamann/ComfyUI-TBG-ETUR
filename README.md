@@ -6,7 +6,7 @@
 # !!! The 1.08v1 version Requires at least **ComfyUI 0.3.52** with QWEN images support !!! 
 **Do not switch to 1.08 yet—it’s still unfinished.**
 
-Here’s a clearer rephrasing of your list:
+Whast New in 1.08 alfa:
 
 Adaptive Denoise with Complexity Mask (limits freedom on even and uniform regions)
 
