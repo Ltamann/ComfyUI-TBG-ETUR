@@ -325,6 +325,14 @@ However, you can achieve the same results using the TBG Enhanced Upscaler and Re
 
 
 ## Update
+1.08 alfa V1
+
+Adaptive Denoise with Complexity Mask (limits freedom on even and uniform regions)
+
+Apple Fast VLM
+
+Per-Pixel Denoise Mask (allows input of a mask to control denoising per pixel, multiplied with the denoise value)
+
 1.07 alfa V1
 
 # TGB Tile Prompter 
@@ -351,7 +359,7 @@ We’re working on a new test build of the **Tile Prompter** and it just got a b
 - **Flux Krea support**  
 
 ## 🔹 Bug Fixes  
-- Fixed edge cases with tile fusion on **1 row, 1 column, or a single tile**  
+- Fixed edge cases with tile fusion on **1 row,  1 column, or a single tile**  
 
 1.06 alfa V2.1
 add Python 3.13 support for ComfyUI 0.3.50 
