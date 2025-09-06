@@ -327,7 +327,9 @@ class TBG_magnific_ETUR:
                     kwargs["Enrichment_Pipe"][0]["resharpen_end"] = max(0.2, min(1.0, (1 - kwargs["denoise"])))
                 else:
                     kwargs["Enrichment_Pipe"][0]["Resharpener_active"] = False
-
+                kwargs["Enrichment_Pipe"][0]["PRO_Fusion_Complexity_min_Denoise"] = 0
+                kwargs["Enrichment_Pipe"][0]["PRO_Fusion_Complexity_max_Denoise"] = 1
+                kwargs["Enrichment_Pipe"][0]["PRO_Fusion_Complexity_Mask_Blur"] = 0
 
                 # Has to be set last before calling refiner
                 kwargs["Controlnet_Pipe_strength"] = kwargs["Resemblance"]
