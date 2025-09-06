@@ -3,7 +3,18 @@
 
 **+ Comfyui TBG_Detail_Enhancer node**
 
-# !!! The 1.07v1 version Requires at least **ComfyUI 0.3.52** with QWEN images support !!! 
+# !!! The 1.08v1 version Requires at least **ComfyUI 0.3.52** with QWEN images support !!! 
+**Do not switch to 1.08 yet—it’s still unfinished.**
+
+Here’s a clearer rephrasing of your list:
+
+Adaptive Denoise with Complexity Mask (limits freedom on even and uniform regions)
+
+Apple Fast VLM
+
+Per-Pixel Denoise Mask (allows input of a mask to control denoising per pixel, multiplied with the denoise value)
+
+Bug fixes for Generative Tile Fusion (handles cases with only one row or column)
 
 **Keep in mind this is still an alpha version, and we're updating and fine-tuning it daily. So do the same**
 
