@@ -2,8 +2,7 @@
 import re
 
 APIURL ='https://api.ylab.es/'
-#APIURL ='http://localhost:8080/'
-#APIURL ='https://dev---tbg-api-oom2umomra-uc.a.run.app/'
+
 
 NAMESPACE='TBG'
 ICON=''
@@ -32,3 +31,4 @@ def get_category(sub_dirs = None):
         return NAMESPACE
     else:
         return "{}/{}".format(f"{ICON} {NAMESPACE}", sub_dirs)
+
