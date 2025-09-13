@@ -18,4 +18,5 @@ accelerate
 qwen-vl-utils
 bitsandbytes
 optimum
-git+https://github.com/huggingface/transformers
+#git+https://github.com/huggingface/transformers
+
