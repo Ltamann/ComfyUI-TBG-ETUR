@@ -9,10 +9,10 @@ from pathlib import Path
 #from .log import log, blue_text, cyan_text, get_summary, get_label
 from .utils import here, define_preprocessor_inputs, INPUT
 
-#Ref: https://github.com/comfyanonymous/ComfyUI/blob/76d53c4622fc06372975ed2a43ad345935b8a551/nodes.py#L17
-#sys.path.insert(0, str(Path(here, "src").resolve()))
-#for pkg_name in ["custom_controlnet_aux", "custom_mmpkg"]:
-#    sys.path.append(str(Path(here, "src", pkg_name).resolve()))
+Ref: https://github.com/comfyanonymous/ComfyUI/blob/76d53c4622fc06372975ed2a43ad345935b8a551/nodes.py#L17
+sys.path.insert(0, str(Path(here, "src").resolve()))
+for pkg_name in ["custom_controlnet_aux", "custom_mmpkg"]:
+    sys.path.append(str(Path(here, "src", pkg_name).resolve()))
 
 #Enable CPU fallback for ops not being supported by MPS like upsample_bicubic2d.out
 #https://github.com/pytorch/pytorch/issues/77764
@@ -157,4 +157,5 @@ class ControlNetPreprocessorSelector:
 
     def get_preprocessor(self, preprocessor: str):
         return (preprocessor,)
+
 
