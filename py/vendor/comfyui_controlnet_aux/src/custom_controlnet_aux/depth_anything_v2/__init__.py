@@ -1,5 +1,5 @@
-from custom_controlnet_aux.depth_anything_v2.dpt import DepthAnythingV2
-from custom_controlnet_aux.util import HWC3, common_input_validate, resize_image_with_pad, custom_hf_download, DEPTH_ANYTHING_V2_MODEL_NAME_DICT
+from ..depth_anything_v2.dpt import DepthAnythingV2
+from ..util import HWC3, common_input_validate, resize_image_with_pad, custom_hf_download, DEPTH_ANYTHING_V2_MODEL_NAME_DICT
 
 import cv2
 import numpy as np

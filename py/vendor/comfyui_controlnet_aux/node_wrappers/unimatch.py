@@ -9,7 +9,7 @@ class Unimatch_OptFlowPreprocessor:
 
     def estimate(self, image, ckpt_name, backward_flow=False, bidirectional_flow=False):
         assert len(image) > 1, "[Unimatch] Requiring as least two frames as an optical flow estimator. Only use this node on video input."    
-        from custom_controlnet_aux.unimatch import UnimatchDetector
+        from ..src.custom_controlnet_aux.unimatch import UnimatchDetector
         tensor_images = image
         model = UnimatchDetector.from_pretrained(filename=ckpt_name).to(model_management.get_torch_device())
         flows, vis_flows = [], []
@@ -24,7 +24,7 @@ class Unimatch_OptFlowPreprocessor:
 class MaskOptFlow:
 
     def mask_opt_flow(self, optical_flow, mask):
-        from custom_controlnet_aux.unimatch import flow_to_image
+        from ..src.custom_controlnet_aux.unimatch import flow_to_image
         assert len(mask) >= len(optical_flow), f"Not enough masks to mask optical flow: {len(mask)} vs {len(optical_flow)}"
         mask = mask[:optical_flow.shape[0]]
         mask = F.interpolate(mask, optical_flow.shape[1:3])

@@ -12,7 +12,7 @@ import math
 from functools import partial
 from typing import Sequence, Tuple, Union, Callable
 
-from custom_controlnet_aux.depth_anything_v2.dinov2_layers import Mlp, PatchEmbed, SwiGLUFFNFused, MemEffAttention, NestedTensorBlock as Block
+from ..depth_anything_v2.dinov2_layers import Mlp, PatchEmbed, SwiGLUFFNFused, MemEffAttention, NestedTensorBlock as Block
 
 import torch
 import torch.nn as nn

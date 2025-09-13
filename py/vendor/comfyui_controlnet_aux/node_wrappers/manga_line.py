@@ -5,7 +5,7 @@ from ..utils import common_annotator_call, define_preprocessor_inputs, INPUT
 class Manga2Anime_LineArt_Preprocessor:
 
     def execute(self, image, resolution=512, **kwargs):
-        from custom_controlnet_aux.manga_line import LineartMangaDetector
+        from ..src.custom_controlnet_aux.manga_line import LineartMangaDetector
 
         model = LineartMangaDetector.from_pretrained().to(model_management.get_torch_device())
         out = common_annotator_call(model, image, resolution=resolution)

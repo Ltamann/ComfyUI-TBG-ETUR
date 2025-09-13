@@ -5,7 +5,7 @@ import io
 import logging
 from typing import Dict, Optional, Union
 
-from custom_controlnet_aux import (CannyDetector, ContentShuffleDetector, HEDdetector,
+from  ..custom_controlnet_aux import (CannyDetector, ContentShuffleDetector, HEDdetector,
                                    LeresDetector, LineartAnimeDetector,
                                    LineartDetector, MediapipeFaceDetector,
                                    MidasDetector, MLSDdetector, NormalBaeDetector,

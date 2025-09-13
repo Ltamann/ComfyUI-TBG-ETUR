@@ -1,6 +1,6 @@
-from custom_controlnet_aux.depth_anything_v2.dinov2 import DINOv2
-from custom_controlnet_aux.depth_anything_v2.util.blocks import FeatureFusionBlock, _make_scratch
-from custom_controlnet_aux.depth_anything_v2.util.transform import Resize, NormalizeImage, PrepareForNet
+from ..depth_anything_v2.dinov2 import DINOv2
+from ..depth_anything_v2.util.blocks import FeatureFusionBlock, _make_scratch
+from ..depth_anything_v2.util.transform import Resize, NormalizeImage, PrepareForNet
 
 import cv2
 import torch

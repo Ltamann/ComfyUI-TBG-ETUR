@@ -1,4 +1,4 @@
-from custom_controlnet_aux.util import resize_image_with_pad, common_input_validate, HWC3
+from ..util import resize_image_with_pad, common_input_validate, HWC3
 
 import cv2
 from PIL import Image

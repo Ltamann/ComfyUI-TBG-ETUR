@@ -7,7 +7,7 @@ from ..utils import common_annotator_call, define_preprocessor_inputs, INPUT
 class OpenPose_Preprocessor:
 
     def estimate_pose(self, image, detect_hand="enable", detect_body="enable", detect_face="enable", scale_stick_for_xinsr_cn="disable", resolution=512, **kwargs):
-        from custom_controlnet_aux.open_pose import OpenposeDetector
+        from ..src.custom_controlnet_aux.open_pose import OpenposeDetector
 
         detect_hand = detect_hand == "enable"
         detect_body = detect_body == "enable"
