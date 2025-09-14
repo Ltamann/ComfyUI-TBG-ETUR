@@ -1,0 +1,6198 @@
+{
+  "id": "3f01ffd7-757b-4a52-a787-999a087e1cf2",
+  "revision": 0,
+  "last_node_id": 116,
+  "last_link_id": 88,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        2579.853515625,
+        3257.802978515625
+      ],
+      "size": [
+        785.919677734375,
+        693.4404296875
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 0,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "title": "TBG masked attention",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "ComfyUI_temp_czkgz_00001_.png",
+        "image"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "UpscaleModelLoader",
+      "pos": [
+        2419.853515625,
+        3117.802978515625
+      ],
+      "size": [
+        260,
+        70
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "UpscaleModelLoader"
+      },
+      "widgets_values": [
+        "ESRGAN_4x.pth"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "ImageUpscaleWithModel",
+      "pos": [
+        2699.853515625,
+        3117.802978515625
+      ],
+      "size": [
+        370,
+        60
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ImageUpscaleWithModel"
+      }
+    },
+    {
+      "id": 4,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        2439.853515625,
+        3237.802978515625
+      ],
+      "size": [
+        640,
+        90
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ImageScaleToTotalPixels"
+      },
+      "widgets_values": [
+        "lanczos",
+        25.000000000000004
+      ]
+    },
+    {
+      "id": 5,
+      "type": "Note",
+      "pos": [
+        2439.853515625,
+        3377.802978515625
+      ],
+      "size": [
+        640,
+        200
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why pre Upscaling ?",
+      "properties": {},
+      "widgets_values": [
+        "Begin the upscaling process by increasing the image size in gradual steps—such as doubling the megapixel count—so the sampler can incrementally add more detail at each stage. It’s often beneficial to first enhance the original image at its native resolution before proceeding with any upscaling.\n\nMost upscaling tools, like SDUltimate, use an ESGAN upscaling step followed by standard interpolation downscaling before any further refinement, typically without providing previews of these intermediate stages.\n\nI prefer to inspect the upscaled image before moving on to generative refinement, as this allows for early detection of artifacts or issues. In many cases, performing the initial upscale without a model produces a less defined result, giving the sampler greater flexibility to generate new, high-quality details"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 6,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2133.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 65,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "VAE",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 7,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2213.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 81,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "CLIP",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 8,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2293.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 9,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2333.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 10,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2293.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 11,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2333.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 54,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            42
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 12,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2253.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 57,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 13,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2213.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 91,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "CLIP",
+          "links": [
+            35
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 14,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2373.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 15,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2373.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 55,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 16,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2413.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 17,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2413.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 56,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 18,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2453.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 96,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "Controlnet_Pipe",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 19,
+      "type": "TBG_ControlNetPipeline",
+      "pos": [
+        3679.853515625,
+        4177.802734375
+      ],
+      "size": [
+        441.11578369140625,
+        242
+      ],
+      "flags": {},
+      "order": 78,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 10
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 11
+        },
+        {
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            21
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_ControlNetPipeline"
+      },
+      "widgets_values": [
+        0.5000000000000001,
+        0,
+        0.8000000000000002,
+        100,
+        150,
+        "Canny Edge",
+        "NONE"
+      ]
+    },
+    {
+      "id": 20,
+      "type": "Reroute",
+      "pos": [
+        4359.853515625,
+        4077.802978515625
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 79,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "SEGS",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 21,
+      "type": "Reroute",
+      "pos": [
+        5539.853515625,
+        2507.802978515625
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 98,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "TBG_Pipe",
+          "links": [
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 22,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2133.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 82,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "VAE",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 23,
+      "type": "SaveImage",
+      "pos": [
+        6779.853515625,
+        4177.802734375
+      ],
+      "size": [
+        330,
+        270
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 110,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 15
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44"
+      },
+      "widgets_values": [
+        "TBG_ETUR\\David_R1\\final_"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2173.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 100,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "MODEL",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 25,
+      "type": "PreviewImage",
+      "pos": [
+        7359.853515625,
+        2327.802978515625
+      ],
+      "size": [
+        710,
+        750
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 111,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 17
+        }
+      ],
+      "outputs": [],
+      "title": "Refined Image",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 26,
+      "type": "Note",
+      "pos": [
+        1619.853515625,
+        3377.802978515625
+      ],
+      "size": [
+        720,
+        200
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why Segments ?",
+      "properties": {},
+      "widgets_values": [
+        "In certain situations, placing an object entirely within a single tile is essential for achieving consistent results. By applying a mask to an object, it can be sampled separately from the rest of the image. The masked area will then be upscaled to match the tile size, enhancing its detail.\n\nThis technique can also be used to repair or modify elements by applying different settings, prompts, or denoise values using the function.\n\nAfter the entire image is processed, the segmented areas will be handled. ImpactPack is compatible with TBG ETUR segmentation entries, making it possible to automate the selection process."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 27,
+      "type": "Reroute",
+      "pos": [
+        8019.853515625,
+        1797.8028564453125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "TBG",
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 28,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2453.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 106,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "Controlnet_Pipe",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 29,
+      "type": "TBG_ControlNetPipeline",
+      "pos": [
+        3179.853515625,
+        4197.802734375
+      ],
+      "size": [
+        377.97528076171875,
+        242
+      ],
+      "flags": {},
+      "order": 59,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 19
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            11
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_ControlNetPipeline"
+      },
+      "widgets_values": [
+        1,
+        0,
+        1,
+        100,
+        150,
+        "None",
+        "NONE"
+      ]
+    },
+    {
+      "id": 30,
+      "type": "TBG_ControlNetPipeline",
+      "pos": [
+        4219.853515625,
+        4177.802734375
+      ],
+      "size": [
+        440,
+        242
+      ],
+      "flags": {},
+      "order": 88,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 20
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 21
+        },
+        {
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            9
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_ControlNetPipeline"
+      },
+      "widgets_values": [
+        0.5,
+        0,
+        0.8000000000000002,
+        255,
+        150,
+        "DepthAnythingV2",
+        "Stitched"
+      ]
+    },
+    {
+      "id": 31,
+      "type": "PreviewImage",
+      "pos": [
+        6589.853515625,
+        2317.802978515625
+      ],
+      "size": [
+        720,
+        780
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 112,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 22
+        }
+      ],
+      "outputs": [],
+      "title": "TILES",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 32,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2173.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 90,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "MODEL",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 33,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2253.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 34,
+      "type": "DualCLIPLoader",
+      "pos": [
+        3139.853515625,
+        2477.802978515625
+      ],
+      "size": [
+        306.35992431640625,
+        143.02444458007812
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "DualCLIPLoader"
+      },
+      "widgets_values": [
+        "t5xxl_fp8_e4m3fn.safetensors",
+        "Long-ViT-L-14-BEST-GmP-smooth-ft.safetensors",
+        "flux",
+        "default"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 35,
+      "type": "LoraLoader",
+      "pos": [
+        3479.853515625,
+        2337.802978515625
+      ],
+      "size": [
+        270,
+        126
+      ],
+      "flags": {},
+      "order": 64,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 24
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            43
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "LoraLoader"
+      },
+      "widgets_values": [
+        "FLUX\\FLUX.1-Turbo-Alpha-8Step.safetensors",
+        0.14,
+        1
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 36,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        3139.853515625,
+        3017.802978515625
+      ],
+      "size": [
+        270,
+        98
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            26
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": []
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "SDXL\\SDXL-Juggernaut-XI-byRunDiffusion.safetensors"
+      ]
+    },
+    {
+      "id": 37,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        3139.853515625,
+        3177.802978515625
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 58,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "SDXL\\sdxl_lightning_8step_lora.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 38,
+      "type": "Note",
+      "pos": [
+        3219.853515625,
+        3917.802978515625
+      ],
+      "size": [
+        590,
+        140
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why use Redux?",
+      "properties": {},
+      "widgets_values": [
+        "Why use Redux?\nRedux regenerates the image while preserving its overall composition and style.\nA value of 1 means full reconstruction with strict adherence to the original\nLower values allow more creative freedom in the output\nA value of 0 disables Redux entirely\nIf neither a Redux Clip nor a Style Model is connected, Redux will automatically be disabled\nRedux is particularly useful for preserving fine materials, textures, and structural composition. In many cases, it can serve as a lightweight alternative to ControlNets.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 39,
+      "type": "ControlNetLoader",
+      "pos": [
+        3179.853515625,
+        4557.802734375
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 16,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "Flux\\Flux.1-dev-Controlnet-Upscaler.safetensors"
+      ]
+    },
+    {
+      "id": 40,
+      "type": "SetUnionControlNetType",
+      "pos": [
+        4299.853515625,
+        4457.802734375
+      ],
+      "size": [
+        335.9449157714844,
+        58
+      ],
+      "flags": {},
+      "order": 60,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "SetUnionControlNetType"
+      },
+      "widgets_values": [
+        "depth"
+      ]
+    },
+    {
+      "id": 41,
+      "type": "SetUnionControlNetType",
+      "pos": [
+        3799.853515625,
+        4457.802734375
+      ],
+      "size": [
+        335.9449157714844,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 61,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 28
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "SetUnionControlNetType"
+      },
+      "widgets_values": [
+        "canny/lineart/anime_lineart/mlsd"
+      ]
+    },
+    {
+      "id": 42,
+      "type": "ControlNetLoader",
+      "pos": [
+        4199.853515625,
+        4537.802734375
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 17,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            27,
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro-2.safetensors"
+      ]
+    },
+    {
+      "id": 43,
+      "type": "TBG_masked_attention",
+      "pos": [
+        2079.853515625,
+        2337.802978515625
+      ],
+      "size": [
+        210,
+        58
+      ],
+      "flags": {},
+      "order": 63,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SEGS",
+          "type": "SEGS",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "title": "TBG Masked Attention",
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_masked_attention"
+      },
+      "widgets_values": [
+        1.5
+      ]
+    },
+    {
+      "id": 44,
+      "type": "StyleModelLoader",
+      "pos": [
+        4299.853515625,
+        3897.802978515625
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STYLE_MODEL",
+          "type": "STYLE_MODEL",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "StyleModelLoader"
+      },
+      "widgets_values": [
+        "flex1_redux_siglip2_512.safetensors"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 45,
+      "type": "CLIPVisionLoader",
+      "pos": [
+        4299.853515625,
+        3997.802978515625
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "CLIPVisionLoader"
+      },
+      "widgets_values": [
+        "siglip2-so400m-patch16-512.safetensors"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 46,
+      "type": "TBG_api_status_check",
+      "pos": [
+        5259.853515625,
+        3017.802978515625
+      ],
+      "size": [
+        260,
+        60
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "Member Status",
+          "type": "STRING",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "65e3185775dccfb38b5c70062dd6eed2d73bfa7b",
+        "Node name for S&R": "TBG_api_status_check"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 47,
+      "type": "PreviewAny",
+      "pos": [
+        5259.853515625,
+        3117.802978515625
+      ],
+      "size": [
+        260,
+        340
+      ],
+      "flags": {},
+      "order": 62,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 30
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.55",
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 48,
+      "type": "PreviewImage",
+      "pos": [
+        5259.853515625,
+        2697.802978515625
+      ],
+      "size": [
+        260,
+        260
+      ],
+      "flags": {},
+      "order": 97,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 31
+        }
+      ],
+      "outputs": [],
+      "title": "TBG Mask Overlay",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 49,
+      "type": "TBG_Upscaler_v1_pro",
+      "pos": [
+        4729.853515625,
+        2707.802978515625
+      ],
+      "size": [
+        500,
+        780
+      ],
+      "flags": {},
+      "order": 89,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 32
+        },
+        {
+          "name": "PRO_segs",
+          "shape": 7,
+          "type": "SEGS",
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Mask Overlay Preview",
+          "type": "IMAGE",
+          "links": [
+            31
+          ]
+        },
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            13
+          ]
+        },
+        {
+          "name": "Tile_Prompt_Pipe",
+          "type": "Tile_Prompt_Pipe",
+          "links": [
+            44
+          ]
+        },
+        {
+          "name": "Info",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_Upscaler_v1_pro"
+      },
+      "widgets_values": [
+        "NONE",
+        1,
+        1024,
+        1024,
+        2048,
+        "Upscale Image By",
+        "1x-Film-Degrainer-1-000.pth",
+        2,
+        "lanczos",
+        "NONE",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. ",
+        16,
+        true,
+        "Neuro_Generative_Tile_Fusion",
+        48,
+        0,
+        0,
+        16,
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 50,
+      "type": "Reroute",
+      "pos": [
+        5559.853515625,
+        2557.802978515625
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            40
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 51,
+      "type": "TBG_enrichment_pipe",
+      "pos": [
+        5839.853515625,
+        3677.802978515625
+      ],
+      "size": [
+        520,
+        900
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "Enrichment_Pipe",
+          "type": "Enrichment_Pipe",
+          "links": [
+            39
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "65e3185775dccfb38b5c70062dd6eed2d73bfa7b",
+        "Node name for S&R": "TBG_enrichment_pipe"
+      },
+      "widgets_values": [
+        false,
+        0.5,
+        0,
+        1,
+        false,
+        1.17,
+        0.2,
+        0.5,
+        false,
+        0,
+        false,
+        1.17,
+        0.12,
+        0.3,
+        0.5,
+        0.8,
+        0,
+        0,
+        0,
+        true,
+        1,
+        "none",
+        "lanczos",
+        "1x-Film-Degrainer-1-000.pth",
+        1,
+        1,
+        0.3,
+        1,
+        0
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 52,
+      "type": "TBG_Refiner_v1_pro",
+      "pos": [
+        5839.853515625,
+        2337.802978515625
+      ],
+      "size": [
+        496.751953125,
+        1256
+      ],
+      "flags": {},
+      "order": 107,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 34
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 35
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 36
+        },
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 37
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "name": "Tile_Prompt_Pipe",
+          "shape": 7,
+          "type": "TILE_Prompt_PIPE_OUT",
+          "link": 38
+        },
+        {
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": 39
+        },
+        {
+          "name": "Custom_Sigmas_!DENOISE=1",
+          "shape": 7,
+          "type": "SIGMAS",
+          "link": null
+        },
+        {
+          "name": "Resume_Tiled_Refinement_Image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "cropped_positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "cropped_negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "denoise_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 40
+        },
+        {
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": 41
+        },
+        {
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": 42
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": null
+        },
+        {
+          "name": "Tile_Prompt_Pipe",
+          "type": "Tile_Prompt_Pipe",
+          "links": null
+        },
+        {
+          "name": "Refined Image",
+          "type": "IMAGE",
+          "links": [
+            15
+          ]
+        },
+        {
+          "name": "Refined Image without Segments",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "Refined Image without ColorCorrection",
+          "type": "IMAGE",
+          "links": [
+            17
+          ]
+        },
+        {
+          "name": "Original Image",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "Image Tiles",
+          "type": "IMAGE",
+          "links": [
+            22
+          ]
+        },
+        {
+          "name": "Tile Overlay Grid",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "Prompt List",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "TBG Enhanced Refiner FLUX PRO - V1",
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_Refiner_v1_pro"
+      },
+      "widgets_values": [
+        "FLUX1",
+        "From TGB Tiler Node",
+        0.5,
+        409817055954550,
+        "randomize",
+        8,
+        1,
+        2,
+        "euler",
+        "simple",
+        0.6,
+        "normalized advanced",
+        false,
+        "1024",
+        "Restore old photograph, remove scratches, reduce noise, enhance details, high resolution, realistic, natural skin tones, clear facial features, no distortion, vintage photo restoration",
+        "",
+        false,
+        false,
+        false,
+        "",
+        "none",
+        1,
+        "OFF",
+        false,
+        0.01,
+        0,
+        1,
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "hsla(120, 25%, 26.7%, 1)"
+    },
+    {
+      "id": 53,
+      "type": "PreviewImage",
+      "pos": [
+        2419.853515625,
+        2297.802978515625
+      ],
+      "size": [
+        655.7254028320312,
+        775.2869262695312
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 23,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 54,
+      "type": "LoadImage",
+      "pos": [
+        1599.853515625,
+        2437.802978515625
+      ],
+      "size": [
+        737.9934692382812,
+        766.1026611328125
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 24,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            32
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "title": "TBG masked attention",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "Input.png",
+        "image"
+      ]
+    },
+    {
+      "id": 55,
+      "type": "UNETLoader",
+      "pos": [
+        3139.853515625,
+        2357.802978515625
+      ],
+      "size": [
+        310,
+        82
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "flux1-kontext-dev.safetensors",
+        "fp8_e4m3fn"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 56,
+      "type": "VAELoader",
+      "pos": [
+        3139.853515625,
+        2677.802978515625
+      ],
+      "size": [
+        260,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 26,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 57,
+      "type": "ModelSamplingFlux",
+      "pos": [
+        3479.853515625,
+        2757.802978515625
+      ],
+      "size": [
+        310,
+        130
+      ],
+      "flags": {},
+      "order": 80,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 43
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ModelSamplingFlux"
+      },
+      "widgets_values": [
+        1.0000000000000002,
+        0.5,
+        1024,
+        1024
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 58,
+      "type": "TBG_TilePrompter_v1",
+      "pos": [
+        4739.853515625,
+        3617.802978515625
+      ],
+      "size": [
+        700,
+        1200
+      ],
+      "flags": {},
+      "order": 99,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "Tile_Prompt_Pipe",
+          "type": "Tile_Prompt_Pipe",
+          "link": 44
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Tile_Prompt_Pipe",
+          "type": "TILE_Prompt_PIPE_OUT",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "title": "TBG Tile Prompt Pipe - V1",
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "65e3185775dccfb38b5c70062dd6eed2d73bfa7b",
+        "Node name for S&R": "TBG_TilePrompter_v1",
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false,
+        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\"]}",
+        "tile_0": "",
+        "tile_1": "",
+        "tile_2": "",
+        "tile_3": "",
+        "requeue": 153,
+        "tile_4": "",
+        "tile_5": "",
+        "tile_6": "",
+        "tile_7": "",
+        "tile_8": "",
+        "tile_9": "",
+        "tile_10": "",
+        "tile_11": "",
+        "tile_12": "",
+        "tile_13": "",
+        "tile_14": "",
+        "tile_15": "",
+        "tile_16": "",
+        "tile_17": "",
+        "tile_18": "",
+        "tile_19": "",
+        "tile_20": "",
+        "tile_21": "",
+        "tile_22": "",
+        "tile_23": "",
+        "tile_24": "",
+        "tile_25": "",
+        "tile_26": "",
+        "tile_27": "",
+        "tile_28": "",
+        "tile_29": "",
+        "tile_30": "",
+        "tile_31": "",
+        "tile_32": "",
+        "tile_33": "",
+        "tile_34": "",
+        "tile_35": "",
+        "tile_36": "",
+        "tile_37": "",
+        "tile_38": "",
+        "tile_39": "",
+        "tile_40": "",
+        "tile_41": "",
+        "tile_42": "",
+        "tile_43": "",
+        "tile_44": "",
+        "tile_45": "",
+        "tile_46": "",
+        "tile_47": "",
+        "tile_48": "",
+        "tile_49": "",
+        "tile_50": "",
+        "tile_51": "",
+        "tile_52": "",
+        "tile_53": "",
+        "tile_54": "",
+        "tile_55": "",
+        "tile_56": "",
+        "tile_57": "",
+        "tile_58": "",
+        "tile_59": "",
+        "tile_60": "",
+        "tile_61": "",
+        "tile_62": "",
+        "tile_63": "",
+        "tile_64": "",
+        "tile_65": "",
+        "tile_66": "",
+        "tile_67": "",
+        "tile_68": "",
+        "tile_69": "",
+        "tile_70": "",
+        "tile_71": "",
+        "tile_72": "",
+        "tile_73": "",
+        "tile_74": "",
+        "tile_75": "",
+        "tile_76": "",
+        "tile_77": "",
+        "tile_78": "",
+        "tile_79": "",
+        "tile_80": "",
+        "tile_81": "",
+        "tile_82": "",
+        "tile_83": "",
+        "tile_84": "",
+        "tile_85": "",
+        "tile_86": "",
+        "tile_87": "",
+        "tile_88": "",
+        "tile_89": "",
+        "tile_90": "",
+        "tile_91": "",
+        "tile_92": "",
+        "tile_93": "",
+        "tile_94": "",
+        "tile_95": "",
+        "tile_96": "",
+        "tile_97": "",
+        "tile_98": "",
+        "tile_99": "",
+        "tile_100": "",
+        "tile_101": "",
+        "tile_102": "",
+        "tile_103": "",
+        "tile_104": "",
+        "tile_105": "",
+        "tile_106": "",
+        "tile_107": "",
+        "tile_108": "",
+        "tile_109": "",
+        "prompt_0": "",
+        "denoise_0": "",
+        "seed_0": "",
+        "cnet_strength_0": "",
+        "prompt_1": "",
+        "denoise_1": "",
+        "seed_1": "",
+        "cnet_strength_1": "",
+        "prompt_2": "",
+        "denoise_2": "",
+        "seed_2": "",
+        "cnet_strength_2": "",
+        "prompt_3": "",
+        "denoise_3": "",
+        "seed_3": "",
+        "cnet_strength_3": "",
+        "prompt_4": "",
+        "denoise_4": "",
+        "seed_4": "",
+        "cnet_strength_4": "",
+        "prompt_5": "",
+        "denoise_5": "",
+        "seed_5": "",
+        "cnet_strength_5": ""
+      },
+      "widgets_values": [
+        153,
+        "",
+        "",
+        "unchanged",
+        "",
+        "unchanged",
+        false,
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 59,
+      "type": "LoadImage",
+      "pos": [
+        2579.853515625,
+        3257.802978515625
+      ],
+      "size": [
+        785.919677734375,
+        693.4404296875
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 27,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "title": "TBG masked attention",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "ComfyUI_temp_czkgz_00001_.png",
+        "image"
+      ]
+    },
+    {
+      "id": 60,
+      "type": "UpscaleModelLoader",
+      "pos": [
+        2419.853515625,
+        3117.802978515625
+      ],
+      "size": [
+        260,
+        70
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "UpscaleModelLoader"
+      },
+      "widgets_values": [
+        "ESRGAN_4x.pth"
+      ]
+    },
+    {
+      "id": 61,
+      "type": "ImageUpscaleWithModel",
+      "pos": [
+        2699.853515625,
+        3117.802978515625
+      ],
+      "size": [
+        370,
+        60
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ImageUpscaleWithModel"
+      }
+    },
+    {
+      "id": 62,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        2439.853515625,
+        3237.802978515625
+      ],
+      "size": [
+        640,
+        90
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ImageScaleToTotalPixels"
+      },
+      "widgets_values": [
+        "lanczos",
+        25.000000000000004
+      ]
+    },
+    {
+      "id": 63,
+      "type": "Note",
+      "pos": [
+        2439.853515625,
+        3377.802978515625
+      ],
+      "size": [
+        640,
+        200
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why pre Upscaling ?",
+      "properties": {},
+      "widgets_values": [
+        "Begin the upscaling process by increasing the image size in gradual steps—such as doubling the megapixel count—so the sampler can incrementally add more detail at each stage. It’s often beneficial to first enhance the original image at its native resolution before proceeding with any upscaling.\n\nMost upscaling tools, like SDUltimate, use an ESGAN upscaling step followed by standard interpolation downscaling before any further refinement, typically without providing previews of these intermediate stages.\n\nI prefer to inspect the upscaled image before moving on to generative refinement, as this allows for early detection of artifacts or issues. In many cases, performing the initial upscale without a model produces a less defined result, giving the sampler greater flexibility to generate new, high-quality details"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 64,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2133.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 77,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 46
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "VAE",
+          "links": [
+            58
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 65,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2213.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 86,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 47
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "CLIP",
+          "links": [
+            50
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 66,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2293.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 67,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2333.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            48
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 68,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2293.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            85
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 69,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2333.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 66,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 48
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            86
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 70,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2253.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 69,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 49
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 71,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2213.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 95,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 50
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "CLIP",
+          "links": [
+            79
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 72,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2373.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            51
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 73,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2373.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 67,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 51
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 74,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2413.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            52
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 75,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2413.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 68,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 52
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 76,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2453.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 101,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 53
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "Controlnet_Pipe",
+          "links": [
+            62
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 77,
+      "type": "TBG_ControlNetPipeline",
+      "pos": [
+        3679.853515625,
+        4177.802734375
+      ],
+      "size": [
+        441.11578369140625,
+        242
+      ],
+      "flags": {},
+      "order": 83,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 54
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 55
+        },
+        {
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            65
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_ControlNetPipeline"
+      },
+      "widgets_values": [
+        0.5000000000000001,
+        0,
+        0.8000000000000002,
+        100,
+        150,
+        "Canny Edge",
+        "NONE"
+      ]
+    },
+    {
+      "id": 78,
+      "type": "Reroute",
+      "pos": [
+        4359.853515625,
+        4077.802978515625
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 84,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 56
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "SEGS",
+          "links": [
+            77
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 79,
+      "type": "Reroute",
+      "pos": [
+        5539.853515625,
+        2507.802978515625
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 103,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 57
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "TBG_Pipe",
+          "links": [
+            81
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 80,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2133.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 87,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 58
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "VAE",
+          "links": [
+            80
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 81,
+      "type": "SaveImage",
+      "pos": [
+        6779.853515625,
+        4177.802734375
+      ],
+      "size": [
+        330,
+        270
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 113,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 59
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44"
+      },
+      "widgets_values": [
+        "TBG_ETUR\\David_R1\\final_"
+      ]
+    },
+    {
+      "id": 82,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2173.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 105,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 60
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "MODEL",
+          "links": [
+            78
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 83,
+      "type": "PreviewImage",
+      "pos": [
+        7359.853515625,
+        2327.802978515625
+      ],
+      "size": [
+        710,
+        750
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 114,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 61
+        }
+      ],
+      "outputs": [],
+      "title": "Refined Image",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 84,
+      "type": "Note",
+      "pos": [
+        1619.853515625,
+        3377.802978515625
+      ],
+      "size": [
+        720,
+        200
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why Segments ?",
+      "properties": {},
+      "widgets_values": [
+        "In certain situations, placing an object entirely within a single tile is essential for achieving consistent results. By applying a mask to an object, it can be sampled separately from the rest of the image. The masked area will then be upscaled to match the tile size, enhancing its detail.\n\nThis technique can also be used to repair or modify elements by applying different settings, prompts, or denoise values using the function.\n\nAfter the entire image is processed, the segmented areas will be handled. ImpactPack is compatible with TBG ETUR segmentation entries, making it possible to automate the selection process."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 85,
+      "type": "Reroute",
+      "pos": [
+        8019.853515625,
+        1797.8028564453125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "TBG",
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 86,
+      "type": "Reroute",
+      "pos": [
+        5548.427734375,
+        2453.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 108,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 62
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "Controlnet_Pipe",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 87,
+      "type": "TBG_ControlNetPipeline",
+      "pos": [
+        3179.853515625,
+        4197.802734375
+      ],
+      "size": [
+        377.97528076171875,
+        242
+      ],
+      "flags": {},
+      "order": 71,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 63
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            55
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_ControlNetPipeline"
+      },
+      "widgets_values": [
+        1,
+        0,
+        1,
+        100,
+        150,
+        "None",
+        "NONE"
+      ]
+    },
+    {
+      "id": 88,
+      "type": "TBG_ControlNetPipeline",
+      "pos": [
+        4219.853515625,
+        4177.802734375
+      ],
+      "size": [
+        440,
+        242
+      ],
+      "flags": {},
+      "order": 92,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 64
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 65
+        },
+        {
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            53
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_ControlNetPipeline"
+      },
+      "widgets_values": [
+        0.5,
+        0,
+        0.8000000000000002,
+        255,
+        150,
+        "DepthAnythingV2",
+        "Stitched"
+      ]
+    },
+    {
+      "id": 89,
+      "type": "PreviewImage",
+      "pos": [
+        6589.853515625,
+        2317.802978515625
+      ],
+      "size": [
+        720,
+        780
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 115,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 66
+        }
+      ],
+      "outputs": [],
+      "title": "TILES",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 90,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2173.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 94,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 67
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "MODEL",
+          "links": [
+            60
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 91,
+      "type": "Reroute",
+      "pos": [
+        4728.427734375,
+        2253.634033203125
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            49
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 92,
+      "type": "DualCLIPLoader",
+      "pos": [
+        3139.853515625,
+        2477.802978515625
+      ],
+      "size": [
+        306.35992431640625,
+        143.02444458007812
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 40,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            69
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "DualCLIPLoader"
+      },
+      "widgets_values": [
+        "t5xxl_fp8_e4m3fn.safetensors",
+        "Long-ViT-L-14-BEST-GmP-smooth-ft.safetensors",
+        "flux",
+        "default"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 93,
+      "type": "LoraLoader",
+      "pos": [
+        3479.853515625,
+        2337.802978515625
+      ],
+      "size": [
+        270,
+        126
+      ],
+      "flags": {},
+      "order": 76,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 68
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 69
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            87
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            47
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "LoraLoader"
+      },
+      "widgets_values": [
+        "FLUX\\FLUX.1-Turbo-Alpha-8Step.safetensors",
+        0.14,
+        1
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 94,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        3139.853515625,
+        3017.802978515625
+      ],
+      "size": [
+        270,
+        98
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            70
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": []
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "SDXL\\SDXL-Juggernaut-XI-byRunDiffusion.safetensors"
+      ]
+    },
+    {
+      "id": 95,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        3139.853515625,
+        3177.802978515625
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 70,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 70
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "SDXL\\sdxl_lightning_8step_lora.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 96,
+      "type": "Note",
+      "pos": [
+        3219.853515625,
+        3917.802978515625
+      ],
+      "size": [
+        590,
+        140
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why use Redux?",
+      "properties": {},
+      "widgets_values": [
+        "Why use Redux?\nRedux regenerates the image while preserving its overall composition and style.\nA value of 1 means full reconstruction with strict adherence to the original\nLower values allow more creative freedom in the output\nA value of 0 disables Redux entirely\nIf neither a Redux Clip nor a Style Model is connected, Redux will automatically be disabled\nRedux is particularly useful for preserving fine materials, textures, and structural composition. In many cases, it can serve as a lightweight alternative to ControlNets.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 97,
+      "type": "ControlNetLoader",
+      "pos": [
+        3179.853515625,
+        4557.802734375
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 43,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            63
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "Flux\\Flux.1-dev-Controlnet-Upscaler.safetensors"
+      ]
+    },
+    {
+      "id": 98,
+      "type": "SetUnionControlNetType",
+      "pos": [
+        4299.853515625,
+        4457.802734375
+      ],
+      "size": [
+        335.9449157714844,
+        58
+      ],
+      "flags": {},
+      "order": 72,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 71
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            64
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "SetUnionControlNetType"
+      },
+      "widgets_values": [
+        "depth"
+      ]
+    },
+    {
+      "id": 99,
+      "type": "SetUnionControlNetType",
+      "pos": [
+        3799.853515625,
+        4457.802734375
+      ],
+      "size": [
+        335.9449157714844,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 73,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 72
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            54
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "SetUnionControlNetType"
+      },
+      "widgets_values": [
+        "canny/lineart/anime_lineart/mlsd"
+      ]
+    },
+    {
+      "id": 100,
+      "type": "ControlNetLoader",
+      "pos": [
+        4199.853515625,
+        4537.802734375
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 44,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            71,
+            72
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro-2.safetensors"
+      ]
+    },
+    {
+      "id": 101,
+      "type": "TBG_masked_attention",
+      "pos": [
+        2079.853515625,
+        2337.802978515625
+      ],
+      "size": [
+        210,
+        58
+      ],
+      "flags": {},
+      "order": 75,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 73
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SEGS",
+          "type": "SEGS",
+          "links": [
+            56
+          ]
+        }
+      ],
+      "title": "TBG Masked Attention",
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_masked_attention"
+      },
+      "widgets_values": [
+        1.5
+      ]
+    },
+    {
+      "id": 102,
+      "type": "StyleModelLoader",
+      "pos": [
+        4299.853515625,
+        3897.802978515625
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 45,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STYLE_MODEL",
+          "type": "STYLE_MODEL",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "StyleModelLoader"
+      },
+      "widgets_values": [
+        "flex1_redux_siglip2_512.safetensors"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 103,
+      "type": "CLIPVisionLoader",
+      "pos": [
+        4299.853515625,
+        3997.802978515625
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 46,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "CLIPVisionLoader"
+      },
+      "widgets_values": [
+        "siglip2-so400m-patch16-512.safetensors"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 104,
+      "type": "TBG_api_status_check",
+      "pos": [
+        5259.853515625,
+        3017.802978515625
+      ],
+      "size": [
+        260,
+        60
+      ],
+      "flags": {},
+      "order": 47,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "Member Status",
+          "type": "STRING",
+          "links": [
+            74
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "65e3185775dccfb38b5c70062dd6eed2d73bfa7b",
+        "Node name for S&R": "TBG_api_status_check"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 105,
+      "type": "PreviewAny",
+      "pos": [
+        5259.853515625,
+        3117.802978515625
+      ],
+      "size": [
+        260,
+        340
+      ],
+      "flags": {},
+      "order": 74,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 74
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.55",
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 106,
+      "type": "PreviewImage",
+      "pos": [
+        5259.853515625,
+        2697.802978515625
+      ],
+      "size": [
+        260,
+        260
+      ],
+      "flags": {},
+      "order": 102,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 75
+        }
+      ],
+      "outputs": [],
+      "title": "TBG Mask Overlay",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": [],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 107,
+      "type": "TBG_Upscaler_v1_pro",
+      "pos": [
+        4729.853515625,
+        2707.802978515625
+      ],
+      "size": [
+        500,
+        780
+      ],
+      "flags": {},
+      "order": 93,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 76
+        },
+        {
+          "name": "PRO_segs",
+          "shape": 7,
+          "type": "SEGS",
+          "link": 77
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Mask Overlay Preview",
+          "type": "IMAGE",
+          "links": [
+            75
+          ]
+        },
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            57
+          ]
+        },
+        {
+          "name": "Tile_Prompt_Pipe",
+          "type": "Tile_Prompt_Pipe",
+          "links": [
+            88
+          ]
+        },
+        {
+          "name": "Info",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_Upscaler_v1_pro"
+      },
+      "widgets_values": [
+        "NONE",
+        1,
+        1024,
+        1024,
+        2048,
+        "Upscale Image By",
+        "1x-Film-Degrainer-1-000.pth",
+        2,
+        "lanczos",
+        "NONE",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. ",
+        16,
+        true,
+        "Neuro_Generative_Tile_Fusion",
+        48,
+        0,
+        0,
+        16,
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 108,
+      "type": "Reroute",
+      "pos": [
+        5559.853515625,
+        2557.802978515625
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 48,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            84
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 109,
+      "type": "TBG_enrichment_pipe",
+      "pos": [
+        5839.853515625,
+        3677.802978515625
+      ],
+      "size": [
+        520,
+        900
+      ],
+      "flags": {},
+      "order": 49,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "Enrichment_Pipe",
+          "type": "Enrichment_Pipe",
+          "links": [
+            83
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "65e3185775dccfb38b5c70062dd6eed2d73bfa7b",
+        "Node name for S&R": "TBG_enrichment_pipe"
+      },
+      "widgets_values": [
+        false,
+        0.5,
+        0,
+        1,
+        false,
+        1.17,
+        0.2,
+        0.5,
+        false,
+        0,
+        false,
+        1.17,
+        0.12,
+        0.3,
+        0.5,
+        0.8,
+        0,
+        0,
+        0,
+        true,
+        1,
+        "none",
+        "lanczos",
+        "1x-Film-Degrainer-1-000.pth",
+        1,
+        1,
+        0.3,
+        1,
+        0
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 110,
+      "type": "TBG_Refiner_v1_pro",
+      "pos": [
+        5839.853515625,
+        2337.802978515625
+      ],
+      "size": [
+        496.751953125,
+        1256
+      ],
+      "flags": {},
+      "order": 109,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 78
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 79
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 80
+        },
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 81
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "name": "Tile_Prompt_Pipe",
+          "shape": 7,
+          "type": "TILE_Prompt_PIPE_OUT",
+          "link": 82
+        },
+        {
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": 83
+        },
+        {
+          "name": "Custom_Sigmas_!DENOISE=1",
+          "shape": 7,
+          "type": "SIGMAS",
+          "link": null
+        },
+        {
+          "name": "Resume_Tiled_Refinement_Image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "cropped_positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "cropped_negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "denoise_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 84
+        },
+        {
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": 85
+        },
+        {
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": 86
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": null
+        },
+        {
+          "name": "Tile_Prompt_Pipe",
+          "type": "Tile_Prompt_Pipe",
+          "links": null
+        },
+        {
+          "name": "Refined Image",
+          "type": "IMAGE",
+          "links": [
+            59
+          ]
+        },
+        {
+          "name": "Refined Image without Segments",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "Refined Image without ColorCorrection",
+          "type": "IMAGE",
+          "links": [
+            61
+          ]
+        },
+        {
+          "name": "Original Image",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "Image Tiles",
+          "type": "IMAGE",
+          "links": [
+            66
+          ]
+        },
+        {
+          "name": "Tile Overlay Grid",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "Prompt List",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "TBG Enhanced Refiner FLUX PRO - V1",
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "ec8f7d2bee5023ce984d66072be123a3fa777238",
+        "Node name for S&R": "TBG_Refiner_v1_pro"
+      },
+      "widgets_values": [
+        "FLUX1",
+        "From TGB Tiler Node",
+        0.5,
+        651836505077903,
+        "randomize",
+        8,
+        1,
+        2,
+        "euler",
+        "simple",
+        0.6,
+        "normalized advanced",
+        false,
+        "1024",
+        "Restore old photograph, remove scratches, reduce noise, enhance details, high resolution, realistic, natural skin tones, clear facial features, no distortion, vintage photo restoration",
+        "",
+        false,
+        false,
+        false,
+        "",
+        "none",
+        1,
+        "OFF",
+        false,
+        0.01,
+        0,
+        1,
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "hsla(120, 25%, 26.7%, 1)"
+    },
+    {
+      "id": 111,
+      "type": "PreviewImage",
+      "pos": [
+        2419.853515625,
+        2297.802978515625
+      ],
+      "size": [
+        655.7254028320312,
+        775.2869262695312
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 50,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 112,
+      "type": "LoadImage",
+      "pos": [
+        1599.853515625,
+        2437.802978515625
+      ],
+      "size": [
+        737.9934692382812,
+        766.1026611328125
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 51,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            76
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            73
+          ]
+        }
+      ],
+      "title": "TBG masked attention",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "Input.png",
+        "image"
+      ]
+    },
+    {
+      "id": 113,
+      "type": "UNETLoader",
+      "pos": [
+        3139.853515625,
+        2357.802978515625
+      ],
+      "size": [
+        310,
+        82
+      ],
+      "flags": {},
+      "order": 52,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            68
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "flux1-kontext-dev.safetensors",
+        "fp8_e4m3fn"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 114,
+      "type": "VAELoader",
+      "pos": [
+        3139.853515625,
+        2677.802978515625
+      ],
+      "size": [
+        260,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 53,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            46
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 115,
+      "type": "ModelSamplingFlux",
+      "pos": [
+        3479.853515625,
+        2757.802978515625
+      ],
+      "size": [
+        310,
+        130
+      ],
+      "flags": {},
+      "order": 85,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 87
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            67
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ModelSamplingFlux"
+      },
+      "widgets_values": [
+        1.0000000000000002,
+        0.5,
+        1024,
+        1024
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 116,
+      "type": "TBG_TilePrompter_v1",
+      "pos": [
+        4739.853515625,
+        3617.802978515625
+      ],
+      "size": [
+        700,
+        1200
+      ],
+      "flags": {},
+      "order": 104,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "Tile_Prompt_Pipe",
+          "type": "Tile_Prompt_Pipe",
+          "link": 88
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Tile_Prompt_Pipe",
+          "type": "TILE_Prompt_PIPE_OUT",
+          "links": [
+            82
+          ]
+        }
+      ],
+      "title": "TBG Tile Prompt Pipe - V1",
+      "properties": {
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "ver": "65e3185775dccfb38b5c70062dd6eed2d73bfa7b",
+        "Node name for S&R": "TBG_TilePrompter_v1",
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false,
+        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\"]}",
+        "tile_0": "",
+        "tile_1": "",
+        "tile_2": "",
+        "tile_3": "",
+        "requeue": 153,
+        "tile_4": "",
+        "tile_5": "",
+        "tile_6": "",
+        "tile_7": "",
+        "tile_8": "",
+        "tile_9": "",
+        "tile_10": "",
+        "tile_11": "",
+        "tile_12": "",
+        "tile_13": "",
+        "tile_14": "",
+        "tile_15": "",
+        "tile_16": "",
+        "tile_17": "",
+        "tile_18": "",
+        "tile_19": "",
+        "tile_20": "",
+        "tile_21": "",
+        "tile_22": "",
+        "tile_23": "",
+        "tile_24": "",
+        "tile_25": "",
+        "tile_26": "",
+        "tile_27": "",
+        "tile_28": "",
+        "tile_29": "",
+        "tile_30": "",
+        "tile_31": "",
+        "tile_32": "",
+        "tile_33": "",
+        "tile_34": "",
+        "tile_35": "",
+        "tile_36": "",
+        "tile_37": "",
+        "tile_38": "",
+        "tile_39": "",
+        "tile_40": "",
+        "tile_41": "",
+        "tile_42": "",
+        "tile_43": "",
+        "tile_44": "",
+        "tile_45": "",
+        "tile_46": "",
+        "tile_47": "",
+        "tile_48": "",
+        "tile_49": "",
+        "tile_50": "",
+        "tile_51": "",
+        "tile_52": "",
+        "tile_53": "",
+        "tile_54": "",
+        "tile_55": "",
+        "tile_56": "",
+        "tile_57": "",
+        "tile_58": "",
+        "tile_59": "",
+        "tile_60": "",
+        "tile_61": "",
+        "tile_62": "",
+        "tile_63": "",
+        "tile_64": "",
+        "tile_65": "",
+        "tile_66": "",
+        "tile_67": "",
+        "tile_68": "",
+        "tile_69": "",
+        "tile_70": "",
+        "tile_71": "",
+        "tile_72": "",
+        "tile_73": "",
+        "tile_74": "",
+        "tile_75": "",
+        "tile_76": "",
+        "tile_77": "",
+        "tile_78": "",
+        "tile_79": "",
+        "tile_80": "",
+        "tile_81": "",
+        "tile_82": "",
+        "tile_83": "",
+        "tile_84": "",
+        "tile_85": "",
+        "tile_86": "",
+        "tile_87": "",
+        "tile_88": "",
+        "tile_89": "",
+        "tile_90": "",
+        "tile_91": "",
+        "tile_92": "",
+        "tile_93": "",
+        "tile_94": "",
+        "tile_95": "",
+        "tile_96": "",
+        "tile_97": "",
+        "tile_98": "",
+        "tile_99": "",
+        "tile_100": "",
+        "tile_101": "",
+        "tile_102": "",
+        "tile_103": "",
+        "tile_104": "",
+        "tile_105": "",
+        "tile_106": "",
+        "tile_107": "",
+        "tile_108": "",
+        "tile_109": "",
+        "prompt_0": "",
+        "denoise_0": "",
+        "seed_0": "",
+        "cnet_strength_0": "",
+        "prompt_1": "",
+        "denoise_1": "",
+        "seed_1": "",
+        "cnet_strength_1": "",
+        "prompt_2": "",
+        "denoise_2": "",
+        "seed_2": "",
+        "cnet_strength_2": "",
+        "prompt_3": "",
+        "denoise_3": "",
+        "seed_3": "",
+        "cnet_strength_3": "",
+        "prompt_4": "",
+        "denoise_4": "",
+        "seed_4": "",
+        "cnet_strength_4": "",
+        "prompt_5": "",
+        "denoise_5": "",
+        "seed_5": "",
+        "cnet_strength_5": ""
+      },
+      "widgets_values": [
+        153,
+        "",
+        "",
+        "unchanged",
+        "",
+        "unchanged",
+        false,
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    }
+  ],
+  "links": [
+    [
+      2,
+      56,
+      0,
+      6,
+      0,
+      "*"
+    ],
+    [
+      3,
+      35,
+      1,
+      7,
+      0,
+      "*"
+    ],
+    [
+      4,
+      9,
+      0,
+      11,
+      0,
+      "*"
+    ],
+    [
+      5,
+      33,
+      0,
+      12,
+      0,
+      "*"
+    ],
+    [
+      6,
+      7,
+      0,
+      13,
+      0,
+      "*"
+    ],
+    [
+      7,
+      14,
+      0,
+      15,
+      0,
+      "*"
+    ],
+    [
+      8,
+      16,
+      0,
+      17,
+      0,
+      "*"
+    ],
+    [
+      9,
+      30,
+      0,
+      18,
+      0,
+      "*"
+    ],
+    [
+      10,
+      41,
+      0,
+      19,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      11,
+      29,
+      0,
+      19,
+      1,
+      "Controlnet_Pipe"
+    ],
+    [
+      12,
+      43,
+      0,
+      20,
+      0,
+      "*"
+    ],
+    [
+      13,
+      49,
+      1,
+      21,
+      0,
+      "*"
+    ],
+    [
+      14,
+      6,
+      0,
+      22,
+      0,
+      "*"
+    ],
+    [
+      15,
+      52,
+      2,
+      23,
+      0,
+      "IMAGE"
+    ],
+    [
+      16,
+      32,
+      0,
+      24,
+      0,
+      "*"
+    ],
+    [
+      17,
+      52,
+      4,
+      25,
+      0,
+      "IMAGE"
+    ],
+    [
+      18,
+      18,
+      0,
+      28,
+      0,
+      "*"
+    ],
+    [
+      19,
+      39,
+      0,
+      29,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      20,
+      40,
+      0,
+      30,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      21,
+      19,
+      0,
+      30,
+      1,
+      "Controlnet_Pipe"
+    ],
+    [
+      22,
+      52,
+      6,
+      31,
+      0,
+      "IMAGE"
+    ],
+    [
+      23,
+      57,
+      0,
+      32,
+      0,
+      "*"
+    ],
+    [
+      24,
+      55,
+      0,
+      35,
+      0,
+      "MODEL"
+    ],
+    [
+      25,
+      34,
+      0,
+      35,
+      1,
+      "CLIP"
+    ],
+    [
+      26,
+      36,
+      0,
+      37,
+      0,
+      "MODEL"
+    ],
+    [
+      27,
+      42,
+      0,
+      40,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      28,
+      42,
+      0,
+      41,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      29,
+      54,
+      1,
+      43,
+      0,
+      "MASK"
+    ],
+    [
+      30,
+      46,
+      0,
+      47,
+      0,
+      "*"
+    ],
+    [
+      31,
+      49,
+      0,
+      48,
+      0,
+      "IMAGE"
+    ],
+    [
+      32,
+      54,
+      0,
+      49,
+      0,
+      "IMAGE"
+    ],
+    [
+      33,
+      20,
+      0,
+      49,
+      1,
+      "SEGS"
+    ],
+    [
+      34,
+      24,
+      0,
+      52,
+      0,
+      "MODEL"
+    ],
+    [
+      35,
+      13,
+      0,
+      52,
+      1,
+      "CLIP"
+    ],
+    [
+      36,
+      22,
+      0,
+      52,
+      2,
+      "VAE"
+    ],
+    [
+      37,
+      21,
+      0,
+      52,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      38,
+      58,
+      0,
+      52,
+      5,
+      "TILE_Prompt_PIPE_OUT"
+    ],
+    [
+      39,
+      51,
+      0,
+      52,
+      6,
+      "Enrichment_Pipe"
+    ],
+    [
+      40,
+      50,
+      0,
+      52,
+      11,
+      "MASK"
+    ],
+    [
+      41,
+      10,
+      0,
+      52,
+      12,
+      "STYLE_MODEL"
+    ],
+    [
+      42,
+      11,
+      0,
+      52,
+      13,
+      "CLIP_VISION"
+    ],
+    [
+      43,
+      35,
+      0,
+      57,
+      0,
+      "MODEL"
+    ],
+    [
+      44,
+      49,
+      2,
+      58,
+      0,
+      "Tile_Prompt_Pipe"
+    ],
+    [
+      46,
+      114,
+      0,
+      64,
+      0,
+      "*"
+    ],
+    [
+      47,
+      93,
+      1,
+      65,
+      0,
+      "*"
+    ],
+    [
+      48,
+      67,
+      0,
+      69,
+      0,
+      "*"
+    ],
+    [
+      49,
+      91,
+      0,
+      70,
+      0,
+      "*"
+    ],
+    [
+      50,
+      65,
+      0,
+      71,
+      0,
+      "*"
+    ],
+    [
+      51,
+      72,
+      0,
+      73,
+      0,
+      "*"
+    ],
+    [
+      52,
+      74,
+      0,
+      75,
+      0,
+      "*"
+    ],
+    [
+      53,
+      88,
+      0,
+      76,
+      0,
+      "*"
+    ],
+    [
+      54,
+      99,
+      0,
+      77,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      55,
+      87,
+      0,
+      77,
+      1,
+      "Controlnet_Pipe"
+    ],
+    [
+      56,
+      101,
+      0,
+      78,
+      0,
+      "*"
+    ],
+    [
+      57,
+      107,
+      1,
+      79,
+      0,
+      "*"
+    ],
+    [
+      58,
+      64,
+      0,
+      80,
+      0,
+      "*"
+    ],
+    [
+      59,
+      110,
+      2,
+      81,
+      0,
+      "IMAGE"
+    ],
+    [
+      60,
+      90,
+      0,
+      82,
+      0,
+      "*"
+    ],
+    [
+      61,
+      110,
+      4,
+      83,
+      0,
+      "IMAGE"
+    ],
+    [
+      62,
+      76,
+      0,
+      86,
+      0,
+      "*"
+    ],
+    [
+      63,
+      97,
+      0,
+      87,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      64,
+      98,
+      0,
+      88,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      65,
+      77,
+      0,
+      88,
+      1,
+      "Controlnet_Pipe"
+    ],
+    [
+      66,
+      110,
+      6,
+      89,
+      0,
+      "IMAGE"
+    ],
+    [
+      67,
+      115,
+      0,
+      90,
+      0,
+      "*"
+    ],
+    [
+      68,
+      113,
+      0,
+      93,
+      0,
+      "MODEL"
+    ],
+    [
+      69,
+      92,
+      0,
+      93,
+      1,
+      "CLIP"
+    ],
+    [
+      70,
+      94,
+      0,
+      95,
+      0,
+      "MODEL"
+    ],
+    [
+      71,
+      100,
+      0,
+      98,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      72,
+      100,
+      0,
+      99,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      73,
+      112,
+      1,
+      101,
+      0,
+      "MASK"
+    ],
+    [
+      74,
+      104,
+      0,
+      105,
+      0,
+      "*"
+    ],
+    [
+      75,
+      107,
+      0,
+      106,
+      0,
+      "IMAGE"
+    ],
+    [
+      76,
+      112,
+      0,
+      107,
+      0,
+      "IMAGE"
+    ],
+    [
+      77,
+      78,
+      0,
+      107,
+      1,
+      "SEGS"
+    ],
+    [
+      78,
+      82,
+      0,
+      110,
+      0,
+      "MODEL"
+    ],
+    [
+      79,
+      71,
+      0,
+      110,
+      1,
+      "CLIP"
+    ],
+    [
+      80,
+      80,
+      0,
+      110,
+      2,
+      "VAE"
+    ],
+    [
+      81,
+      79,
+      0,
+      110,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      82,
+      116,
+      0,
+      110,
+      5,
+      "TILE_Prompt_PIPE_OUT"
+    ],
+    [
+      83,
+      109,
+      0,
+      110,
+      6,
+      "Enrichment_Pipe"
+    ],
+    [
+      84,
+      108,
+      0,
+      110,
+      11,
+      "MASK"
+    ],
+    [
+      85,
+      68,
+      0,
+      110,
+      12,
+      "STYLE_MODEL"
+    ],
+    [
+      86,
+      69,
+      0,
+      110,
+      13,
+      "CLIP_VISION"
+    ],
+    [
+      87,
+      93,
+      0,
+      115,
+      0,
+      "MODEL"
+    ],
+    [
+      88,
+      107,
+      2,
+      116,
+      0,
+      "Tile_Prompt_Pipe"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Redux Style Transfer",
+      "bounding": [
+        3139.853515625,
+        3837.802978515625,
+        1540,
+        240
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Controlnet Pipe depth",
+      "bounding": [
+        4179.853515625,
+        4097.802734375,
+        500,
+        500
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Controlnet Pipe Canny",
+      "bounding": [
+        3639.853515625,
+        4097.802734375,
+        520,
+        500
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Controlnet Pipe Upscale",
+      "bounding": [
+        3139.853515625,
+        4097.802734375,
+        480,
+        500
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "TBG_Enhanced Tiled Upscaler and Refiner PRO                                                                                                                           Version Alfa 1.08v1",
+      "bounding": [
+        1579.853515625,
+        1937.8028564453125,
+        6540,
+        140
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Masked Attention",
+      "bounding": [
+        1579.853515625,
+        2117.802978515625,
+        800,
+        1480
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "Pre Upscale",
+      "bounding": [
+        2399.853515625,
+        2117.802978515625,
+        700,
+        1480
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "Enhanced Refiner",
+      "bounding": [
+        5679.853515625,
+        2117.802978515625,
+        840,
+        2800
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 9,
+      "title": "Final Image",
+      "bounding": [
+        6539.853515625,
+        2117.802978515625,
+        1560,
+        2100
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 10,
+      "title": "TBG_ETUR PRO FLUX Kontext + Qwen Image Edit + Nunchaku + Krea + Qwen 2.5 VL + Skycaptioner V1- New Tile Promt Pipe",
+      "bounding": [
+        1579.853515625,
+        1777.8028564453125,
+        6540,
+        120
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 11,
+      "title": "Enhanced Tiler",
+      "bounding": [
+        4719.853515625,
+        2517.802978515625,
+        800,
+        980
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 12,
+      "title": "1.67 x Fastes Flux FP8 turbo Setup",
+      "bounding": [
+        3119.853515625,
+        2277.802978515625,
+        700,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 13,
+      "title": "Controlnet Pipe Upscale",
+      "bounding": [
+        3139.853515625,
+        3297.802978515625,
+        1540,
+        520
+      ],
+      "color": "#8A8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 14,
+      "title": "Group",
+      "bounding": [
+        4699.853515625,
+        3537.802978515625,
+        820,
+        2440
+      ],
+      "color": "#8AA",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 15,
+      "title": "8.35 x faster Nunchaku FLUX DiT Loader",
+      "bounding": [
+        3839.853515625,
+        2277.802978515625,
+        640,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 16,
+      "title": "SDXL",
+      "bounding": [
+        3119.853515625,
+        2937.802978515625,
+        360,
+        340
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 17,
+      "title": "Group",
+      "bounding": [
+        4499.853515625,
+        2277.802978515625,
+        180,
+        1000
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 18,
+      "title": "Redux Style Transfer",
+      "bounding": [
+        3139.853515625,
+        3837.802978515625,
+        1540,
+        240
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 19,
+      "title": "Controlnet Pipe depth",
+      "bounding": [
+        4179.853515625,
+        4097.802734375,
+        500,
+        500
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 20,
+      "title": "Controlnet Pipe Canny",
+      "bounding": [
+        3639.853515625,
+        4097.802734375,
+        520,
+        500
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 21,
+      "title": "Controlnet Pipe Upscale",
+      "bounding": [
+        3139.853515625,
+        4097.802734375,
+        480,
+        500
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 22,
+      "title": "TBG_Enhanced Tiled Upscaler and Refiner PRO                                                                                                                           Version Alfa 1.08v1",
+      "bounding": [
+        1579.853515625,
+        1937.8028564453125,
+        6540,
+        140
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 23,
+      "title": "Masked Attention",
+      "bounding": [
+        1579.853515625,
+        2117.802978515625,
+        800,
+        1480
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 24,
+      "title": "Pre Upscale",
+      "bounding": [
+        2399.853515625,
+        2117.802978515625,
+        700,
+        1480
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 25,
+      "title": "Enhanced Refiner",
+      "bounding": [
+        5679.853515625,
+        2117.802978515625,
+        840,
+        2800
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 26,
+      "title": "Final Image",
+      "bounding": [
+        6539.853515625,
+        2117.802978515625,
+        1560,
+        2100
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 27,
+      "title": "TBG_ETUR PRO FLUX Kontext + Qwen Image Edit + Nunchaku + Krea + Qwen 2.5 VL + Skycaptioner V1- New Tile Promt Pipe",
+      "bounding": [
+        1579.853515625,
+        1777.8028564453125,
+        6540,
+        120
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 28,
+      "title": "Enhanced Tiler",
+      "bounding": [
+        4719.853515625,
+        2517.802978515625,
+        800,
+        980
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 29,
+      "title": "1.67 x Fastes Flux FP8 turbo Setup",
+      "bounding": [
+        3119.853515625,
+        2277.802978515625,
+        700,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 30,
+      "title": "Controlnet Pipe Upscale",
+      "bounding": [
+        3139.853515625,
+        3297.802978515625,
+        1540,
+        520
+      ],
+      "color": "#8A8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 31,
+      "title": "Group",
+      "bounding": [
+        4699.853515625,
+        3537.802978515625,
+        820,
+        2440
+      ],
+      "color": "#8AA",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 32,
+      "title": "8.35 x faster Nunchaku FLUX DiT Loader",
+      "bounding": [
+        3839.853515625,
+        2277.802978515625,
+        640,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 33,
+      "title": "SDXL",
+      "bounding": [
+        3119.853515625,
+        2937.802978515625,
+        360,
+        340
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 34,
+      "title": "Group",
+      "bounding": [
+        4499.853515625,
+        2277.802978515625,
+        180,
+        1000
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.318630817710357,
+      "offset": [
+        -929.3301342927192,
+        -1659.865145300381
+      ]
+    },
+    "frontendVersion": "1.25.11"
+  },
+  "version": 0.4
+}
