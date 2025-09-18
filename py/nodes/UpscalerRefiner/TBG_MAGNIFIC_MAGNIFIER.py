@@ -232,11 +232,11 @@ class TBG_magnific_ETUR:
         kwargs["LLMPrompt_Prompt"] = ""
 
         # Initial fusion and compositing settings
-        kwargs["compositing_mask_blur"] = 32
+        kwargs["compositing_mask_blur"] = 16
         kwargs["PRO_Tile_Fusion_blur_margin"] = 48
         kwargs["PRO_Tile_Fusion_shift_in_out"] = 0
-        kwargs["PRO_Tile_Fusion_shift_top_left"] = 0
-        kwargs["PRO_Tile_Fusion_border_margin"] = 32
+        kwargs["PRO_Tile_Fusion_shift_top_left"] = 48
+        kwargs["PRO_Tile_Fusion_border_margin"] = 16
         kwargs["Tile_Fusion_Mode"] = "From TGB Tiler Node"
         kwargs["Tile_Fusion_Blend"] = 0
         kwargs["denoise_method"] = 'normalized advanced'
@@ -267,11 +267,12 @@ class TBG_magnific_ETUR:
 
         # Set borders and scale based on denoise strength (max total recommended 204)
         kwargs["PRO_Tile_Fusion_blur_margin"] = 16 + int(kwargs["denoise"] * 96)  # 102 divide the tile by 5 so min 1 stays to render 1024 = 204
-        kwargs["PRO_Tile_Fusion_border_margin"] = 8 + int(kwargs["denoise"] * 80)  # 88
+        kwargs["PRO_Tile_Fusion_border_margin"] = 16 # + int(kwargs["denoise"] * 8)  # 88
         kwargs["PRO_Tile_Fusion_blur_margin"] = (kwargs["PRO_Tile_Fusion_blur_margin"] // 8) * 8
         kwargs["PRO_Tile_Fusion_border_margin"] = (kwargs["PRO_Tile_Fusion_border_margin"] // 8) * 8
         kwargs["PRO_Tile_Fusion_blur_margin"] = max(kwargs["PRO_Tile_Fusion_blur_margin"], 48)
         kwargs["PRO_Tile_Fusion_border_margin"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 32)
+        kwargs["PRO_Tile_Fusion_shift_top_left"] = kwargs["PRO_Tile_Fusion_border_margin"] + kwargs["PRO_Tile_Fusion_blur_margin"]
         kwargs["compositing_mask_blur"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 16)
 
 
@@ -287,9 +288,9 @@ class TBG_magnific_ETUR:
         kwargs['Color_Match_Str'] = 1 - kwargs["denoise"]
         kwargs["Enrichment_Pipe"][0]["eta"] = kwargs["Add_Details"]
         kwargs["Enrichment_Pipe"][0]["eta_starta"] = 0
-        kwargs["Enrichment_Pipe"][0]["eta_end"] = 0.5
+        kwargs["Enrichment_Pipe"][0]["eta_end"] = 0.3
         kwargs["Enrichment_Pipe"][0]["resharpen_start"] = 0
-        kwargs["Enrichment_Pipe"][0]["resharpen_end"] = 0.2
+        kwargs["Enrichment_Pipe"][0]["resharpen_end"] = 0.3
         i = 0
         refined_image = None
         # ── Main upscale / refine loop ───────────────────────────────── #

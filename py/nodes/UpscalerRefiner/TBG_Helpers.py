@@ -8,7 +8,7 @@ from typing import Tuple, List
 
 from comfy_extras.nodes_mask import ImageToMask
 from nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
-
+from pygments.lexer import default
 
 
 def tensor_to_pil(image_tensor, batch_index=0) -> Image:
@@ -811,5 +811,4 @@ NODE_DISPLAY_NAME_MAPPINGS["MaskUpdateInpaintFromConditioning"] = "Mask Hard Ble
 NODE_DISPLAY_NAME_MAPPINGS["MaskConditionalPaint"] = "MaskConditionalPaint"
 NODE_DISPLAY_NAME_MAPPINGS["MaskToDenoiseInterpolator"] = "Complexity Mask to Denoise"
 NODE_DISPLAY_NAME_MAPPINGS["MaskGrayValueScaler"] = "Complexity Mask to Denoise Min-Max"
-
 

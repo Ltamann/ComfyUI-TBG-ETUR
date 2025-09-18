@@ -8,6 +8,7 @@ import PIL
 from PIL import Image
 
 MAX_SIZE_THUMPNAIL = (256, 256)  # max width, height
+MAX_SIZE_TILESIZESAVED = (4096, 4096)  # max width, height
 import time
 # Third-party imports
 import numpy as np
@@ -631,7 +632,7 @@ class TBG_TilePrompter_v1():
                         continue
 
                 full_folder, base, _, sub, _ = folder_paths.get_save_image_path(
-                    f"TBG/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
+                    f"TBG/thumbnail/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
                 )
                 fname = f"{base}_{idx:05}.png"
                 os.makedirs(full_folder, exist_ok=True)
@@ -640,8 +641,18 @@ class TBG_TilePrompter_v1():
                     img = Image.fromarray(arr.clip(0, 255).astype('uint8'))
                     img.thumbnail(MAX_SIZE_THUMPNAIL, Image.Resampling.LANCZOS)
                     img.save(path, compress_level=4)
-                    #Image.fromarray(arr.clip(0, 255).astype('uint8')).save(path, compress_level=4)
                 results.append({"filename": fname, "subfolder": sub, "type": "temp"})
+
+                full_folder, base, _, sub, _ = folder_paths.get_save_image_path(
+                    f"TBG/tiles/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
+                )
+                fname = f"{base}_{idx:05}.png"
+                os.makedirs(full_folder, exist_ok=True)
+                path = os.path.join(full_folder, fname)
+                if not os.path.exists(path):
+                    img = Image.fromarray(arr.clip(0, 255).astype('uint8'))
+                    img.thumbnail(MAX_SIZE_TILESIZESAVED, Image.Resampling.LANCZOS)
+                    img.save(path, compress_level=4)
 
         # Save segment tiles
         if segment_tiles:

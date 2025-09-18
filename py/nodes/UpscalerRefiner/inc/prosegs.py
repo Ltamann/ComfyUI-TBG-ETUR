@@ -3,28 +3,19 @@ from collections import namedtuple
 
 import PIL
 import numpy as np
-import torchvision
+
 from PIL import Image
-from numpy import sqrt
-from requests import HTTPError
-from .image import TBG_Image
+
 
 PIL.Image.MAX_IMAGE_PIXELS = 592515344
 # Application-specific imports
-import comfy
-import comfy.model_management as model_management
 import comfy_extras
-import nodes
 import comfy_extras.nodes_images
 import comfy_extras.nodes_mask
 import torch
-import requests
-import json
-import torch
-from ....utils.constants import get_apiurl
 from scipy.ndimage import gaussian_filter, grey_dilation, distance_transform_edt
 import torchvision.transforms.functional as TF
-
+from collections import namedtuple
 SEG = namedtuple("SEG",
                  ['cropped_image', 'cropped_mask', 'confidence', 'crop_region', 'bbox', 'label', 'control_net_wrapper', 'inpainting_mask', 'compositing_mask'],
                  defaults=[None])
@@ -51,69 +42,164 @@ class TBG_Segms():
         return TF.to_tensor(img_resized).to(tensor_img.device)
 
     @classmethod
-    def upscale_segm_to_match_div8_and_upscalebysettings(self, segs, target_shape):
+    def upscale_segm_to_match_div8_and_upscalebysettings(cls, segs, target_shape):
         """
-        This function rescales segmentation metadata and cropped masks to match a target_shape resolution.
-        Modified to ensure final cropped_image and mask pixels are divisible by 8.
+        Rescale segmentation metadata and cropped masks so that they can be
+        composited onto the tiled‑upscaled image.
 
+        The important change is that **coordinates are never altered after the
+        padding/scale step** (the transformation performed in
+        `TBG_Image.transform_segment_coordinates`).  We only snap the four
+        corners to the nearest multiple of 8 once, then keep those values for
+        both cropping *and* stitching.  The mask tensor is forced to 8‑divisible
+        size, but it is cropped back to the exact region so the spatial
+        coordinates stay unchanged.
         """
-        h = segs[0][0]
-        w = segs[0][1]
+        # -----------------------------------------------------------------
+        # 0 – original image size (height, width) that was supplied to the
+        #     function as the first element of ``segs``.
+        # -----------------------------------------------------------------
+        h, w = segs[0]  # (height, width) of the ORIGINAL image
+        th, tw = target_shape.shape[1], target_shape.shape[2]  # size of the up‑scaled full image
 
-        th = target_shape.shape[1]
-        tw = target_shape.shape[2]
+        # -----------------------------------------------------------------
+        # 1 – scaling factors from original → up‑scaled image.
+        # -----------------------------------------------------------------
+        rh = th / h if h else 1.0  # vertical scale
+        rw = tw / w if w else 1.0  # horizontal scale
 
-        rh = th / h
-        rw = tw / w
+        # -----------------------------------------------------------------
+        # Helper: round a value **down** to the nearest multiple of 8.
+        # -----------------------------------------------------------------
+        def _floor8(v: int) -> int:
+            return (v // 8) * 8
 
-        if (h == th and w == tw) or h == 0 or w == 0:
-            rh = 1
-            rw = 1
+        # Helper: round a value **up** to the nearest multiple of 8.
+        # -----------------------------------------------------------------
+        def _ceil8(v: int) -> int:
+            return ((v + 7) // 8) * 8
 
         new_segs = []
 
+        # -----------------------------------------------------------------
+        # 2 – Walk through every segment and produce a new SEG where
+        #     *crop_region* is 8‑aligned but otherwise identical to the
+        #     already‑scaled region.
+        # -----------------------------------------------------------------
         for seg in segs[1]:
-            cropped_image = seg.cropped_image # initial None
-            cropped_mask = seg.cropped_mask
+            # -----------------------------------------------------------------
+            # a) Get the *already‑scaled* coordinates that came from
+            #    `transform_segment_coordinates`.  They are still in pixel units
+            #    of the up‑scaled, padded image.
+            # -----------------------------------------------------------------
             x1, y1, x2, y2 = seg.crop_region
             bx1, by1, bx2, by2 = seg.bbox
 
-            # Calculate initial scaled dimensions
-            crop_region = int(x1 * rw), int(y1 * rw), int(x2 * rh), int(y2 * rh)
-            bbox = int(bx1 * rw), int(by1 * rw), int(bx2 * rh), int(by2 * rh)
+            # -----------------------------------------------------------------
+            # b) Snap every corner to the 8‑grid (left/top down, right/bottom up).
+            #    This guarantees that the **rectangle is fully 8‑divisible**
+            #    while staying inside the original region.
+            # -----------------------------------------------------------------
+            x1_al = _floor8(int(x1))
+            y1_al = _floor8(int(y1))
+            x2_al = _ceil8(int(x2))
+            y2_al = _ceil8(int(y2))
 
-            # Calculate initial dimensions
-            initial_new_w = crop_region[2] - crop_region[0]
-            initial_new_h = crop_region[3] - crop_region[1]
+            # Same rule for the optional bbox (only used for visualisation).
+            bx1_al = _floor8(int(bx1))
+            by1_al = _floor8(int(by1))
+            bx2_al = _ceil8(int(bx2))
+            by2_al = _ceil8(int(by2))
 
-            # Make dimensions divisible by 8
-            new_w =  ((initial_new_w + 7) // 8) * 8
-            new_h =  ((initial_new_h + 7) // 8) * 8
+            # The **final** crop region that will be used for both the crop
+            # operation and later stitching.
+            crop_region = (x1_al, y1_al, x2_al, y2_al)
 
-            # Update crop_region to reflect the new dimensions
-            crop_region = (crop_region[0], crop_region[1],
-                           crop_region[0] + new_w, crop_region[1] + new_h)
+            # -----------------------------------------------------------------
+            # c) Crop the image from the up‑scaled whole picture.
+            # -----------------------------------------------------------------
+            cropped_image = comfy_extras.nodes_images.ImageCrop().crop(
+                target_shape,
+                x2_al - x1_al,  # width  (already 8‑aligned)
+                y2_al - y1_al,  # height (already 8‑aligned)
+                x1_al, y1_al
+            )[0]
+            # print(target_shape.shape)torch.Size([1, 768, 1344, 3])
+            # print(cropped_image.shape)torch.Size([1, 208, 200, 3])
 
-            x1, y1, x2, y2 = crop_region
-            cropped_image = comfy_extras.nodes_images.ImageCrop().crop(target_shape, x2 - x1, y2 - y1, x1, y1)[0]
-
+            # -----------------------------------------------------------------
+            # d) Prepare the mask.
+            #    • Convert numpy → torch if needed.
+            #    • Resize the mask **to a size that is a multiple of 8** (VAE
+            #      requirement).
+            #    • Then centre‑crop it back to the *exact* width/height of the
+            #      aligned rectangle so that the spatial coordinates stay correct.
+            # -----------------------------------------------------------------
+            cropped_mask = seg.cropped_mask
             if isinstance(cropped_mask, np.ndarray):
                 cropped_mask = torch.from_numpy(cropped_mask)
 
+            # Exact width/height we need for compositing
+            exact_w = x2_al - x1_al
+            exact_h = y2_al - y1_al
 
-            cropped_mask = torch.nn.functional.interpolate(cropped_mask.unsqueeze(0).unsqueeze(0), size=(new_h, new_w), mode='bilinear', align_corners=False)
-            cropped_mask = cropped_mask.squeeze(0).squeeze(0) # HW
-            #cropped_mask = cropped_mask.permute(0, 2, 3, 1) # BCHW to BHWC
-            #convert mask to  1 and 0 without gradient
+            # Rounded size for the VAE‑friendly interpolation
+            rounded_w = _ceil8(exact_w)
+            rounded_h = _ceil8(exact_h)
+
+
+            # Interpolate mask to the rounded size (adds the required padding)
+            cropped_mask = torch.nn.functional.interpolate(
+                cropped_mask.unsqueeze(0).unsqueeze(0),  # [1,1,H,W]
+                size=(rounded_h, rounded_w),
+                mode='bilinear',
+                align_corners=False
+            ).squeeze(0).squeeze(0)  # back to [H,W]
+
+
+
+            # If we padded the mask, remove the extra pixels so that mask size
+            # exactly matches the image size we will paste.
+            if rounded_w != exact_w or rounded_h != exact_h:
+                off_x = (rounded_w - exact_w) // 2
+                off_y = (rounded_h - exact_h) // 2
+                cropped_mask = cropped_mask[
+                               off_y:off_y + exact_h,
+                               off_x:off_x + exact_w
+                               ]
+
+            # Convert the binary mask (no gradients) – same as original code.
             binary_mask = (cropped_mask > 0.5).float()
 
-            compositing_mask = TBG_Segms.grow_and_blur_mask(binary_mask, 48, 16)
-            inpainting_mask = TBG_Segms.grow_and_blur_mask(binary_mask,32, 64)
-            cropped_mask = TBG_Segms.grow_and_blur_mask(binary_mask, 16, 32)
+            # -----------------------------------------------------------------
+            # e) Build the three auxiliary masks that are used later for the
+            #    different blending steps.
+            # -----------------------------------------------------------------
+            compositing_mask = cls.grow_and_blur_mask(binary_mask, 48, 16)
+            inpainting_mask = cls.grow_and_blur_mask(binary_mask, 32, 64)
+            cropped_mask = cls.grow_and_blur_mask(binary_mask, 16, 32)
 
-            new_seg = SEG(cropped_image, cropped_mask, seg.confidence, crop_region, bbox, seg.label, seg.control_net_wrapper, inpainting_mask, compositing_mask)
+            # -----------------------------------------------------------------
+            # f) Assemble the new SEG.  All coordinates have already been
+            #    aligned; nothing will be changed later in the pipeline.
+            # -----------------------------------------------------------------
+            new_seg = SEG(
+                cropped_image=cropped_image,
+                cropped_mask=cropped_mask,
+                confidence=seg.confidence,
+                crop_region=crop_region,  # <-- aligned, never touched again
+                bbox=(bx1_al, by1_al, bx2_al, by2_al),
+                label=seg.label,
+                control_net_wrapper=seg.control_net_wrapper,
+                inpainting_mask=inpainting_mask,
+                compositing_mask=compositing_mask
+            )
             new_segs.append(new_seg)
 
+        # -----------------------------------------------------------------
+        # Return the size of the up‑scaled image (height, width) *and* the list
+        # of new SEG objects.
+        # -----------------------------------------------------------------
         return (th, tw), new_segs
 
     @classmethod
