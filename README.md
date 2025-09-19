@@ -3,8 +3,7 @@
 
 **+ Comfyui TBG_Detail_Enhancer node**
 
-# !!! The 1.08v1 version Requires at least **ComfyUI 0.3.52** with QWEN images support !!! 
-**Do not switch to 1.08 yet—it’s still unfinished.**
+# !!! The 1.08v2 version Requires at least **ComfyUI 0.3.52** with QWEN images support !!! 
 
 Whast New in 1.08 alfa:
 
