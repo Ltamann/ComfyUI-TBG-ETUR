@@ -3,7 +3,7 @@
 
 **+ Comfyui TBG_Detail_Enhancer node**
 
-# !!! The 1.08v3 version Requires at least **ComfyUI 0.3.52** with QWEN images support !!! 
+# !!! The 1.08v3 version Requires at least **ComfyUI 0.3.52** and python 3.10 to 3.13 !!! 
 
   ![environment_var.png](img/108v3.png)
 **Keep in mind this is still an alpha version, and we're updating and fine-tuning it daily. So do the same**
