@@ -1,18 +1,23 @@
-
 import comfy.utils
 import math
 import comfy.model_management as model_management
 import nodes
 import comfy_extras
+import numpy as np
 from comfy_extras.nodes_edit_model import ReferenceLatent
 from ..inc.sigmas import process_image_to_tiles
+from ....vendor.ComfyUI_Unload_Models_main.py.unload_one_model import UnloadOneModelNode
 from ....vendor.comfyui_controlnet_aux.src.custom_controlnet_aux.canny.canny import CannyDetector
 from ....vendor.comfyui_controlnet_aux.src.custom_controlnet_aux.depth_anything_v2.da2tgb import DepthAnythingV2Detector
 from ....vendor.comfyui_controlnet_aux.utils import common_annotator_call
 
+import comfy.model_management as model_management
+
+
+
+
 
 def apply_controlnets_from_pipe(self, cnetpipe, positive, negative, full_image, tile_image, vae, index):
-
     controlnet_node = nodes.ControlNetApplyAdvanced()
     for control in cnetpipe:
         controlnet_model = control["controlnet"]
@@ -26,7 +31,7 @@ def apply_controlnets_from_pipe(self, cnetpipe, positive, negative, full_image, 
         # set image for CNET
         cnet_image = tile_image
         if noise_image is not None:
-            grid_images = process_image_to_tiles(self,noise_image)
+            grid_images = process_image_to_tiles(self, noise_image)
             cnet_image = grid_images[self.KSAMPLER.latent_index]
             if isinstance(cnet_image, tuple):
                 cnet_image = np.array(cnet_image)
@@ -34,24 +39,25 @@ def apply_controlnets_from_pipe(self, cnetpipe, positive, negative, full_image, 
         grid_cnetstrength = self.OUTPUTS.grid_cnetstrength[index]
         if grid_cnetstrength is not None and isinstance(grid_cnetstrength, (float, int)):
             strength = strength * grid_cnetstrength
-            #print("Using Tile cnet_strength: ",grid_cnetstrength)
+            # print("Using Tile cnet_strength: ",grid_cnetstrength)
         else:
-            strength = strength*self.KSAMPLER.cnet_multiply
-            #print("Using General cnet_strength: ", grid_cnetstrength)
+            strength = strength * self.KSAMPLER.cnet_multiply
+            # print("Using General cnet_strength: ", grid_cnetstrength)
         # Preprocessero
 
-        if preprocessor=="DepthAnythingV2":  
+        if preprocessor == "DepthAnythingV2":
             model = DepthAnythingV2Detector.from_pretrained(filename="depth_anything_v2_vitl.pth").to(model_management.get_torch_device())
             cnet_image = common_annotator_call(model, cnet_image, resolution=1024, max_depth=1)
-            del model    
-        if preprocessor=="Canny Edge":
+            del model
+        if preprocessor == "Canny Edge":
             cnet_image = common_annotator_call(CannyDetector(), cnet_image, canny_low_threshold=canny_low_threshold, canny_high_threshold=canny_high_threshold, resolution=1024)
         positive, negative = controlnet_node.apply_controlnet(
             positive, negative, controlnet_model, cnet_image, strength, start, end, vae
         )
+        if self.lowvram:
+            UnloadOneModelNode.route(controlnet_model)
+
     return positive, negative
-
-
 
 
 def get_Kontext_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
@@ -71,24 +77,24 @@ def get_Kontext_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
         noise_image = control["noise_image"]
 
         if noise_image is not None:
-            grid_images = process_image_to_tiles(self,noise_image)
+            grid_images = process_image_to_tiles(self, noise_image)
             cnet_image = grid_images[self.KSAMPLER.latent_index]
             if isinstance(cnet_image, tuple):
                 cnet_image = np.array(cnet_image)
 
-        strength = strength*self.KSAMPLER.cnet_multiply
+        strength = strength * self.KSAMPLER.cnet_multiply
         # Preprocessor
 
-        if preprocessor=="DepthAnythingV2":
+        if preprocessor == "DepthAnythingV2":
             model = DepthAnythingV2Detector.from_pretrained(filename="depth_anything_v2_vitl.pth").to(model_management.get_torch_device())
             cnet_image = common_annotator_call(model, cnet_image, resolution=1024, max_depth=1)
             cnet_image = cnet_image * strength + 0.5 * (1 - strength)
 
             del model
-        if preprocessor=="Canny Edge":
+        if preprocessor == "Canny Edge":
             cnet_image = common_annotator_call(CannyDetector(), cnet_image, canny_low_threshold=canny_low_threshold, canny_high_threshold=canny_high_threshold, resolution=1024)
             cnet_image = cnet_image * strength + 0.5 * (1 - strength)
-        if patch_for_Flux_Kontext != "NONE" and preprocessor in ("DepthAnythingV2","Canny Edge"):
+        if patch_for_Flux_Kontext != "NONE" and preprocessor in ("DepthAnythingV2", "Canny Edge"):
             if patch_for_Flux_Kontext == "Stitched":
                 # first stitch images is tile
                 kontext_img_combined = comfy_extras.nodes_images.ImageStitch.stitch(
@@ -115,6 +121,7 @@ def get_Kontext_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
     positive = ReferenceLatent.append(0, positive, kontext_latent_image)[0]
     return positive
 
+
 def get_qwen_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
     kontext_img_combined = tile_image
     cnet_image = tile_image
@@ -134,25 +141,25 @@ def get_qwen_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
         noise_image = control["noise_image"]
 
         if noise_image is not None:
-            grid_images = process_image_to_tiles(self,noise_image)
+            grid_images = process_image_to_tiles(self, noise_image)
             cnet_image = grid_images[self.KSAMPLER.latent_index]
             if isinstance(cnet_image, tuple):
                 cnet_image = np.array(cnet_image)
 
-        strength = strength*self.KSAMPLER.cnet_multiply
+        strength = strength * self.KSAMPLER.cnet_multiply
         # Preprocessor
 
-        if preprocessor=="DepthAnythingV2":
+        if preprocessor == "DepthAnythingV2":
             model = DepthAnythingV2Detector.from_pretrained(filename="depth_anything_v2_vitl.pth").to(model_management.get_torch_device())
             cnet_image = common_annotator_call(model, cnet_image, resolution=1024, max_depth=1)
             cnet_image = cnet_image * strength + 0.5 * (1 - strength)
 
             del model
-        if preprocessor=="Canny Edge":
+        if preprocessor == "Canny Edge":
             cnet_image = common_annotator_call(CannyDetector(), cnet_image, canny_low_threshold=canny_low_threshold, canny_high_threshold=canny_high_threshold, resolution=1024)
             cnet_image = cnet_image * strength + 0.5 * (1 - strength)
 
-        if patch_for_Flux_Kontext != "NONE" and preprocessor in ("DepthAnythingV2","Canny Edge"):
+        if patch_for_Flux_Kontext != "NONE" and preprocessor in ("DepthAnythingV2", "Canny Edge"):
             if patch_for_Flux_Kontext == "Stitched":
                 # first stitch images is tile original
                 originaladded = True
@@ -175,9 +182,7 @@ def get_qwen_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
                 cnet_image_latent = nodes.VAEEncode().encode(self.KSAMPLER.vae, cnet_image)[0]
                 positive = ReferenceLatent.append(0, positive, cnet_image_latent)[0]
 
-
-
-    if  originaladded == False:
+    if originaladded == False:
         positive = ReferenceLatent.append(0, positive, tile_image)[0]
     # add stitched to chained
     kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, kontext_img_combined)[0]
@@ -209,6 +214,7 @@ def downscale_to_cnet_scale(cond1, cond2, interp_mode='bilinear'):
     leaving pooled_output and other 1D/2D tensors untouched,
     and return two new CONDITIONING objects with identical nesting.
     """
+
     # Helper to collect each main spatial tensor size
     def get_spatial_size(cond):
         sizes = []
@@ -238,9 +244,10 @@ def downscale_to_cnet_scale(cond1, cond2, interp_mode='bilinear'):
                 t = tensor
                 added = False
                 if t.dim() == 3:
-                    t = t.unsqueeze(0); added = True
+                    t = t.unsqueeze(0);
+                    added = True
                 # for 'area' mode omit align_corners
-                if interp_mode in ('linear','bilinear','bicubic','trilinear'):
+                if interp_mode in ('linear', 'bilinear', 'bicubic', 'trilinear'):
                     t2 = F.interpolate(t, size=(min_h, min_w), mode=interp_mode, align_corners=False)
                 else:
                     t2 = F.interpolate(t, size=(min_h, min_w), mode=interp_mode)
@@ -255,8 +262,9 @@ def downscale_to_cnet_scale(cond1, cond2, interp_mode='bilinear'):
                         rr = r
                         added = False
                         if rr.dim() == 3:
-                            rr = rr.unsqueeze(0); added = True
-                        if interp_mode in ('linear','bilinear','bicubic','trilinear'):
+                            rr = rr.unsqueeze(0);
+                            added = True
+                        if interp_mode in ('linear', 'bilinear', 'bicubic', 'trilinear'):
                             rr2 = F.interpolate(rr, size=(min_h, min_w), mode=interp_mode, align_corners=False)
                         else:
                             rr2 = F.interpolate(rr, size=(min_h, min_w), mode=interp_mode)
@@ -273,13 +281,13 @@ def downscale_to_cnet_scale(cond1, cond2, interp_mode='bilinear'):
     eq2 = downscale_cond(cond2)
     return eq1, eq2
 
+
 #
 
 import torch
 import torch.nn.functional as F
 import copy
 
-
 import torch
 import torch.nn.functional as F
 import copy
@@ -287,6 +295,7 @@ import copy
 import torch
 import torch.nn.functional as F
 import copy
+
 
 def adapt_cnet_to_biggest_reference(cond, interp_mode='bilinear'):
     """
@@ -367,6 +376,7 @@ def debug_conditioning(cond):
     recurse(cond)
     print(f"Total reference_latents tensors (latent images): {latent_count}")
 
+
 def equalize_spatial_tensors(cond, interp_mode='area'):
     """
     Given a CONDITIONING (list of [tensor, meta_dict]):
@@ -393,7 +403,7 @@ def equalize_spatial_tensors(cond, interp_mode='area'):
         # Resize main spatial tensor
         if tensor.dim() >= 3:
             t = tensor.unsqueeze(0) if tensor.dim() == 3 else tensor
-            if interp_mode in ('linear','bilinear','bicubic','trilinear'):
+            if interp_mode in ('linear', 'bilinear', 'bicubic', 'trilinear'):
                 t2 = F.interpolate(t, size=(min_h, min_w), mode=interp_mode, align_corners=False)
             else:
                 t2 = F.interpolate(t, size=(min_h, min_w), mode=interp_mode)
@@ -405,7 +415,7 @@ def equalize_spatial_tensors(cond, interp_mode='area'):
             for ref in meta['reference_latents']:
                 if isinstance(ref, torch.Tensor) and ref.dim() >= 3:
                     r = ref.unsqueeze(0) if ref.dim() == 3 else ref
-                    if interp_mode in ('linear','bilinear','bicubic','trilinear'):
+                    if interp_mode in ('linear', 'bilinear', 'bicubic', 'trilinear'):
                         r2 = F.interpolate(r, size=(min_h, min_w), mode=interp_mode, align_corners=False)
                     else:
                         r2 = F.interpolate(r, size=(min_h, min_w), mode=interp_mode)
@@ -503,6 +513,7 @@ def equalize_single_conditioning(cond, mode='bilinear'):
     """
     # 1. Collect tensor infos
     tensor_infos = []
+
     def collect(obj, path):
         if torch.is_tensor(obj):
             tensor_infos.append({'tensor': obj, 'path': path, 'shape': obj.shape})
@@ -512,6 +523,7 @@ def equalize_single_conditioning(cond, mode='bilinear'):
         elif isinstance(obj, dict):
             for k, v in obj.items():
                 collect(v, path + [k])
+
     collect(cond, [])
 
     # 2. Compute max spatial dims
@@ -521,7 +533,7 @@ def equalize_single_conditioning(cond, mode='bilinear'):
         if len(sh) >= 3:
             h, w = sh[-2], sh[-1]
             max_h, max_w = max(max_h, h), max(max_w, w)
-    if max_h==0 or max_w==0:
+    if max_h == 0 or max_w == 0:
         return cond
 
     # 3. Prepare updates
@@ -529,11 +541,11 @@ def equalize_single_conditioning(cond, mode='bilinear'):
     for info in tensor_infos:
         t = info['tensor']
         sh = info['shape']
-        if len(sh) >= 3 and (sh[-2]!=max_h or sh[-1]!=max_w):
+        if len(sh) >= 3 and (sh[-2] != max_h or sh[-1] != max_w):
             # move to CPU, add batch dim if needed
             cpu_t = t.detach().cpu()
             added_batch = False
-            if cpu_t.dim()==3:
+            if cpu_t.dim() == 3:
                 cpu_t = cpu_t.unsqueeze(0)
                 added_batch = True
 

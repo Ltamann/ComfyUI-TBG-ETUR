@@ -14,6 +14,7 @@ PRESETS_CE = [
 PRESETS_PRO = [
     'NONE',
     'Soft Merge',
+    'PRO_Tile_Fusion',
     'PRO_Neuro_Generative_Tile_Fusion',
     'PRO_Neuro_Generative_Tile_Fusion + Soft Merge',
     'Full size Image no Tiles',
@@ -34,57 +35,58 @@ def get_presets(min_tile_size, **kwargs):
             kwargs["presets"] = 'None'
 
         if kwargs["presets"] == 'Soft Merge':
-            kwargs["presets"] = 'Classic Tile Seams'
+
             kwargs["PRO_Neuro_Generative_Tile_Fusion"] = False
             kwargs["PRO_Tile_Fusion_Mode"] = 'NONE'
             kwargs["PRO_Tile_Fusion_blur_margin"] = 0
             kwargs["PRO_Tile_Fusion_shift_in_out"] = 0
             kwargs["PRO_Tile_Fusion_shift_top_left"] = 0
             kwargs["PRO_Tile_Fusion_border_margin"] = 0
-            kwargs["compositing_mask_blur"] = minimum_unit * 2
+            kwargs["compositing_mask_blur"] = 16
 
         elif kwargs["presets"] == 'PRO_Neuro_Generative_Tile_Fusion':
-            kwargs["presets"] = 'Generative Tile Fusion'
+
             kwargs["PRO_Neuro_Generative_Tile_Fusion"] = True
             kwargs["PRO_Tile_Fusion_Mode"] = 'Neuro_Generative_Tile_Fusion'
             kwargs["compositing_mask_blur"] = 0
-            kwargs["PRO_Tile_Fusion_blur_margin"] = minimum_unit * 4
+            kwargs["PRO_Tile_Fusion_blur_margin"] = 48
             kwargs["PRO_Tile_Fusion_shift_in_out"] =  0
-            kwargs["PRO_Tile_Fusion_shift_top_left"] = 0
-            kwargs["PRO_Tile_Fusion_border_margin"] =minimum_unit * 4
+            kwargs["PRO_Tile_Fusion_shift_top_left"] = 48
+            kwargs["PRO_Tile_Fusion_border_margin"] =0
 
 
         elif kwargs["presets"] == 'PRO_Neuro_Generative_Tile_Fusion + Soft Merge':
-            kwargs["presets"] = 'Classic Tile Seams + Generative Tile Fusion'
+
             kwargs["PRO_Neuro_Generative_Tile_Fusion"] = True
             kwargs["PRO_Tile_Fusion_Mode"] = 'Neuro_Generative_Tile_Fusion'
-            kwargs["compositing_mask_blur"] = minimum_unit * 2
-            kwargs["PRO_Tile_Fusion_blur_margin"] = minimum_unit * 4
+            kwargs["compositing_mask_blur"] = 16
+            kwargs["PRO_Tile_Fusion_blur_margin"] = 48
             kwargs["PRO_Tile_Fusion_shift_in_out"] = 0
-            kwargs["PRO_Tile_Fusion_shift_top_left"] = 0
-            kwargs["PRO_Tile_Fusion_border_margin"] = minimum_unit * 4
+            kwargs["PRO_Tile_Fusion_shift_top_left"] = 48
+            kwargs["PRO_Tile_Fusion_border_margin"] = 0
+
 
 
         elif kwargs["presets"] == 'PRO_Tile_Fusion':
-            kwargs["presets"] = 'Original Tile Fusion'
+
             kwargs["PRO_Neuro_Generative_Tile_Fusion"] = True
             kwargs["PRO_Tile_Fusion_Mode"] = 'Tile_Fusion'
             kwargs["compositing_mask_blur"] = 0
-            kwargs["PRO_Tile_Fusion_blur_margin"] = minimum_unit * 3
-            kwargs["PRO_Tile_Fusion_shift_in_out"] = 0
-            kwargs["PRO_Tile_Fusion_shift_top_left"] = minimum_unit * 6
-            kwargs["PRO_Tile_Fusion_border_margin"] =minimum_unit * 2
+            kwargs["PRO_Tile_Fusion_blur_margin"] = 48
+            kwargs["PRO_Tile_Fusion_shift_in_out"] = 48
+            kwargs["PRO_Tile_Fusion_shift_top_left"] = -96
+            kwargs["PRO_Tile_Fusion_border_margin"] = 16
 
 
         elif kwargs["presets"] == 'PRO_Tile_Fusion + Soft Merge':
-            kwargs["presets"] = 'Original Tile Fusion + Soft Merge'
+
             kwargs["PRO_Neuro_Generative_Tile_Fusion"] = True
             kwargs["PRO_Tile_Fusion_Mode"] = 'Tile_Fusion'
-            kwargs["compositing_mask_blur"] = minimum_unit * 2
-            kwargs["PRO_Tile_Fusion_blur_margin"] = minimum_unit * 3
-            kwargs["PRO_Tile_Fusion_shift_in_out"] = 0
-            kwargs["PRO_Tile_Fusion_shift_top_left"] = minimum_unit * 6
-            kwargs["PRO_Tile_Fusion_border_margin"] = minimum_unit * 2
+            kwargs["compositing_mask_blur"] = 16
+            kwargs["PRO_Tile_Fusion_blur_margin"] = 48
+            kwargs["PRO_Tile_Fusion_shift_in_out"] = 48
+            kwargs["PRO_Tile_Fusion_shift_top_left"] = -96
+            kwargs["PRO_Tile_Fusion_border_margin"] = 16
 
 
         return (kwargs)

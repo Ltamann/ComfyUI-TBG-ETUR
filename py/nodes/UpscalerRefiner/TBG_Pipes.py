@@ -151,9 +151,9 @@ class TBG_enrichment_pipe:
                 "resharpen_start": ("FLOAT", {"default": 0, "min": 0, "max": 1, "round": 0.01}),
                 "resharpen_end": ("FLOAT", {"default": 1, "min": 0, "max": 1, "round": 0.01}),
                 "eta_active": ("BOOLEAN", {"default": False, "label_on": "Enabled", "label_off": "Disabled"}),
-                "eta": ("FLOAT", {"default": 1.17, "min": 0, "max": 1.2, "step": 0.01, "round": 0.01}),
-                "eta_start": ("FLOAT", {"default": 0.2, "min": 0, "max": 1, "round": 0.01}),
-                "eta_end": ("FLOAT", {"default": 0.5, "min": 0, "max": 1, "round": 0.01}),
+                "eta": ("FLOAT", {"default": 0.60, "min": 0, "max": 1.20, "step": 0.01, "round": 0.01}),
+                "eta_start": ("FLOAT", {"default": 0.2, "min": 0, "max": 1, "step": 0.01, "round": 0.01}),
+                "eta_end": ("FLOAT", {"default": 0.5, "min": 0, "max": 1, "step": 0.01, "round": 0.01}),
 
 
                 "Sigmas_creative_tail_active": ("BOOLEAN", {"default": False, "label_on": "Enabled", "label_off": "Disabled"}),
@@ -632,7 +632,7 @@ class TBG_TilePrompter_v1():
                         continue
 
                 full_folder, base, _, sub, _ = folder_paths.get_save_image_path(
-                    f"TBG/thumbnail/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
+                    f"TBG/thumbnail_{self.INFO.id}/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
                 )
                 fname = f"{base}_{idx:05}.png"
                 os.makedirs(full_folder, exist_ok=True)
@@ -644,7 +644,7 @@ class TBG_TilePrompter_v1():
                 results.append({"filename": fname, "subfolder": sub, "type": "temp"})
 
                 full_folder, base, _, sub, _ = folder_paths.get_save_image_path(
-                    f"TBG/tiles/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
+                    f"TBG/tiles_{self.INFO.id}/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
                 )
                 fname = f"{base}_{idx:05}.png"
                 os.makedirs(full_folder, exist_ok=True)

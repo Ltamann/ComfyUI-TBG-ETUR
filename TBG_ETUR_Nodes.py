@@ -59,5 +59,3 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     key: get_name(value, getattr(value, "NAME", value.__name__), getattr(value, "SHORTCUT", "")) for key, value in NODE_CLASS_MAPPINGS.items()
 }
 
-
-

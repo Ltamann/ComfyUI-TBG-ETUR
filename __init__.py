@@ -64,14 +64,20 @@ NODE_DISPLAY_NAME_MAPPINGS.update(PATREON_NAMES)
 
 
 
-__all__ = [ 'NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIRECTORY' ]
+
+__all__ = [
+    "NODE_CLASS_MAPPINGS",
+    "NODE_DISPLAY_NAME_MAPPINGS",
+    "WEB_DIRECTORY",
+
+]
 
 MANIFEST = {
     "name": "TGB ETUR Enhanced Tiled Upscaler and Refiner PRO",
     "version": VERSION,
-    "author": "TBG Tobias Laarmann",
+    "author": "TBG Think build Generate - Tobias Laarmann",
     "project": "https://github.com/Ltamann/ComfyUI-TBG-ETUR",
     "description": "TGB ETUR Enhanced Tiled Upscaler and Refiner PRO",
-}
 
+}
 

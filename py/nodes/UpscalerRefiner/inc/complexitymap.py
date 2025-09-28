@@ -25,15 +25,6 @@ def create_complexity_map(image, fusionmask, multiplier=1, min_gray=0.3, max_gra
 
 def create_denoise_map(complexity_mask, fusionmask, multiplier=1, min_gray=0.3, max_gray=1, blurmulti=0):
     # create complexity mask
-    fnComplexityMap = ImageComplexityMap()
     fnMaskMultiplyZeroWins = MaskMultiplyZeroWins()
-    fnMaskGrayValueScaler = MaskGrayValueScaler()
-
-    blur = 128 + int(128 * blurmulti)
-    area = 8 + int(8 * blurmulti)
-
-    # set  complexity mask denoise clamping
-    fusion_denoise_mask = fnMaskGrayValueScaler.scale_gray_values( complexity_mask, multiplier, min_gray, max_gray)[0]
-    # combine fusion mask with complexity_mask
-    complexity_fusion_mask_combined = fnMaskMultiplyZeroWins.multiply_masks( fusion_denoise_mask, fusionmask, "multiply", True, False)[0]
+    complexity_fusion_mask_combined = fnMaskMultiplyZeroWins.multiply_masks( complexity_mask, fusionmask, "multiply", True, False)[0]
     return (complexity_fusion_mask_combined,)

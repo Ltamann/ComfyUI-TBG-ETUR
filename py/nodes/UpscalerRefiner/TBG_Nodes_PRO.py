@@ -145,7 +145,7 @@ class TBG_Upscaler_v1_pro():
                 "PRO_Tile_Fusion_Mode": (self.DIFFUSION_MODES, {"label": "PRO_Tile_Fusion_Mode", "default": "Neuro_Generative_Tile_Fusion"}),
                 "PRO_Tile_Fusion_blur_margin": ("INT",{"label": "PRO_Tile_Fusion_blur_margin","default": 48,"min": 0, "max": 128, "step": 8}),
                 "PRO_Tile_Fusion_shift_in_out": ("INT",{"label": "PRO_Tile_Fusion_shift_in_out", "default": 0, "min": -128, "max": 128,"step": 8}),
-                "PRO_Tile_Fusion_shift_top_left": ("INT",{"label": "PRO_Tile_Fusion_shift_top_left", "default": 0, "min": 0, "max": 128,"step": 8}),
+                "PRO_Tile_Fusion_shift_top_left": ("INT",{"label": "PRO_Tile_Fusion_shift_top_left", "default": 0, "min": -128, "max": 128,"step": 8}),
                 "PRO_Tile_Fusion_border_margin": ("INT", {"label": "shift_mask", "default": 16, "min": 0, "max": 128,"step": 8}),
                 #"PRO_Fusion_Space_Denoise": ("FLOAT", {"label": "inpaint_max", "default": 1, "min": 0, "max": 2, "step": 0.01, "round": 0.01}),
             },
@@ -162,7 +162,8 @@ class TBG_Upscaler_v1_pro():
         "IMAGE",
         "TBG_Pipe",
         "Tile_Prompt_Pipe",  # self.OUTPUTS.grid_prompts ,output_tiles
-        "STRING"
+        "STRING",
+        "IMAGE"
 
     )
 
@@ -170,7 +171,8 @@ class TBG_Upscaler_v1_pro():
         "Mask Overlay Preview",
         "TBG_Pipe",
         "Tile_Prompt_Pipe",
-        "Info"
+        "Info",
+        "Upscaled Image"
     )
 
     OUTPUT_IS_LIST = (
@@ -230,7 +232,7 @@ class TBG_Upscaler_v1_pro():
 
         result =  TBG_Upscaler_v1.fn(**kwargs)
         current_credits = 0
-        _, _, _, _, current_credits = result
+        _, _, _, _, _,current_credits = result
         return {
             "ui": {"value": [f"{current_credits}"]},
             "result": result
@@ -298,6 +300,7 @@ class TBG_Refiner_v1_pro():
                 "Tile_Prompt_Pipe": ("TILE_Prompt_PIPE_OUT", {"label": "Tile Prompt Pipe"}),
                 "Enrichment_Pipe": ("Enrichment_Pipe", {"label": "TBG enrichment Pipe"}),
                 "Custom_Sigmas_!DENOISE=1": ("SIGMAS", {"label": "Sigmas with denoise 1","tooltip": "Insert your full custom sigma noise curve (not denoised), as denoising is performed per tile by the node."}),
+                "Sampler": ("SAMPLER",{"label": "Overwrites the Sampler Name field"}),
                 "Resume_Tiled_Refinement_Image": ("IMAGE", {"label": "Presampled_Background_Image"}),
                 "cropped_positive": ("CONDITIONING",),
                 "cropped_negative": ("CONDITIONING",),

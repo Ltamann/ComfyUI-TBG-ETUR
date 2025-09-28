@@ -237,7 +237,7 @@ class TBG_magnific_ETUR:
         kwargs["compositing_mask_blur"] = 16
         kwargs["PRO_Tile_Fusion_blur_margin"] = 48
         kwargs["PRO_Tile_Fusion_shift_in_out"] = 0
-        kwargs["PRO_Tile_Fusion_shift_top_left"] = 48
+        kwargs["PRO_Tile_Fusion_shift_top_left"] = 48+16
         kwargs["PRO_Tile_Fusion_border_margin"] = 16
         kwargs["Tile_Fusion_Mode"] = "From TGB Tiler Node"
         kwargs["Tile_Fusion_Blend"] = 0
@@ -268,14 +268,14 @@ class TBG_magnific_ETUR:
         kwargs["Enrichment_Pipe"] = cls.Enrichment_Pipe()
 
         # Set borders and scale based on denoise strength (max total recommended 204)
-        kwargs["PRO_Tile_Fusion_blur_margin"] = 16 + int(kwargs["denoise"] * 96)  # 102 divide the tile by 5 so min 1 stays to render 1024 = 204
-        kwargs["PRO_Tile_Fusion_border_margin"] = 8 + int(kwargs["denoise"] * 8)  # 88
-        kwargs["PRO_Tile_Fusion_blur_margin"] = (kwargs["PRO_Tile_Fusion_blur_margin"] // 8) * 8
-        kwargs["PRO_Tile_Fusion_border_margin"] = (kwargs["PRO_Tile_Fusion_border_margin"] // 8) * 8
-        kwargs["PRO_Tile_Fusion_blur_margin"] = max(kwargs["PRO_Tile_Fusion_blur_margin"], 48)
-        kwargs["PRO_Tile_Fusion_border_margin"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 32)
-        kwargs["compositing_mask_blur"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 16)
-        kwargs["PRO_Tile_Fusion_shift_top_left"] =   kwargs["PRO_Tile_Fusion_border_margin"] + kwargs["PRO_Tile_Fusion_blur_margin"]
+        #kwargs["PRO_Tile_Fusion_blur_margin"] = 16 + int(kwargs["denoise"] * 96)  # 102 divide the tile by 5 so min 1 stays to render 1024 = 204
+        #kwargs["PRO_Tile_Fusion_border_margin"] = 8 + int(kwargs["denoise"] * 8)  # 88
+        #kwargs["PRO_Tile_Fusion_blur_margin"] = (kwargs["PRO_Tile_Fusion_blur_margin"] // 8) * 8
+        #kwargs["PRO_Tile_Fusion_border_margin"] = (kwargs["PRO_Tile_Fusion_border_margin"] // 8) * 8
+        #kwargs["PRO_Tile_Fusion_blur_margin"] = max(kwargs["PRO_Tile_Fusion_blur_margin"], 48)
+        #kwargs["PRO_Tile_Fusion_border_margin"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 32)
+        #kwargs["compositing_mask_blur"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 16)
+        # kwargs["PRO_Tile_Fusion_shift_top_left"] =   kwargs["PRO_Tile_Fusion_border_margin"] + kwargs["PRO_Tile_Fusion_blur_margin"]
 
         # Creative control variables for loop
         detail_daemon_active = True
@@ -304,7 +304,8 @@ class TBG_magnific_ETUR:
                 kwargs["Enrichment_Pipe"][0]["tile_upscale_plus"] = "none"
 
                 # ── CALL TILER (may overwrite some kwargs) ────────────── #
-                _, tbg_pipe, _, _, current_credits = TBG_Upscaler_v1.fn(**kwargs)
+
+                _, tbg_pipe, _, _, _,current_credits = TBG_Upscaler_v1.fn(**kwargs)
                 kwargs["TBG_Pipe"] = tbg_pipe
 
                 # ── AFTER TILER: Configure kwargs for Refiner ─────────── #
@@ -362,7 +363,8 @@ class TBG_magnific_ETUR:
                 kwargs["image"] = newimages
 
                 # ── CALL TILER (may overwrite some kwargs) ────────────── #
-                mask_overlay_preview, tbg_pipe, tile_prompt_pipe, info, current_credits = TBG_Upscaler_v1.fn(**kwargs)
+                _, tbg_pipe, _, _, _, current_credits = TBG_Upscaler_v1.fn(**kwargs)
+                mask_overlay_preview, tbg_pipe, tile_prompt_pipe, info, _,current_credits = TBG_Upscaler_v1.fn(**kwargs)
                 kwargs["TBG_Pipe"] = tbg_pipe
 
                 # ── AFTER TILER: Adjust kwargs for Refiner ─────────────── #
@@ -417,13 +419,17 @@ class TBG_magnific_ETUR:
                 kwargs["Redux_strength"] = kwargs["Resemblance"]
 
                 # Calculate Fusion parameters related to denoise settings
-                kwargs["PRO_Tile_Fusion_blur_margin"] = 16 + int(kwargs["denoise"] * 102)  # Divide tile by 5 so min 1 stays to render 1024 = 204
-                kwargs["PRO_Tile_Fusion_border_margin"] = 8 + int(kwargs["denoise"] * 88)
-                kwargs["PRO_Tile_Fusion_blur_margin"] = (kwargs["PRO_Tile_Fusion_blur_margin"] // 8) * 8
-                kwargs["PRO_Tile_Fusion_border_margin"] = (kwargs["PRO_Tile_Fusion_border_margin"] // 8) * 8
-                kwargs["PRO_Tile_Fusion_blur_margin"] = max(kwargs["PRO_Tile_Fusion_blur_margin"], 48)
-                kwargs["PRO_Tile_Fusion_border_margin"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 32)
-                kwargs["compositing_mask_blur"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 16)
+                #kwargs["PRO_Tile_Fusion_blur_margin"] = 16 + int(kwargs["denoise"] * 102)  # Divide tile by 5 so min 1 stays to render 1024 = 204
+                #kwargs["PRO_Tile_Fusion_border_margin"] = 8 + int(kwargs["denoise"] * 88)
+
+                #kwargs["PRO_Tile_Fusion_blur_margin"] = (kwargs["PRO_Tile_Fusion_blur_margin"] // 8) * 8
+                #kwargs["PRO_Tile_Fusion_border_margin"] = (kwargs["PRO_Tile_Fusion_border_margin"] // 8) * 8
+
+                #kwargs["PRO_Tile_Fusion_blur_margin"] = max(kwargs["PRO_Tile_Fusion_blur_margin"], 48)
+                #kwargs["PRO_Tile_Fusion_border_margin"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 16)
+                #kwargs["PRO_Tile_Fusion_shift_top_left"] = max(kwargs["PRO_Tile_Fusion_shift_top_left"], 16)
+
+                #kwargs["compositing_mask_blur"] = max(kwargs["PRO_Tile_Fusion_border_margin"], 16)
 
                 # ── CALL REFINER ──────────────────────────────────────── #
                 result = TBG_Refiner_v1.fn(**kwargs)

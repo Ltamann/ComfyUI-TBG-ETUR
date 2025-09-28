@@ -785,6 +785,7 @@ class MaskGrayValueScaler:
         return (result_mask,)
 
 
+
 # Node mapping
 
 
@@ -799,7 +800,6 @@ NODE_CLASS_MAPPINGS["MaskMultiplyAdvanced"] = MaskMultiplyAdvanced
 NODE_CLASS_MAPPINGS["MaskUpdateInpaintFromConditioning"] = MaskUpdateInpaintFromConditioning
 NODE_CLASS_MAPPINGS["MaskConditionalPaint"] = MaskConditionalPaint
 NODE_CLASS_MAPPINGS["MaskToDenoiseInterpolator"] = MaskToDenoiseInterpolator
-
 
 NODE_DISPLAY_NAME_MAPPINGS["FluxKontextResolution"] = "Flux Kontext Resolution"
 NODE_DISPLAY_NAME_MAPPINGS["QwenEditResolution"] = "Qwen Edit Resolution"
