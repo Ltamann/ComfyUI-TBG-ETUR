@@ -95,7 +95,7 @@ class TBG_Tiled_Upscaler_CE():
             "required": {
                 "image": ("IMAGE", {"label": "Image"}),
                 "presets": (self.PRESETS, {"label": "presets", "default": "NONE"}),
-                "Fragmentation": ("FLOAT", {"label": "inpaint_max", "default": 0, "min": -5, "max": 5, "step": 0.01, "round": 0.01}),
+                "Fragmentation": ("FLOAT", {"label": "inpaint_max", "default": 0, "min": 0.5, "max": 5, "step": 0.01, "round": 0.01}),
                 "tile_size": ("INT",{"label": "Tile Size height", "default": 1024, "min": 320, "max": 8192, "step": 16}),
                 "upscaler": (self.UPSCALE_TYPE, {"label": "Upscale Type", "default": "NONE"}),
                 "upscale_model": (folder_paths.get_filename_list("upscale_models"), {"label": "Upscale Model"}),
@@ -329,6 +329,7 @@ class TBG_Refiner_CE():
 
 
         return TBG_Refiner_v1.fn(**kwargs)
+
 
 
 
