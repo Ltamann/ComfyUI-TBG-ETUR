@@ -156,17 +156,19 @@ def process_image_to_tiles(self, input_image): # for controllnet preprocessing w
         from .image import TBG_Image
 
         # Get tiled grid specifications
-        grid_specs = TBG_Image().get_tiled_grid_specs(resized_image, self.SIZE.actual_inner_tile_sizeH, self.SIZE.actual_inner_tile_sizeW, self.PARAMS.rows_qty, self.PARAMS.cols_qty , self.SIZE.feather_mask_margin,self.SIZE.shift)[0]
+        grid_specs = TBG_Image().gridspecs_get_tiled_grid_specs(resized_image, self.SIZE.actual_inner_tile_sizeH, self.SIZE.actual_inner_tile_sizeW, self.PARAMS.rows_qty, self.PARAMS.cols_qty, self.SIZE.feather_mask_margin, self.SIZE.shift)[0]
         # Generate grid images (tiles)
-        grid_images = TBG_Image().get_grid_images(resized_image, grid_specs)
+        grid_images = TBG_Image().gridspecs_get_grid_images(resized_image, grid_specs)
         return grid_images
 
 
 
 
-def denoise_sigmas(sigmas, denoise, denoise_method):
+def denoise_sigmas_tgb(sigmas, denoise, denoise_method, model, scheduler):
     total_steps = sigmas.shape[0]
     if denoise_method == "default":
+
+        """
         if denoise is not None and denoise < 1.0:
             if denoise <= 0.0:
                 return (torch.FloatTensor([]),)
@@ -174,6 +176,17 @@ def denoise_sigmas(sigmas, denoise, denoise_method):
             sigmas = sigmas.view(1, 1, -1)
             interpolated_sigmas = F.interpolate( sigmas, size=aumented_steps, mode='linear', align_corners=True    ).view(-1)
             sigmas = interpolated_sigmas[-(total_steps):]
+        """
+        steps = sigmas.shape[0] - 1
+        total_steps = steps
+        if denoise < 1.0:
+            if denoise <= 0.0:
+                return (torch.FloatTensor([]),)
+            total_steps = int(steps / denoise)
+
+        sigmas = comfy.samplers.calculate_sigmas(model.get_model_object("model_sampling"), scheduler, total_steps).cpu()
+        sigmas = sigmas[-(steps + 1):]
+        return sigmas
 
     if denoise_method == "multiplyed":
         if denoise is not None and denoise < 1.0:
@@ -253,9 +266,29 @@ def denoise_sigmas(sigmas, denoise, denoise_method):
 
 def get_sigmas(model, scheduler, total_steps, denoise, denoise_method):
     if denoise == 1:
+        #sigmas = comfy.samplers.calculate_sigmas(model.get_model_object("model_sampling"), scheduler, total_steps).cpu()
+        steps = total_steps
+        total_steps = steps
+        if denoise < 1.0:
+            if denoise <= 0.0:
+                return (torch.FloatTensor([]),)
+            total_steps = int(steps / denoise)
+
         sigmas = comfy.samplers.calculate_sigmas(model.get_model_object("model_sampling"), scheduler, total_steps).cpu()
+        sigmas = sigmas[-(steps + 1):]
         return (sigmas, )
     if denoise_method == "default":
+        steps = total_steps
+        total_steps = steps
+        if denoise < 1.0:
+            if denoise <= 0.0:
+                return (torch.FloatTensor([]),)
+            total_steps = int(steps / denoise)
+
+        sigmas = comfy.samplers.calculate_sigmas(model.get_model_object("model_sampling"), scheduler, total_steps).cpu()
+        sigmas = sigmas[-(steps + 1):]
+        return (sigmas,)
+        """
         if denoise is not None and denoise < 1.0:
             if denoise <= 0.0:
                 return (torch.FloatTensor([]),)
@@ -263,7 +296,7 @@ def get_sigmas(model, scheduler, total_steps, denoise, denoise_method):
         sigmas = comfy.samplers.calculate_sigmas(model.get_model_object("model_sampling"), scheduler, aumented_steps).cpu()
         # Cuts out the lowSteps from the totalSteps
         sigmas = sigmas[-(total_steps):]
-
+        """
     if denoise_method == "multiplyed":
         sigmas = comfy.samplers.calculate_sigmas(model.get_model_object("model_sampling"), scheduler, total_steps).cpu()
         if denoise is not None and denoise < 1.0:
