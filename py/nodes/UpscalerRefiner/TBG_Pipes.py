@@ -1,11 +1,11 @@
 # Standard library imports
-import glob
-import os
 from types import SimpleNamespace
 import json
 import aiohttp
 import PIL
 from PIL import Image
+import os
+import glob
 
 MAX_SIZE_THUMPNAIL = (256, 256)  # max width, height
 MAX_SIZE_TILESIZESAVED = (4096, 4096)  # max width, height
@@ -630,7 +630,7 @@ class TBG_TilePrompter_v1():
                         arr = np.asarray(torchtile)  # fallback
                     except Exception:
                         continue
-
+                """
                 full_folder, base, _, sub, _ = folder_paths.get_save_image_path(
                     f"TBG/thumbnail_{self.INFO.id}/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
                 )
@@ -643,6 +643,7 @@ class TBG_TilePrompter_v1():
                     img.save(path, compress_level=4)
                 results.append({"filename": fname, "subfolder": sub, "type": "temp"})
 
+
                 full_folder, base, _, sub, _ = folder_paths.get_save_image_path(
                     f"TBG/tiles_{self.INFO.id}/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
                 )
@@ -653,6 +654,47 @@ class TBG_TilePrompter_v1():
                     img = Image.fromarray(arr.clip(0, 255).astype('uint8'))
                     img.thumbnail(MAX_SIZE_TILESIZESAVED, Image.Resampling.LANCZOS)
                     img.save(path, compress_level=4)
+                """
+                full_folder, base, _, sub, _ = folder_paths.get_save_image_path(
+                    f"TBG/thumbnail_{self.INFO.id}/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
+                )
+
+                # Delete old files before saving
+                if idx == 0:  # only clear once per batch
+                    for f in glob.glob(os.path.join(full_folder, "*.png")):
+                        os.remove(f)
+
+                os.makedirs(full_folder, exist_ok=True)
+
+                # Create unique filename (timestamp or random suffix)
+                unique_suffix = int(time.time() * 1000)  # milliseconds
+                fname = f"{base}_{idx:05}_{unique_suffix}.png"
+                path = os.path.join(full_folder, fname)
+
+                img = Image.fromarray(arr.clip(0, 255).astype('uint8'))
+                img.thumbnail(MAX_SIZE_THUMPNAIL, Image.Resampling.LANCZOS)
+                img.save(path, compress_level=4)
+
+                results.append({"filename": fname, "subfolder": sub, "type": "temp"})
+
+                # --- Second block: tiles ---
+                full_folder, base, _, sub, _ = folder_paths.get_save_image_path(
+                    f"TBG/tiles_{self.INFO.id}/{filename_prefix}", self.output_dir, arr.shape[1], arr.shape
+                )
+
+                if idx == 0:
+                    for f in glob.glob(os.path.join(full_folder, "*.png")):
+                        os.remove(f)
+
+                os.makedirs(full_folder, exist_ok=True)
+
+                unique_suffix = int(time.time() * 1000)
+                fname = f"{base}_{idx:05}_{unique_suffix}.png"
+                path = os.path.join(full_folder, fname)
+
+                img = Image.fromarray(arr.clip(0, 255).astype('uint8'))
+                img.thumbnail(MAX_SIZE_TILESIZESAVED, Image.Resampling.LANCZOS)
+                img.save(path, compress_level=4)
 
         # Save segment tiles
         if segment_tiles:
