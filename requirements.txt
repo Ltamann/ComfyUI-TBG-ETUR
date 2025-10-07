@@ -1,3 +1,5 @@
+# For Janus
+git+https://github.com/deepseek-ai/Janus.git
 
 # For TBG 
 opencv-python
@@ -8,16 +10,16 @@ color-matcher
 grog
 opencv-contrib-python
 color-matcher
-# For Janus
-git+https://github.com/deepseek-ai/Janus.git
+
 # For Qwen 2.5 VL:
 hf_xet
 pillow
 qwen-vl-utils
 bitsandbytes
 optimum
-#git+https://github.com/huggingface/transformers
-diffusers>=0.35
-accelerate
+
+# Correction for Nunchacu
 huggingface_hub>=0.34
+transformers==4.56.2
+diffusers>=0.35.0
 accelerate>=1.10
