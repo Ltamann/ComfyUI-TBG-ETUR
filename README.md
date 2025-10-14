@@ -4,6 +4,9 @@
 **+ Comfyui TBG_Detail_Enhancer node**
 
 # !!! The 1.08v3 version Requires at least **ComfyUI 0.3.52** and python 3.10 to 3.13 !!! 
+# !!! The 1.08v3 version is tested on **ComfyUI 0.3.65** and python 3.10 to 3.13 !!! 
+
+ComfyUI is updating all functions to the V3 schema and renaming them as well. This means new names are being added to old functions almost daily, and I need to implement code that works with both older and latest versions, which is a bit tricky. My latest update already includes most of these changes for version 0.3.65 - newer version are not supported
 
   ![environment_var.png](img/108v3.png)
 **Keep in mind this is still an alpha version, and we're updating and fine-tuning it daily. So do the same**
