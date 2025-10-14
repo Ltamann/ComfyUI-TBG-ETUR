@@ -8,12 +8,11 @@ import torch
 import torch.nn.functional as F
 import math
 
-from comfy_extras.nodes_custom_sampler import SamplerEulerAncestral
-from comfy_extras.nodes_pag import PerturbedAttentionGuidance
+from comfy_extras.nodes_custom_sampler import SamplerEulerAncestral, SamplerCustomAdvanced
 from ..inc.image import TBG_Image
 from ..inc.sigmas import inject_noise, _get_sigmas
 
-
+DEBUG = False
 
 try:
     from custom_nodes.RES4LYF.legacy.samplers import ClownSamplerAdvanced
@@ -26,15 +25,24 @@ class TBG_sampler():
     @staticmethod
     def getSampler(self,positive,negative,sigmas,latent_image,index):
 
+        if DEBUG:
+            print("SamplerCustom used")
+
         grid_seed = self.OUTPUTS.grid_seed[index]
         if grid_seed is not None and isinstance(grid_seed, (int)):
             noise_seed = grid_seed
 
         else:
             noise_seed = self.KSAMPLER.noise_seed
+        # V3 scheme name changes
+        Sampler_custom = comfy_extras.nodes_custom_sampler.SamplerCustom()
+        if hasattr(Sampler_custom, "sample"):
+            Sampler_custom_execute = Sampler_custom.sample
+        elif hasattr(Sampler_custom, "execute"):
+            Sampler_custom_execute = Sampler_custom.execute
 
 
-        latent_output = comfy_extras.nodes_custom_sampler.SamplerCustom().sample(
+        latent_output = Sampler_custom_execute(
             self.KSAMPLER.model,
             self.KSAMPLER.add_noise,
             noise_seed,
@@ -55,16 +63,24 @@ class TBG_sampler():
         w = pixels.shape[2] * scale_factor
         h = pixels.shape[1] * scale_factor
 
-        pixels = TBG_Image().better_downscale(pixels, round(latent_image_W), round(latent_image_H),
-                                              self.PARAMS.upscale_method_inpainting,
-                                              self.PARAMS.upscale_model_inpainting)
+        pixels = TBG_Image().helper_upscaleimage(pixels, round(latent_image_W), round(latent_image_H),
+                                                 self.PARAMS.upscale_method_inpainting,
+                                                 self.PARAMS.upscale_model_inpainting)
         latent_output = nodes.VAEEncode().encode(self.KSAMPLER.vae, pixels)[0]
         latent_output = inject_noise(latent_output, self.KSAMPLER.latentupscale_noise)[0]
         LatentUpscaleByScalesigmas = _get_sigmas(self.KSAMPLER.sigmas_type, self.KSAMPLER.model,
                                                  self.KSAMPLER.latentupscale_steps,
                                                  self.KSAMPLER.latentupscale_denoise, self.KSAMPLER.scheduler,
                                                  self.KSAMPLER.model_type)
-        latent_output = comfy_extras.nodes_custom_sampler.SamplerCustom().sample(
+
+        # V3 scheme name changes
+        Sampler_custom = comfy_extras.nodes_custom_sampler.SamplerCustom()
+        if hasattr(Sampler_custom, "sample"):
+            Sampler_custom_execute = Sampler_custom.sample
+        elif hasattr(Sampler_custom, "execute"):
+            Sampler_custom_execute = Sampler_custom.execute
+
+        latent_output = Sampler_custom.execute(
             self.KSAMPLER.model,
             self.KSAMPLER.add_noise,
             self.KSAMPLER.noise_seed,
@@ -79,13 +95,20 @@ class TBG_sampler():
         latent_output = inject_noise(latent_output, self.KSAMPLER.latentupscale_noise)[0]
         # downscale latent to old size
         pixels = (nodes.VAEDecode().decode(self.KSAMPLER.vae, latent_output)[0].unsqueeze(0))[0]
-        pixels = TBG_Image().better_downscale(pixels, round(latent_image_W), round(latent_image_H),
-                                              self.PARAMS.upscale_method_inpainting,
-                                              self.PARAMS.upscale_model_inpainting)
+        pixels = TBG_Image().helper_upscaleimage(pixels, round(latent_image_W), round(latent_image_H),
+                                                 self.PARAMS.upscale_method_inpainting,
+                                                 self.PARAMS.upscale_model_inpainting)
 
         latent_output = nodes.VAEEncode().encode(self.KSAMPLER.vae, pixels)[0]
 
-        latent_output = comfy_extras.nodes_custom_sampler.SamplerCustom().sample(
+        # V3 scheme name changes
+        Sampler_custom = comfy_extras.nodes_custom_sampler.SamplerCustom()
+        if hasattr(Sampler_custom, "sample"):
+            Sampler_custom_execute = Sampler_custom.sample
+        elif hasattr(Sampler_custom, "execute"):
+            Sampler_custom_execute = Sampler_custom.execute
+
+        latent_output = Sampler_custom_execute(
             self.KSAMPLER.model,
             self.KSAMPLER.add_noise,
             self.KSAMPLER.noise_seed,
@@ -108,6 +131,8 @@ class TBG_sampler():
         cs_eta = self.KSAMPLER.eta * 2
         cs_s_noise = self.KSAMPLER.eta * 0.5
         if HAS_CLOWNSAMPLER == True:
+            if DEBUG:
+                print("HAS_CLOWNSAMPLER used")
          #   print("Switching to ClownSampler res_2m for eta noise injection")
 
             noise_type_sde = "gaussian"  # "brownian"
@@ -171,10 +196,20 @@ class TBG_sampler():
             except Exception as e:
                 print("e")
         else:
+            if DEBUG:
+                print("SamplerEulerAncestral used")
            # print("Switching to SamplerEulerAncestral for eta noise injection")
             eta = min(self.KSAMPLER.eta * 4, 3)
             s_noise = min(self.KSAMPLER.eta * 1.2, 1)
-            sampler = SamplerEulerAncestral.get_sampler(0, eta, s_noise)[0]
+
+            # V3 scheme name changes
+            if hasattr(SamplerEulerAncestral, "sample"):
+                SamplerEulerAncestral_execute = SamplerEulerAncestral.get_sampler
+            elif hasattr(SamplerEulerAncestral, "execute"):
+                SamplerEulerAncestral_execute = SamplerEulerAncestral.execute
+
+
+            sampler = SamplerEulerAncestral_execute(0, eta, s_noise)[0]
         return sampler
 
 
