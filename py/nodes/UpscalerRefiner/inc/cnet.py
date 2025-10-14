@@ -1,10 +1,8 @@
 import comfy.utils
 import math
-import comfy.model_management as model_management
 import nodes
-import comfy_extras
 import numpy as np
-from comfy_extras.nodes_edit_model import ReferenceLatent
+
 from ..inc.sigmas import process_image_to_tiles
 from ....vendor.ComfyUI_Unload_Models_main.py.unload_one_model import UnloadOneModelNode
 from ....vendor.comfyui_controlnet_aux.src.custom_controlnet_aux.canny.canny import CannyDetector
@@ -14,6 +12,20 @@ from ....vendor.comfyui_controlnet_aux.utils import common_annotator_call
 import comfy.model_management as model_management
 
 
+# V3 scheme name changes
+from comfy_extras.nodes_images import ImageStitch
+if hasattr(ImageStitch, "stitch"):
+    ImageStitch_execute = ImageStitch.stitch
+elif hasattr(ImageStitch, "execute"):
+    ImageStitch_execute = ImageStitch.execute
+
+
+
+from comfy_extras.nodes_edit_model import ReferenceLatent
+if hasattr(ReferenceLatent, "append"):
+    ReferenceLatent_execute = ReferenceLatent.append
+elif hasattr(ReferenceLatent, "execute"):
+    ReferenceLatent_execute = ReferenceLatent.execute
 
 
 
@@ -97,7 +109,7 @@ def get_Kontext_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
         if patch_for_Flux_Kontext != "NONE" and preprocessor in ("DepthAnythingV2", "Canny Edge"):
             if patch_for_Flux_Kontext == "Stitched":
                 # first stitch images is tile
-                kontext_img_combined = comfy_extras.nodes_images.ImageStitch.stitch(
+                kontext_img_combined = ImageStitch_execute(
                     0,
                     kontext_img_combined,
                     'right',
@@ -111,14 +123,14 @@ def get_Kontext_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
                     originaladded == True
 
                     kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, tile_image)[0]
-                    positive = ReferenceLatent.append(0, positive, kontext_latent_image)[0]
+                    positive = ReferenceLatent_execute(0, positive, kontext_latent_image)[0]
 
                 cnet_image_latent = nodes.VAEEncode().encode(self.KSAMPLER.vae, cnet_image)[0]
-                positive = ReferenceLatent.append(0, positive, cnet_image_latent)[0]
+                positive = ReferenceLatent_execute(0, positive, cnet_image_latent)[0]
 
     # add stitched to chained
     kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, kontext_img_combined)[0]
-    positive = ReferenceLatent.append(0, positive, kontext_latent_image)[0]
+    positive = ReferenceLatent_execute(0, positive, kontext_latent_image)[0]
     return positive
 
 
@@ -163,7 +175,7 @@ def get_qwen_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
             if patch_for_Flux_Kontext == "Stitched":
                 # first stitch images is tile original
                 originaladded = True
-                kontext_img_combined = comfy_extras.nodes_images.ImageStitch.stitch(
+                kontext_img_combined = ImageStitch_execute(
                     0,
                     kontext_img_combined,
                     'right',
@@ -177,16 +189,16 @@ def get_qwen_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
                     originaladded = True
                     # add original
                     kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, tile_image)[0]
-                    positive = ReferenceLatent.append(0, positive, kontext_latent_image)[0]
+                    positive = ReferenceLatent_execute(0, positive, kontext_latent_image)[0]
                 # add Cnet
                 cnet_image_latent = nodes.VAEEncode().encode(self.KSAMPLER.vae, cnet_image)[0]
-                positive = ReferenceLatent.append(0, positive, cnet_image_latent)[0]
+                positive = ReferenceLatent_execute(0, positive, cnet_image_latent)[0]
 
     if originaladded == False:
-        positive = ReferenceLatent.append(0, positive, tile_image)[0]
+        positive = ReferenceLatent_execute(0, positive, tile_image)[0]
     # add stitched to chained
     kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, kontext_img_combined)[0]
-    positive = ReferenceLatent.append(0, positive, kontext_latent_image)[0]
+    positive = ReferenceLatent_execute(0, positive, kontext_latent_image)[0]
     return positive
 
 

@@ -12,6 +12,13 @@ from comfy_extras.nodes_custom_sampler import SamplerEulerAncestral, SamplerCust
 from ..inc.image import TBG_Image
 from ..inc.sigmas import inject_noise, _get_sigmas
 
+# V3 scheme name changes
+Sampler_custom = comfy_extras.nodes_custom_sampler.SamplerCustom()
+if hasattr(Sampler_custom, "sample"):
+    Sampler_custom_execute = Sampler_custom.sample
+elif hasattr(Sampler_custom, "execute"):
+    Sampler_custom_execute = Sampler_custom.execute
+
 DEBUG = False
 
 try:
@@ -34,13 +41,6 @@ class TBG_sampler():
 
         else:
             noise_seed = self.KSAMPLER.noise_seed
-        # V3 scheme name changes
-        Sampler_custom = comfy_extras.nodes_custom_sampler.SamplerCustom()
-        if hasattr(Sampler_custom, "sample"):
-            Sampler_custom_execute = Sampler_custom.sample
-        elif hasattr(Sampler_custom, "execute"):
-            Sampler_custom_execute = Sampler_custom.execute
-
 
         latent_output = Sampler_custom_execute(
             self.KSAMPLER.model,
@@ -73,13 +73,6 @@ class TBG_sampler():
                                                  self.KSAMPLER.latentupscale_denoise, self.KSAMPLER.scheduler,
                                                  self.KSAMPLER.model_type)
 
-        # V3 scheme name changes
-        Sampler_custom = comfy_extras.nodes_custom_sampler.SamplerCustom()
-        if hasattr(Sampler_custom, "sample"):
-            Sampler_custom_execute = Sampler_custom.sample
-        elif hasattr(Sampler_custom, "execute"):
-            Sampler_custom_execute = Sampler_custom.execute
-
         latent_output = Sampler_custom.execute(
             self.KSAMPLER.model,
             self.KSAMPLER.add_noise,
@@ -102,11 +95,6 @@ class TBG_sampler():
         latent_output = nodes.VAEEncode().encode(self.KSAMPLER.vae, pixels)[0]
 
         # V3 scheme name changes
-        Sampler_custom = comfy_extras.nodes_custom_sampler.SamplerCustom()
-        if hasattr(Sampler_custom, "sample"):
-            Sampler_custom_execute = Sampler_custom.sample
-        elif hasattr(Sampler_custom, "execute"):
-            Sampler_custom_execute = Sampler_custom.execute
 
         latent_output = Sampler_custom_execute(
             self.KSAMPLER.model,

@@ -15,9 +15,10 @@ import comfy.sampler_helpers
 import comfy.samplers
 import comfy.sd
 import comfy.supported_models
+
+
 from ..UpscalerRefiner.TBG_Refiner import TBG_Refiner_v1
 from ..UpscalerRefiner.TBG_Tiler import TBG_Upscaler_v1
-from ...vendor.ComfyUI_MaraScott_Nodes.py.utils.constants import get_category
 from ....TBG_presets import PRESETS_PRO
 
 # ────────────────────────────── Main Class ────────────────────────────── #

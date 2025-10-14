@@ -6,9 +6,15 @@ import numpy as np
 from PIL import Image
 from typing import Tuple, List
 
-from comfy_extras.nodes_mask import ImageToMask
+
 from nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
 from pygments.lexer import default
+
+from comfy_extras.nodes_mask import ImageToMask
+if hasattr(ImageToMask, "image_to_mask"):
+    ImageToMask_execute = ImageToMask.image_to_mask
+elif hasattr(ImageToMask, "execute"):
+    ImageToMask_execute = ImageToMask.execute
 
 
 def tensor_to_pil(image_tensor, batch_index=0) -> Image:
@@ -359,12 +365,9 @@ class ImageComplexityMap:
         out = pil_to_tensor(out)
         image = out.unsqueeze(-1)  # shape becomes (1, 1024, 1024, 1)
         image = image.repeat(1, 1, 1, 3)  # shape becomes (1, 1024, 1024, 3)
-        mask = ImageToMask.image_to_mask(0, image, "green")[0]
+        mask = ImageToMask_execute(0, image, "green")[0]
         return (image, mask,)
 
-
-import torch
-import numpy as np
 
 
 class MaskMultiplyZeroWins:
