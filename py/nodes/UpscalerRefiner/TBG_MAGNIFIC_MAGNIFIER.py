@@ -521,7 +521,9 @@ class TBG_magnific_ETUR:
         """
         Enrichment_Pipe = []
         Enrichment_Pipe.append({
-
+            "PRO_Fusion_Complexity_min_Denoise" : 0,
+            "PRO_Fusion_Complexity_max_Denoise": 1,
+            "PRO_Fusion_Complexity_Mask_Blur": 0,
             "eta_start": 0,
             "eta_end": 0.5,
             "resharpen_start": 0,
