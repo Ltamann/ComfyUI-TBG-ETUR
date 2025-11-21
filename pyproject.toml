@@ -1,7 +1,7 @@
 [project]
 name = "tbg-etur"
 description = "About TBG Enhanced Tiled Upscaler and Refiner Pro! We at TBG Think. Build. Generate. Pro AI upscaling & image enrichment are excited to make our TBG Enhanced Tiled Upscaler and Refiner Pro available to you for free non-commercial use. We believe in empowering creators and innovators, which is why anything you create or generate using our software"
-version = "1.0.0"
+version = "1.0.8v3"
 license = {file = "LICENSE"} 
 # classifiers = [
 #     # For OS-independent nodes (works on all operating systems)
@@ -29,7 +29,7 @@ Documentation = "https://github.com/Ltamann/ComfyUI-TBG-ETUR/wiki"
 "Bug Tracker" = "https://github.com/Ltamann/ComfyUI-TBG-ETUR/issues"
 
 [tool.comfy]
-PublisherId = ""
+PublisherId = "tbg"
 DisplayName = "ComfyUI-TBG-ETUR"
 Icon = ""
 includes = [] 
