@@ -1,6 +1,6 @@
 [project]
 name = "tbg-etur"
-description = "About TBG Enhanced Tiled Upscaler and Refiner Pro! We at TBG Think. Build. Generate. Pro AI upscaling & image enrichment are excited to make our TBG Enhanced Tiled Upscaler and Refiner Pro available to you for free non-commercial use. We believe in empowering creators and innovators, which is why anything you create or generate using our software"
+description = "TBG Enhanced Tiled Upscaler and Refiner upscales up to 200MP with precise control. It features dual-model processing (structure + detail), per-pixel denoising to control where creativity is applied, and per-tile and per-object prompts, denoise, and seeds. Advanced fast previews. New generative tile fusion seamless joining, even on high-denoise. The node is available in Pro and CE versions, with the Pro version requiring a membership at https://www.patreon.com/TB_LAAR."
 version = "1.0.8"
 license = {file = "LICENSE"} 
 # classifiers = [
