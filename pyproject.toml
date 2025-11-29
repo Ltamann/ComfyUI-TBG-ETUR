@@ -29,7 +29,7 @@ Documentation = "https://github.com/Ltamann/ComfyUI-TBG-ETUR/wiki"
 "Bug Tracker" = "https://github.com/Ltamann/ComfyUI-TBG-ETUR/issues"
 
 [tool.comfy]
-PublisherId = "tbg"
+PublisherId = "TBG-ETUR"
 DisplayName = "ComfyUI-TBG-ETUR"
 Icon = ""
 includes = [] 
