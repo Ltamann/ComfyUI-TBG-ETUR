@@ -20,6 +20,10 @@ optimum
 
 # Correction for Nunchacu
 huggingface_hub>=0.34
-transformers==4.56.2
+transformers>=4.57.1
 diffusers>=0.35.0
 accelerate>=1.10
+numpy >= 2.3.5
+
+
+
