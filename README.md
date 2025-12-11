@@ -465,4 +465,57 @@ Due to the complex structure of Neuro Generative Tile Fusion (NGTF), the cache f
 
 We're actively working to improve this behavior and aim to address it in the next release.
 
-And we add new WORKFLOWS for 1.04 alfa
+# Model Download List
+
+## Upscale Models
+- [RealESRGAN_x4plus.pth](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth) (upscale_models)
+- [4x_NMKD-Superscale-SP_178000_G.pth](https://huggingface.co/gemasai/4x_NMKD-Superscale-SP_178000_G/resolve/main/4x_NMKD-Superscale-SP_178000_G.pth?download=true) (upscale_models)
+- [4x-UltraSharp.pth](https://huggingface.co/madriss/chkpts/resolve/d9ae35349b0cb67e06aebbeb94316827bcd6be4a/ComfyUI/models/upscale_models/4x-UltraSharp.pth?download=true) (upscale_models)
+- [4xNomos8kDAT.pth](https://huggingface.co/Maxivi/SDXLModels/resolve/main/4xNomos8kDAT.pth?download=true) (upscale_models)
+- [4x_NMKD-Siax_200k.pth](https://huggingface.co/uwg/upscaler/resolve/main/ESRGAN/4x_NMKD-Siax_200k.pth?download=true) (upscale_models)
+- [4x_RealisticRescaler_100000_G.pth](https://huggingface.co/Afizi/4x_RealisticRescaler_100000_G.pth/resolve/main/4x_RealisticRescaler_100000_G.pth?download=true) (upscale_models)
+- [4x_foolhardy_Remacri.pth](https://huggingface.co/fofr/comfyui/resolve/25913cf4ac3650cceba6ec5a1df1c88da67ed17b/upscale_models/4x_foolhardy_Remacri.pth?download=true) (upscale_models)
+- [RealESRGAN_x4plus_anime_6B.pth](https://huggingface.co/ac-pill/upscale_models/resolve/main/RealESRGAN_x4plus_anime_6B.pth?download=true) (upscale_models)
+
+## Diffusion Models
+- [svdq-fp4_r32-flux.1-krea-dev.safetensors](https://huggingface.co/nunchaku-tech/nunchaku-flux.1-krea-dev/resolve/main/svdq-fp4_r32-flux.1-krea-dev.safetensors?download=true) (diffusion_models)
+- [flux.1-dev-SRPO-BFL-bf16.safetensors](https://huggingface.co/rockerBOO/flux.1-dev-SRPO/resolve/main/flux.1-dev-SRPO-BFL-bf16.safetensors?download=true) (diffusion_models)
+- [flux1-dev-Q8_0.gguf](https://huggingface.co/city96/FLUX.1-dev-gguf/resolve/main/flux1-dev-Q8_0.gguf?download=true) (diffusion_models)
+- [flux1-kontext-dev.safetensors](https://huggingface.co/Comfy-Org/flux1-kontext-dev_ComfyUI/resolve/main/split_files/diffusion_models/flux1-dev-kontext_fp8_scaled.safetensors?download=true) (diffusion_models)
+- [qwen_image_fp8_e4m3fn.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_fp8_e4m3fn.safetensors?download=true) (diffusion_models)
+- [qwen_image_edit_2509_fp8_e4m3fn.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors?download=true) (diffusion_models)
+- [svdq-fp4_r32-qwen-image-edit-2509.safetensors](https://huggingface.co/nunchaku-tech/nunchaku-qwen-image-edit-2509/resolve/main/svdq-fp4_r32-qwen-image-edit-2509.safetensors?download=true) (diffusion_models)
+- [svdq-fp4_r32-flux.1-kontext-dev.safetensors](https://huggingface.co/mit-han-lab/nunchaku-flux.1-kontext-dev/resolve/main/svdq-fp4_r32-flux.1-kontext-dev.safetensors?download=true) (diffusion_models)
+- [Qwen_Image_Edit-Q8_0.gguf](https://huggingface.co/QuantStack/Qwen-Image-Edit-GGUF/resolve/main/Qwen_Image_Edit-Q8_0.gguf?download=true) (diffusion_models)
+
+## CLIP Models
+- [t5xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors?download=true) (clip)
+- [Long-ViT-L-14-BEST-GmP-smooth-ft.safetensors](https://huggingface.co/zer0int/LongCLIP-GmP-ViT-L-14/resolve/main/Long-ViT-L-14-BEST-GmP-smooth-ft.safetensors?download=true) (clip)
+- [qwen_2.5_vl_7b_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors?download=true) (clip)
+- [CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors](https://huggingface.co/laion/CLIP-ViT-H-14-laion2B-s32B-b79K/resolve/main/open_clip_model.safetensors?download=true) (clip)
+
+## CLIP Vision
+- [sigclip_vision_patch14_384.safetensors](https://huggingface.co/Comfy-Org/sigclip_vision_384/resolve/main/sigclip_vision_patch14_384.safetensors?download=true) (clip_vision)
+
+## VAE
+- [ae.safetensors](https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors) (vae)
+- [qwen_image_vae.safetensors](https://huggingface.co/Qwen/Qwen-Image/resolve/main/vae/diffusion_pytorch_model.safetensors?download=true) (vae)
+
+## Loras
+- [FLUX/FLUX.1-Turbo-Alpha-8Step.safetensors](https://huggingface.co/alimama-creative/FLUX.1-Turbo-Alpha/resolve/main/diffusion_pytorch_model.safetensors) (loras)
+- [QWEN/Qwen-Image-Lightning-8steps-V2.0.safetensors](https://huggingface.co/lightx2v/Qwen-Image-Lightning/resolve/main/Qwen-Image-Lightning-8steps-V2.0.safetensors?download=true) (loras)
+
+## Style Models
+- [flux1-redux-dev.safetensors](https://huggingface.co/black-forest-labs/FLUX.1-Redux-dev/resolve/main/flux1-redux-dev.safetensors?download=true) (style_models)
+
+## ControlNet
+- [Flux.1-dev-Controlnet-Upscaler.safetensors](https://huggingface.co/jasperai/Flux.1-dev-Controlnet-Upscaler/resolve/main/diffusion_pytorch_model.safetensors?download=true) (controlnet)
+- [Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro-2.safetensors](https://huggingface.co/Shakker-Labs/FLUX.1-dev-ControlNet-Union-Pro-2.0/resolve/main/diffusion_pytorch_model.safetensors?download=true) (controlnet)
+
+## Checkpoints
+- [SDXL-Juggernaut-XI-byRunDiffusion.safetensors](https://huggingface.co/RunDiffusion/Juggernaut-XI-v11/resolve/main/Juggernaut-XI-byRunDiffusion.safetensors) (checkpoints)
+
+
+
+
+
