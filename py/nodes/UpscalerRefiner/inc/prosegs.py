@@ -9,9 +9,6 @@ from PIL import Image
 
 PIL.Image.MAX_IMAGE_PIXELS = 592515344
 # Application-specific imports
-import comfy_extras
-import comfy_extras.nodes_images
-import comfy_extras.nodes_mask
 import torch
 from scipy.ndimage import gaussian_filter, grey_dilation, distance_transform_edt
 import torchvision.transforms.functional as TF
@@ -118,7 +115,17 @@ class TBG_Segms():
             # -----------------------------------------------------------------
             # c) Crop the image from the up‑scaled whole picture.
             # -----------------------------------------------------------------
-            cropped_image = comfy_extras.nodes_images.ImageCrop().crop(
+
+            def crop(image, width, height, x, y):
+                x = min(x, image.shape[2] - 1)
+                y = min(y, image.shape[1] - 1)
+                to_x = width + x
+                to_y = height + y
+                img = image[:, y:to_y, x:to_x, :]
+                return (img,)
+
+
+            cropped_image =crop(
                 target_shape,
                 x2_al - x1_al,  # width  (already 8‑aligned)
                 y2_al - y1_al,  # height (already 8‑aligned)

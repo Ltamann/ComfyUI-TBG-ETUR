@@ -14,6 +14,16 @@ def fill_missing_tiles_from_background_rebuild(self, background, output_images):
                 images[index] =  output_images[index]
     return images
 
+
+def crop(image, width, height, x, y):
+    x = min(x, image.shape[2] - 1)
+    y = min(y, image.shape[1] - 1)
+    to_x = width + x
+    to_y = height + y
+    img = image[:, y:to_y, x:to_x, :]
+    return (img,)
+
+
 def fill_missing_tiles_from_background(self, background, output_images):
             # Build Tiles from Refine_Alternative_Image
     Alternative_Images=[]
@@ -22,7 +32,7 @@ def fill_missing_tiles_from_background(self, background, output_images):
     # for Tiles
     for index, grid_spec in enumerate(grid_spec_tile):
         row, col, order, x_start, y_start, width_inc, height_inc = grid_spec
-        Alternative_Image = comfy_extras.nodes_images.ImageCrop().crop(background, width_inc, height_inc, x_start, y_start)[0]
+        Alternative_Image = crop(background, width_inc, height_inc, x_start, y_start)[0]
         Alternative_Images.append(Alternative_Image)
     return Alternative_Images
 
