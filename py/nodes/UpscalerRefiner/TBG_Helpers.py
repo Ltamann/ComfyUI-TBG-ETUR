@@ -11,10 +11,18 @@ from nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
 from pygments.lexer import default
 
 from comfy_extras.nodes_mask import ImageToMask
-if hasattr(ImageToMask, "image_to_mask"):
-    ImageToMask_execute = ImageToMask.image_to_mask
-elif hasattr(ImageToMask, "execute"):
-    ImageToMask_execute = ImageToMask.execute
+
+
+if hasattr(ImageToMask, "execute"):
+    # execute is a @classmethod; no instance needed
+    def ImageToMask_execute(image,chanel):
+        return ImageToMask.execute(image,chanel)
+elif hasattr(ImageToMask, "image_to_mask"):
+    # composite is an instance method; needs an instance
+    def ImageToMask_execute(image,chanel):
+        node = ImageToMask()  # or cache a global instance if you prefer
+        return node.image_to_mask(image,chanel)
+
 
 
 def tensor_to_pil(image_tensor, batch_index=0) -> Image:
@@ -365,7 +373,7 @@ class ImageComplexityMap:
         out = pil_to_tensor(out)
         image = out.unsqueeze(-1)  # shape becomes (1, 1024, 1024, 1)
         image = image.repeat(1, 1, 1, 3)  # shape becomes (1, 1024, 1024, 3)
-        mask = ImageToMask_execute(0, image, "green")[0]
+        mask = ImageToMask_execute( image, "green")[0]
         return (image, mask,)
 
 
