@@ -1,0 +1,3358 @@
+{
+  "id": "78e117ed-0d9a-411f-880a-200fe0e75ce9",
+  "revision": 0,
+  "last_node_id": 53,
+  "last_link_id": 57,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        514.1212953970578,
+        1748.4236418891846
+      ],
+      "size": [
+        785.919677734375,
+        693.4404296875
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 0,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "title": "TBG masked attention",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "ComfyUI_temp_czkgz_00001_.png",
+        "image"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "Image Comparer (rgthree)",
+      "pos": [
+        4906.28763581654,
+        1658.4236418891846
+      ],
+      "size": [
+        1050,
+        940
+      ],
+      "flags": {},
+      "order": 51,
+      "mode": 0,
+      "inputs": [
+        {
+          "dir": 3,
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "dir": 3,
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [],
+      "title": "Compare Input - Refined",
+      "properties": {
+        "cnr_id": "rgthree-comfy",
+        "ver": "c5ffa43de4ddb17244626a65a30700a05dd6b67d",
+        "comparer_mode": "Slide"
+      },
+      "widgets_values": [
+        [
+          {
+            "name": "A",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_acfxp_00001_.png&type=temp&subfolder=&rand=0.26683622720835176"
+          },
+          {
+            "name": "B",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_acfxp_00002_.png&type=temp&subfolder=&rand=0.29709204133238365"
+          }
+        ]
+      ]
+    },
+    {
+      "id": 5,
+      "type": "Note",
+      "pos": [
+        -445.87870460294204,
+        1868.4236418891846
+      ],
+      "size": [
+        720,
+        200
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why Segments ?",
+      "properties": {},
+      "widgets_values": [
+        "In certain situations, placing an object entirely within a single tile is essential for achieving consistent results. By applying a mask to an object, it can be sampled separately from the rest of the image. The masked area will then be upscaled to match the tile size, enhancing its detail.\n\nThis technique can also be used to repair or modify elements by applying different settings, prompts, or denoise values using the function.\n\nAfter the entire image is processed, the segmented areas will be handled. ImpactPack is compatible with TBG ETUR segmentation entries, making it possible to automate the selection process."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 6,
+      "type": "Reroute",
+      "pos": [
+        5940.19696485967,
+        306.9891822266152
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "TBG",
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 7,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        1454.1212953970578,
+        1648.4236418891846
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "models": [
+          {
+            "name": "Qwen-Image-Lightning-4steps-V1.0.safetensors",
+            "url": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/resolve/main/Qwen-Image-Lightning-4steps-V1.0.safetensors",
+            "directory": "loras"
+          }
+        ],
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "ue_properties": {
+          "version": "7.0.1",
+          "widget_ue_connectable": {
+            "lora_name": true,
+            "strength_model": true
+          }
+        },
+        "ttNbgOverride": {
+          "color": "#222",
+          "bgcolor": "#000",
+          "groupcolor": "#444"
+        }
+      },
+      "widgets_values": [
+        "QWEN\\Qwen-Image-Lightning-8steps-V1.0.safetensors",
+        1.02
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 8,
+      "type": "ModelSamplingAuraFlow",
+      "pos": [
+        1754.1212953970573,
+        1508.4236418891842
+      ],
+      "size": [
+        290,
+        60
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.48",
+        "Node name for S&R": "ModelSamplingAuraFlow",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "ue_properties": {
+          "version": "7.0.1",
+          "widget_ue_connectable": {}
+        },
+        "ttNbgOverride": {
+          "color": "#222",
+          "bgcolor": "#000",
+          "groupcolor": "#444"
+        }
+      },
+      "widgets_values": [
+        3
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 9,
+      "type": "NunchakuFluxDiTLoader",
+      "pos": [
+        1774.1212953970573,
+        848.4236418891841
+      ],
+      "size": [
+        275.73333740234375,
+        202
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NunchakuFluxDiTLoader",
+        "cnr_id": "ComfyUI-nunchaku",
+        "ver": "ca9e26422a5452b3306012ba2ed305e712a3f7e3"
+      },
+      "widgets_values": [
+        "svdq-fp4_r32-flux.1-krea-dev.safetensors",
+        0,
+        "nunchaku-fp16",
+        "auto",
+        0,
+        "bfloat16",
+        "enabled"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 10,
+      "type": "CFGNorm",
+      "pos": [
+        1754.1212953970573,
+        1608.4236418891846
+      ],
+      "size": [
+        290,
+        60
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "patched_model",
+          "type": "MODEL",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "CFGNorm",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "ue_properties": {
+          "version": "7.0.1",
+          "widget_ue_connectable": {
+            "strength": true
+          }
+        },
+        "ttNbgOverride": {
+          "color": "#222",
+          "bgcolor": "#000",
+          "groupcolor": "#444"
+        }
+      },
+      "widgets_values": [
+        1
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 12,
+      "type": "VAELoader",
+      "pos": [
+        1814.1212953970573,
+        1308.4236418891842
+      ],
+      "size": [
+        260,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 5,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 13,
+      "type": "DualCLIPLoader",
+      "pos": [
+        1794.1212953970573,
+        1108.4236418891842
+      ],
+      "size": [
+        306.35992431640625,
+        143.02444458007812
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 6,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "DualCLIPLoader"
+      },
+      "widgets_values": [
+        "t5xxl_fp8_e4m3fn.safetensors",
+        "Long-ViT-L-14-BEST-GmP-smooth-ft.safetensors",
+        "flux",
+        "default"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 14,
+      "type": "ModelSamplingFlux",
+      "pos": [
+        2134.1212953970576,
+        1108.4236418891842
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ModelSamplingFlux"
+      },
+      "widgets_values": [
+        1.0000000000000002,
+        0.5,
+        1024,
+        1024
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 15,
+      "type": "Any Switch (rgthree)",
+      "pos": [
+        2434.121295397058,
+        848.4236418891841
+      ],
+      "size": [
+        250.04998779296875,
+        106
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "dir": 3,
+          "name": "any_01",
+          "type": "VAE",
+          "link": 6
+        },
+        {
+          "dir": 3,
+          "name": "any_02",
+          "type": "VAE",
+          "link": 7
+        },
+        {
+          "dir": 3,
+          "name": "any_03",
+          "type": "VAE",
+          "link": 8
+        },
+        {
+          "dir": 3,
+          "name": "any_04",
+          "type": "VAE",
+          "link": 9
+        },
+        {
+          "name": "any_05",
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "dir": 4,
+          "label": "VAE",
+          "name": "*",
+          "shape": 3,
+          "type": "VAE",
+          "links": [
+            41,
+            46
+          ]
+        }
+      ],
+      "title": "VAE Switch",
+      "properties": {
+        "cnr_id": "rgthree-comfy",
+        "ver": "c5ffa43de4ddb17244626a65a30700a05dd6b67d"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 16,
+      "type": "Any Switch (rgthree)",
+      "pos": [
+        2434.121295397058,
+        908.4236418891841
+      ],
+      "size": [
+        250.04998779296875,
+        126
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 45,
+      "mode": 0,
+      "inputs": [
+        {
+          "dir": 3,
+          "name": "any_01",
+          "type": "MODEL",
+          "link": 10
+        },
+        {
+          "dir": 3,
+          "name": "any_02",
+          "type": "MODEL",
+          "link": 11
+        },
+        {
+          "dir": 3,
+          "name": "any_03",
+          "type": "MODEL",
+          "link": 12
+        },
+        {
+          "dir": 3,
+          "name": "any_04",
+          "type": "MODEL",
+          "link": 13
+        },
+        {
+          "name": "any_05",
+          "type": "MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "dir": 4,
+          "label": "MODEL",
+          "name": "*",
+          "shape": 3,
+          "type": "MODEL",
+          "links": [
+            44
+          ]
+        }
+      ],
+      "title": "Moel Switch",
+      "properties": {
+        "cnr_id": "rgthree-comfy",
+        "ver": "c5ffa43de4ddb17244626a65a30700a05dd6b67d"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 17,
+      "type": "NunchakuFluxLoraLoader",
+      "pos": [
+        2134.1212953970576,
+        868.4236418891841
+      ],
+      "size": [
+        236.351171875,
+        82
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NunchakuFluxLoraLoader",
+        "cnr_id": "ComfyUI-nunchaku",
+        "ver": "ca9e26422a5452b3306012ba2ed305e712a3f7e3"
+      },
+      "widgets_values": [
+        "FLUX\\alimama-FLUXdev_Turbo_Alpha_lora.safetensors",
+        1
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 18,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        1074.1212953970578,
+        1508.4236418891842
+      ],
+      "size": [
+        270,
+        98
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            15
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            19
+          ]
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "SDXL\\SDXL-Juggernaut-XI-byRunDiffusion.safetensors"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        1074.1212953970578,
+        1668.4236418891846
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "SDXL\\sdxl_lightning_8step_lora.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 20,
+      "type": "CLIPLoader",
+      "pos": [
+        2054.1212953970576,
+        1508.4236418891842
+      ],
+      "size": [
+        330,
+        110
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 8,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.48",
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "directory": "text_encoders"
+          }
+        ],
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "ue_properties": {
+          "version": "7.0.1",
+          "widget_ue_connectable": {}
+        },
+        "ttNbgOverride": {
+          "color": "#222",
+          "bgcolor": "#000",
+          "groupcolor": "#444"
+        }
+      },
+      "widgets_values": [
+        "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "qwen_image",
+        "default"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 21,
+      "type": "VAELoader",
+      "pos": [
+        2054.1212953970576,
+        1688.4236418891846
+      ],
+      "size": [
+        330,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 9,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.48",
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "qwen_image_vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors",
+            "directory": "vae"
+          }
+        ],
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "ue_properties": {
+          "version": "7.0.1",
+          "widget_ue_connectable": {}
+        },
+        "ttNbgOverride": {
+          "color": "#222",
+          "bgcolor": "#000",
+          "groupcolor": "#444"
+        }
+      },
+      "widgets_values": [
+        "qwen_image_vae.safetensors"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 22,
+      "type": "Any Switch (rgthree)",
+      "pos": [
+        2434.121295397058,
+        988.4236418891841
+      ],
+      "size": [
+        250.04998779296875,
+        126
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "dir": 3,
+          "name": "any_01",
+          "type": "CLIP",
+          "link": 16
+        },
+        {
+          "dir": 3,
+          "name": "any_02",
+          "type": "CLIP",
+          "link": 17
+        },
+        {
+          "dir": 3,
+          "name": "any_03",
+          "type": "CLIP",
+          "link": 18
+        },
+        {
+          "dir": 3,
+          "name": "any_04",
+          "type": "CLIP",
+          "link": 19
+        },
+        {
+          "name": "any_05",
+          "type": "CLIP",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "dir": 4,
+          "label": "CLIP",
+          "name": "*",
+          "shape": 3,
+          "type": "CLIP",
+          "links": [
+            45
+          ]
+        }
+      ],
+      "title": "CLIP Switch",
+      "properties": {
+        "cnr_id": "rgthree-comfy",
+        "ver": "c5ffa43de4ddb17244626a65a30700a05dd6b67d"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 23,
+      "type": "Note",
+      "pos": [
+        1154.1212953970578,
+        2408.4236418891855
+      ],
+      "size": [
+        590,
+        140
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why use Redux?",
+      "properties": {},
+      "widgets_values": [
+        "Why use Redux?\nRedux regenerates the image while preserving its overall composition and style.\nA value of 1 means full reconstruction with strict adherence to the original\nLower values allow more creative freedom in the output\nA value of 0 disables Redux entirely\nIf neither a Redux Clip nor a Style Model is connected, Redux will automatically be disabled\nRedux is particularly useful for preserving fine materials, textures, and structural composition. In many cases, it can serve as a lightweight alternative to ControlNets.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 24,
+      "type": "UNETLoader",
+      "pos": [
+        1074.1212953970578,
+        848.4236418891841
+      ],
+      "size": [
+        310,
+        82
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "flux1-krea-dev.safetensors",
+        "fp8_e4m3fn"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 25,
+      "type": "Reroute",
+      "pos": [
+        1341.4151047569455,
+        1633.0394041541208
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "*",
+          "links": [
+            35
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 26,
+      "type": "TBG ETUR Control Net Pipeline",
+      "pos": [
+        1133.0606533153803,
+        2690.519449431686
+      ],
+      "size": [
+        340.359375,
+        242
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 20
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            22
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
+      },
+      "widgets_values": [
+        1,
+        0,
+        1,
+        100,
+        150,
+        "None",
+        "NONE"
+      ]
+    },
+    {
+      "id": 27,
+      "type": "ControlNetLoader",
+      "pos": [
+        1142.2324587271357,
+        2989.7569976020754
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "Flux\\Flux.1-dev-Controlnet-Upscaler.safetensors"
+      ]
+    },
+    {
+      "id": 28,
+      "type": "TBG ETUR Control Net Pipeline",
+      "pos": [
+        1638.0092509696117,
+        2672.4546276997394
+      ],
+      "size": [
+        340.359375,
+        242
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 21
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 22
+        },
+        {
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            26
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
+      },
+      "widgets_values": [
+        0.5,
+        0,
+        0.8,
+        100,
+        150,
+        "Canny Edge",
+        "NONE"
+      ]
+    },
+    {
+      "id": 29,
+      "type": "SetUnionControlNetType",
+      "pos": [
+        1641.2323244497923,
+        3002.201449506371
+      ],
+      "size": [
+        335.9449157714844,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "SetUnionControlNetType"
+      },
+      "widgets_values": [
+        "canny/lineart/anime_lineart/mlsd"
+      ]
+    },
+    {
+      "id": 30,
+      "type": "ControlNetLoader",
+      "pos": [
+        1993.5659487173696,
+        3030.868093793483
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            23,
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro-2.safetensors"
+      ]
+    },
+    {
+      "id": 31,
+      "type": "SetUnionControlNetType",
+      "pos": [
+        2219.454583971276,
+        3004.6458342719966
+      ],
+      "size": [
+        334.72272338867197,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "SetUnionControlNetType"
+      },
+      "widgets_values": [
+        "depth"
+      ]
+    },
+    {
+      "id": 32,
+      "type": "TBG ETUR Control Net Pipeline",
+      "pos": [
+        2203.8982890555494,
+        2657.7879162739596
+      ],
+      "size": [
+        340.359375,
+        242
+      ],
+      "flags": {},
+      "order": 44,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 25
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 26
+        },
+        {
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            48
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
+      },
+      "widgets_values": [
+        0.5,
+        0,
+        0.8,
+        100,
+        150,
+        "DepthAnythingV2",
+        "NONE"
+      ]
+    },
+    {
+      "id": 34,
+      "type": "ControlNetLoader",
+      "pos": [
+        1873.1112190476263,
+        2152.464002773419
+      ],
+      "size": [
+        280,
+        60
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "FLUX_upscale_diffusion_pytorch_model.safetensors"
+      ]
+    },
+    {
+      "id": 35,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        1586.0404626555808,
+        1991.6559527911727
+      ],
+      "size": [
+        204.134765625,
+        26
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ConditioningZeroOut"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 36,
+      "type": "PreviewImage",
+      "pos": [
+        388.12006303957565,
+        863.8010020181317
+      ],
+      "size": [
+        592.535428660028,
+        571.6408474701262
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 28
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.7.0",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 39,
+      "type": "Note",
+      "pos": [
+        1076.7991477895346,
+        3147.241737769866
+      ],
+      "size": [
+        450,
+        220
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "ControlNets",
+      "properties": {},
+      "widgets_values": [
+        "You can add as many ControlNets as you like.\ncurrently, the only available preprocessors are Depth, Canny, Canny Edge, and None. We’ve excluded Pose because the subject will be divided into tiles, making pose estimation ineffective in the cnet pipe you can add pose conventionaly to the croped conditioning in the refiner.\n\nA global ControlNet strength modifier is available to help fine-tune all ControlNets at once.\n\nThe ControlNet preprocessor works directly on each tile, allowing it to operate at the tile's full resolution. This differs from other refiners like Ultimate Upscale, where the ControlNet input is cropped, and a tile only uses a small portion of the full ControlNet resolution. With our setup, each tile benefits from full-resolution preprocessing."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 41,
+      "type": "Note",
+      "pos": [
+        359.3583273074897,
+        2298.263824480699
+      ],
+      "size": [
+        306.7492776665806,
+        276.93293800038737
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "ControlNets",
+      "properties": {},
+      "widgets_values": [
+        "Set the Lab Node to Only Upscale to turn this into a fully functional Tiled Upscaler.\nWe fine-tuned SeedVR2, Waifu, FlashVR, and others into a new multi-step Upscaler and Refiner with adaptive sigmas.\nGive them a try — they’re not the fastest option, but for consistent, high-quality upscaling, this is a solid solution.\n\nFor more details on what’s changed, please read the text field shown when creating the node and have a look into the Tooltips."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 44,
+      "type": "DualCLIPLoader",
+      "pos": [
+        1077.1515799318588,
+        978.5246550727778
+      ],
+      "size": [
+        306.35992431640625,
+        143.02444458007812
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "DualCLIPLoader"
+      },
+      "widgets_values": [
+        "t5xxl_fp8_e4m3fn.safetensors",
+        "Long-ViT-L-14-BEST-GmP-smooth-ft.safetensors",
+        "flux",
+        "default"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 45,
+      "type": "TBG ETUR Upscaler and Tile Generator PRO",
+      "pos": [
+        2746.120967256009,
+        808.9525281851745
+      ],
+      "size": [
+        682.828258167614,
+        744
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 53
+        },
+        {
+          "name": "Segment_Mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 34
+        },
+        {
+          "name": "PRO_segs",
+          "shape": 7,
+          "type": "SEGS",
+          "link": 35
+        },
+        {
+          "name": "labs_upscaler",
+          "shape": 7,
+          "type": "labs_upscaler",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            36
+          ]
+        },
+        {
+          "name": "Upscaled Image",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO"
+      },
+      "widgets_values": [
+        "NONE",
+        1,
+        1024,
+        1024,
+        "FAST/_bilinear",
+        2,
+        "microsoft/Florence-2-base",
+        "None (FP16)",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        false,
+        "",
+        0,
+        "fixed",
+        "Neuro_Generative_Tile_Fusion",
+        64,
+        0.95,
+        16,
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 46,
+      "type": "TBG ETUR Tile Overrides",
+      "pos": [
+        2754.6962892403817,
+        1774.1020612409382
+      ],
+      "size": [
+        708.1223892040512,
+        4430
+      ],
+      "flags": {},
+      "order": 47,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 36
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            47
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR Tile Overrides",
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false,
+        "tile_edits_json": "{\"prompts\":[\"The image shows a white book with a black cover sitting on top of a gray wall. The book appears to be a hardcover with a glossy finish, and the cover is slightly raised, giving it a 3D effect. The white color of the book stands out against the gray wall, creating a striking contrast.\",\"The image shows a black and white poster with the letter 'T' in the center, surrounded by a grey and white background. The letter is bold and stands out against the stark contrast of the two colors, creating a striking visual.\",\"The image shows a black and white poster with the letter 'B' on it. The letter is bold and stands out against the white background, creating a striking contrast.\",\"The image shows a black letter 'G' on a white background, creating a striking contrast between the two colors. The letter is bold and stands out against the stark white background.\",\"The image shows a black and white painting on a white wall with a black arrow pointing to the right. The painting is composed of a combination of white and black colors, creating a stark contrast against the white background.\",\"The image shows a painting on a wall with a red and blue square in the center, surrounded by a black border. The painting is composed of a variety of colors, including red, blue, and white, creating a vibrant and eye-catching composition.\",\"The image shows a painting by Jean-Michel Basquiat titled Untitled. It is composed of a combination of black, white, blue and red colors, creating a striking contrast against the white background.\",\"The image shows a black and blue poster with the words BFI written in bold white lettering against a black background.\",\"The image shows a black and blue Google logo on a white background. The logo consists of the letter 'G' in the center, surrounded by a blue border.\",\"The image shows a black and blue letter 'G' on a white background, creating a striking contrast between the two colors.\",\"The image shows a close up of a blue and white sign on a wall. The sign is rectangular in shape and has a white background with blue lettering. The lettering is clearly visible and stands out against the wall.\",\"The image shows a blue and white poster with the words FET DPO written in bold, capitalized letters. The background of the poster is a bright, vibrant blue, and the text stands out against it.\",\"The image shows a blue and red sign with the word TU on it against a white background.\",\"The image shows a blue and red sign with the number 10 on it against a white background. The sign is likely for a public domain, as indicated by the text at the bottom of the image.\",\"The image shows a blue and red letter 'R' on a white and grey background. The letter is bold and stands out against the stark contrast of the two colors.\",\"The image shows a blue and white parking sign on the side of a building, with a black and white background. The sign is a free parking sign template, with the letter 'P' prominently displayed.\",\"The image shows the Pro logo on a white background with blue text that reads How to Make Money with Pro. The logo is a blue circle with the word Pro in the center, surrounded by a white border. The text is written in a bold, black font and is centered in the middle of the circle. The background is a bright white, providing a stark contrast to the blue of the logo.\",\"The image shows a white background with the text move more now written in bold black font. The text is centered in the middle of the image and is surrounded by a thin black border. The font is modern and eye-catching, making it stand out against the white background.\",\"The image shows a poster with the text 1.10 the muscle, the speed, and vram written in bold black font against a white background. The text is centered in the middle of the poster and is surrounded by a black border.\",\"The image shows a poster with the words Google, Red, and More written in bold, black font against a white background. The poster is framed by a thin black border, giving it a modern and professional look.\",\"The image shows a white book with a blue speech bubble on the cover. The speech bubble is filled with text, giving the impression that the book is open.\",\"The image shows a blue speech bubble with the word PRO on it against a white background.\",\"The image shows a white board with black text that reads more money, more money, less money against a blue background.\",\"The image shows a white board with the words The Muscle, the Speed, and VRAM written on it against a wall in the background.\",\"The image shows a white board with the words circle, bed, m written on it against a grey background.\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}",
+        "prompt_0": "The image shows a white book with a black cover sitting on top of a gray wall. The book appears to be a hardcover with a glossy finish, and the cover is slightly raised, giving it a 3D effect. The white color of the book stands out against the gray wall, creating a striking contrast.",
+        "prompt_1": "The image shows a black and white poster with the letter 'T' in the center, surrounded by a grey and white background. The letter is bold and stands out against the stark contrast of the two colors, creating a striking visual.",
+        "prompt_2": "The image shows a black and white poster with the letter 'B' on it. The letter is bold and stands out against the white background, creating a striking contrast.",
+        "prompt_3": "The image shows a black letter 'G' on a white background, creating a striking contrast between the two colors. The letter is bold and stands out against the stark white background.",
+        "prompt_4": "The image shows a black and white painting on a white wall with a black arrow pointing to the right. The painting is composed of a combination of white and black colors, creating a stark contrast against the white background.",
+        "prompt_5": "The image shows a painting on a wall with a red and blue square in the center, surrounded by a black border. The painting is composed of a variety of colors, including red, blue, and white, creating a vibrant and eye-catching composition.",
+        "prompt_6": "The image shows a painting by Jean-Michel Basquiat titled Untitled. It is composed of a combination of black, white, blue and red colors, creating a striking contrast against the white background.",
+        "prompt_7": "The image shows a black and blue poster with the words BFI written in bold white lettering against a black background.",
+        "prompt_8": "The image shows a black and blue Google logo on a white background. The logo consists of the letter 'G' in the center, surrounded by a blue border.",
+        "prompt_9": "The image shows a black and blue letter 'G' on a white background, creating a striking contrast between the two colors.",
+        "prompt_10": "The image shows a close up of a blue and white sign on a wall. The sign is rectangular in shape and has a white background with blue lettering. The lettering is clearly visible and stands out against the wall.",
+        "prompt_11": "The image shows a blue and white poster with the words FET DPO written in bold, capitalized letters. The background of the poster is a bright, vibrant blue, and the text stands out against it.",
+        "denoise_0": "",
+        "seed_0": "",
+        "cnet_strength_0": "",
+        "denoise_1": "",
+        "seed_1": "",
+        "cnet_strength_1": "",
+        "denoise_2": "",
+        "seed_2": "",
+        "cnet_strength_2": "",
+        "denoise_3": "",
+        "seed_3": "",
+        "cnet_strength_3": "",
+        "denoise_4": "",
+        "seed_4": "",
+        "cnet_strength_4": "",
+        "denoise_5": "",
+        "seed_5": "",
+        "cnet_strength_5": "",
+        "denoise_6": "",
+        "seed_6": "",
+        "cnet_strength_6": "",
+        "denoise_7": "",
+        "seed_7": "",
+        "cnet_strength_7": "",
+        "denoise_8": "",
+        "seed_8": "",
+        "cnet_strength_8": "",
+        "denoise_9": "",
+        "seed_9": "",
+        "cnet_strength_9": "",
+        "denoise_10": "",
+        "seed_10": "",
+        "cnet_strength_10": "",
+        "denoise_11": "",
+        "seed_11": "",
+        "cnet_strength_11": "",
+        "prompt_12": "The image shows a blue and red sign with the word TU on it against a white background.",
+        "prompt_13": "The image shows a blue and red sign with the number 10 on it against a white background. The sign is likely for a public domain, as indicated by the text at the bottom of the image.",
+        "prompt_14": "The image shows a blue and red letter 'R' on a white and grey background. The letter is bold and stands out against the stark contrast of the two colors.",
+        "prompt_15": "The image shows a blue and white parking sign on the side of a building, with a black and white background. The sign is a free parking sign template, with the letter 'P' prominently displayed.",
+        "prompt_16": "The image shows the Pro logo on a white background with blue text that reads How to Make Money with Pro. The logo is a blue circle with the word Pro in the center, surrounded by a white border. The text is written in a bold, black font and is centered in the middle of the circle. The background is a bright white, providing a stark contrast to the blue of the logo.",
+        "prompt_17": "The image shows a white background with the text move more now written in bold black font. The text is centered in the middle of the image and is surrounded by a thin black border. The font is modern and eye-catching, making it stand out against the white background.",
+        "prompt_18": "The image shows a poster with the text 1.10 the muscle, the speed, and vram written in bold black font against a white background. The text is centered in the middle of the poster and is surrounded by a black border.",
+        "prompt_19": "The image shows a poster with the words Google, Red, and More written in bold, black font against a white background. The poster is framed by a thin black border, giving it a modern and professional look.",
+        "prompt_20": "The image shows a white book with a blue speech bubble on the cover. The speech bubble is filled with text, giving the impression that the book is open.",
+        "prompt_21": "The image shows a blue speech bubble with the word PRO on it against a white background.",
+        "prompt_22": "The image shows a white board with black text that reads more money, more money, less money against a blue background.",
+        "prompt_23": "The image shows a white board with the words The Muscle, the Speed, and VRAM written on it against a wall in the background.",
+        "prompt_24": "The image shows a white board with the words circle, bed, m written on it against a grey background."
+      },
+      "widgets_values": [
+        true,
+        0,
+        "",
+        "",
+        "unchanged",
+        "",
+        "unchanged",
+        false,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 47,
+      "type": "ControlNetApplyAdvanced",
+      "pos": [
+        1875.8082627266024,
+        1909.8377815154277
+      ],
+      "size": [
+        270,
+        186
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 37
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 38
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 39
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 40
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            42
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ControlNetApplyAdvanced"
+      },
+      "widgets_values": [
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "id": 53,
+      "type": "PreviewImage",
+      "pos": [
+        4676.28763581654,
+        808.4236418891841
+      ],
+      "size": [
+        720,
+        780
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 52,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 56
+        }
+      ],
+      "outputs": [],
+      "title": "TILES",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 2,
+      "type": "SaveImage",
+      "pos": [
+        4707.002024583876,
+        1707.5869626827362
+      ],
+      "size": [
+        330,
+        270
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 50,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 57
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44"
+      },
+      "widgets_values": [
+        "TBG_ETUR\\David_R1\\final_"
+      ]
+    },
+    {
+      "id": 48,
+      "type": "TBG ETUR enrichment pipe",
+      "pos": [
+        3743.6382763459437,
+        2818.381454290233
+      ],
+      "size": [
+        700.9769779346179,
+        632.9232045354411
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "Enrichment_Pipe",
+          "type": "Enrichment_Pipe",
+          "links": [
+            49
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR enrichment pipe"
+      },
+      "widgets_values": [
+        false,
+        0.5,
+        0,
+        1,
+        false,
+        1.17,
+        0.12,
+        0.3,
+        0.5,
+        0.8,
+        0,
+        0,
+        0,
+        true,
+        1,
+        "none",
+        "bilinear",
+        "1x-Film-Degrainer-1-000.pth",
+        1,
+        1,
+        0.2,
+        1,
+        0
+      ]
+    },
+    {
+      "id": 49,
+      "type": "TBG ETUR Labs for Refiner",
+      "pos": [
+        3738.0494754528677,
+        2374.288525721991
+      ],
+      "size": [
+        698.4978711547847,
+        332.183319793701
+      ],
+      "flags": {},
+      "order": 46,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "Custom_Sigmas_!DENOISE=1",
+          "shape": 7,
+          "type": "SIGMAS",
+          "link": null
+        },
+        {
+          "name": "Sampler",
+          "shape": 7,
+          "type": "SAMPLER",
+          "link": null
+        },
+        {
+          "name": "cropped_positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 42
+        },
+        {
+          "name": "cropped_negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 43
+        }
+      ],
+      "outputs": [
+        {
+          "name": "labs_refiner",
+          "type": "labs_refiner",
+          "links": [
+            52
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR Labs for Refiner"
+      },
+      "widgets_values": [
+        0.5,
+        0,
+        true,
+        true,
+        true,
+        0,
+        false,
+        "gpupyramid",
+        2048
+      ]
+    },
+    {
+      "id": 43,
+      "type": "LoraLoader",
+      "pos": [
+        1428.8136378557354,
+        850.3703657641196
+      ],
+      "size": [
+        270,
+        126
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 32
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            31
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "LoraLoader"
+      },
+      "widgets_values": [
+        "FLUX\\FLUX.1-Turbo-Alpha-8Step.safetensors",
+        0.14,
+        1
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 42,
+      "type": "ModelSamplingFlux",
+      "pos": [
+        1375.2366346800725,
+        1186.5475983369631
+      ],
+      "size": [
+        310,
+        130
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ModelSamplingFlux"
+      },
+      "widgets_values": [
+        1.0000000000000002,
+        0.5,
+        1024,
+        1024
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 11,
+      "type": "VAELoader",
+      "pos": [
+        1084.876809923425,
+        1175.14592155227
+      ],
+      "size": [
+        260,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 20,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 33,
+      "type": "CLIPTextEncodeFlux",
+      "pos": [
+        1114.8990358755734,
+        1902.6458678413333
+      ],
+      "size": [
+        400,
+        340
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            27,
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "CLIPTextEncodeFlux"
+      },
+      "widgets_values": [
+        "",
+        "",
+        3.5
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 52,
+      "type": "StyleModelLoader",
+      "pos": [
+        2230.5545332298566,
+        1936.495766784666
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STYLE_MODEL",
+          "type": "STYLE_MODEL",
+          "links": [
+            50
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "StyleModelLoader"
+      },
+      "widgets_values": [
+        "flex1_redux_siglip2_512.safetensors"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 51,
+      "type": "CLIPVisionLoader",
+      "pos": [
+        2230.3384436230317,
+        2098.865246451932
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": [
+            51
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "CLIPVisionLoader"
+      },
+      "widgets_values": [
+        "siglip2-so400m-patch16-512.safetensors"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 37,
+      "type": "TBG ETUR Upscaler and Tile Generator PRO",
+      "pos": [
+        401.8428498566191,
+        1512.6718231021632
+      ],
+      "size": [
+        568.2088440661621,
+        744
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 29
+        },
+        {
+          "name": "Segment_Mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "PRO_segs",
+          "shape": 7,
+          "type": "SEGS",
+          "link": null
+        },
+        {
+          "name": "labs_upscaler",
+          "shape": 7,
+          "type": "labs_upscaler",
+          "link": 30
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": []
+        },
+        {
+          "name": "Upscaled Image",
+          "type": "IMAGE",
+          "links": [
+            28,
+            40,
+            53
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO"
+      },
+      "widgets_values": [
+        "NONE",
+        1,
+        1024,
+        1024,
+        "SuperResolution/Tiled-SeedVR2 Standard",
+        2,
+        "NONE",
+        "None (FP16)",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        false,
+        "",
+        0,
+        "fixed",
+        "Neuro_Generative_Tile_Fusion",
+        64,
+        0.95,
+        16,
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 40,
+      "type": "TBG ETUR Labs Upscaler",
+      "pos": [
+        694.8330168655447,
+        2370.6944904451207
+      ],
+      "size": [
+        345.013671875,
+        198
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "SEEDVR2_DIT",
+          "shape": 7,
+          "type": "SEEDVR2_DIT",
+          "link": null
+        },
+        {
+          "name": "SEEDVR2_VAE",
+          "shape": 7,
+          "type": "SEEDVR2_VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "labs_upscaler",
+          "type": "labs_upscaler",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR Labs Upscaler"
+      },
+      "widgets_values": [
+        "Close with Comfyui",
+        true,
+        true,
+        0,
+        0,
+        16
+      ]
+    },
+    {
+      "id": 38,
+      "type": "LoadImage",
+      "pos": [
+        -465.87870460294204,
+        928.4236418891841
+      ],
+      "size": [
+        737.9934692382812,
+        766.1026611328125
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 25,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            29
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "title": "TBG masked attention",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "ComfyUI_00451_.png",
+        "image"
+      ]
+    },
+    {
+      "id": 50,
+      "type": "TBG ETUR Refiner PRO",
+      "pos": [
+        3750.2431751497834,
+        845.4557109579908
+      ],
+      "size": [
+        732.0672013007779,
+        1128
+      ],
+      "flags": {},
+      "order": 48,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 44
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 45
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 46
+        },
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 47
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 48
+        },
+        {
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": 49
+        },
+        {
+          "name": "denoise_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": 50
+        },
+        {
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": 51
+        },
+        {
+          "name": "labs_refiner",
+          "shape": 7,
+          "type": "labs_refiner",
+          "link": 52
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Refined",
+          "type": "IMAGE",
+          "links": [
+            1,
+            55,
+            57
+          ]
+        },
+        {
+          "name": "Refined without Segs",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "Refined without ColorCorrection",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "Original Upscaled",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "Original",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "Tiles",
+          "type": "IMAGE",
+          "links": [
+            56
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TBG ETUR Refiner PRO"
+      },
+      "widgets_values": [
+        "FLUX1",
+        1,
+        30,
+        4,
+        "fixed",
+        3.5,
+        "euler",
+        "simple",
+        true,
+        1024,
+        "",
+        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        0.27,
+        "normalized advanced",
+        1,
+        0.5,
+        0,
+        0,
+        0,
+        1,
+        "none",
+        false,
+        false,
+        "",
+        true,
+        ""
+      ]
+    },
+    {
+      "id": 4,
+      "type": "PreviewImage",
+      "pos": [
+        5446.28763581654,
+        818.4236418891841
+      ],
+      "size": [
+        710,
+        750
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 49,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 55
+        }
+      ],
+      "outputs": [],
+      "title": "Refined Image",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      1,
+      50,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      50,
+      3,
+      3,
+      1,
+      "IMAGE"
+    ],
+    [
+      3,
+      7,
+      0,
+      8,
+      0,
+      "MODEL"
+    ],
+    [
+      4,
+      8,
+      0,
+      10,
+      0,
+      "MODEL"
+    ],
+    [
+      5,
+      17,
+      0,
+      14,
+      0,
+      "MODEL"
+    ],
+    [
+      6,
+      12,
+      0,
+      15,
+      0,
+      "VAE"
+    ],
+    [
+      7,
+      11,
+      0,
+      15,
+      1,
+      "VAE"
+    ],
+    [
+      8,
+      21,
+      0,
+      15,
+      2,
+      "VAE"
+    ],
+    [
+      9,
+      18,
+      2,
+      15,
+      3,
+      "VAE"
+    ],
+    [
+      10,
+      10,
+      0,
+      16,
+      0,
+      "MODEL"
+    ],
+    [
+      11,
+      42,
+      0,
+      16,
+      1,
+      "MODEL"
+    ],
+    [
+      12,
+      19,
+      0,
+      16,
+      2,
+      "MODEL"
+    ],
+    [
+      13,
+      14,
+      0,
+      16,
+      3,
+      "MODEL"
+    ],
+    [
+      14,
+      9,
+      0,
+      17,
+      0,
+      "MODEL"
+    ],
+    [
+      15,
+      18,
+      0,
+      19,
+      0,
+      "MODEL"
+    ],
+    [
+      16,
+      43,
+      1,
+      22,
+      0,
+      "CLIP"
+    ],
+    [
+      17,
+      13,
+      0,
+      22,
+      1,
+      "CLIP"
+    ],
+    [
+      18,
+      20,
+      0,
+      22,
+      2,
+      "CLIP"
+    ],
+    [
+      19,
+      18,
+      1,
+      22,
+      3,
+      "CLIP"
+    ],
+    [
+      20,
+      27,
+      0,
+      26,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      21,
+      29,
+      0,
+      28,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      22,
+      26,
+      0,
+      28,
+      1,
+      "Controlnet_Pipe"
+    ],
+    [
+      23,
+      30,
+      0,
+      29,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      24,
+      30,
+      0,
+      31,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      25,
+      31,
+      0,
+      32,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      26,
+      28,
+      0,
+      32,
+      1,
+      "Controlnet_Pipe"
+    ],
+    [
+      27,
+      33,
+      0,
+      35,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      28,
+      37,
+      1,
+      36,
+      0,
+      "IMAGE"
+    ],
+    [
+      29,
+      38,
+      0,
+      37,
+      0,
+      "IMAGE"
+    ],
+    [
+      30,
+      40,
+      0,
+      37,
+      3,
+      "labs_upscaler"
+    ],
+    [
+      31,
+      43,
+      0,
+      42,
+      0,
+      "MODEL"
+    ],
+    [
+      32,
+      24,
+      0,
+      43,
+      0,
+      "MODEL"
+    ],
+    [
+      33,
+      44,
+      0,
+      43,
+      1,
+      "CLIP"
+    ],
+    [
+      34,
+      38,
+      1,
+      45,
+      1,
+      "MASK"
+    ],
+    [
+      35,
+      25,
+      0,
+      45,
+      2,
+      "SEGS"
+    ],
+    [
+      36,
+      45,
+      0,
+      46,
+      0,
+      "TBG_Pipe"
+    ],
+    [
+      37,
+      33,
+      0,
+      47,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      38,
+      35,
+      0,
+      47,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      39,
+      34,
+      0,
+      47,
+      2,
+      "CONTROL_NET"
+    ],
+    [
+      40,
+      37,
+      1,
+      47,
+      3,
+      "IMAGE"
+    ],
+    [
+      41,
+      15,
+      0,
+      47,
+      4,
+      "VAE"
+    ],
+    [
+      42,
+      47,
+      0,
+      49,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      43,
+      47,
+      1,
+      49,
+      3,
+      "CONDITIONING"
+    ],
+    [
+      44,
+      16,
+      0,
+      50,
+      0,
+      "MODEL"
+    ],
+    [
+      45,
+      22,
+      0,
+      50,
+      1,
+      "CLIP"
+    ],
+    [
+      46,
+      15,
+      0,
+      50,
+      2,
+      "VAE"
+    ],
+    [
+      47,
+      46,
+      0,
+      50,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      48,
+      32,
+      0,
+      50,
+      4,
+      "Controlnet_Pipe"
+    ],
+    [
+      49,
+      48,
+      0,
+      50,
+      5,
+      "Enrichment_Pipe"
+    ],
+    [
+      50,
+      52,
+      0,
+      50,
+      7,
+      "STYLE_MODEL"
+    ],
+    [
+      51,
+      51,
+      0,
+      50,
+      8,
+      "CLIP_VISION"
+    ],
+    [
+      52,
+      49,
+      0,
+      50,
+      9,
+      "labs_refiner"
+    ],
+    [
+      53,
+      37,
+      1,
+      45,
+      0,
+      "IMAGE"
+    ],
+    [
+      55,
+      50,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      56,
+      50,
+      5,
+      53,
+      0,
+      "IMAGE"
+    ],
+    [
+      57,
+      50,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Redux Style Transfer",
+      "bounding": [
+        1074.1212953970578,
+        2328.4236418891855,
+        1540,
+        240
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Controlnet Pipe depth",
+      "bounding": [
+        2114.1212953970576,
+        2588.4236418891855,
+        500,
+        500
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Controlnet Pipe Canny",
+      "bounding": [
+        1574.1212953970578,
+        2588.4236418891855,
+        520,
+        500
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Controlnet Pipe Upscale",
+      "bounding": [
+        1074.1212953970578,
+        2588.4236418891855,
+        480,
+        500
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "TBG_Enhanced Tiled Upscaler and Refiner PRO                                                                                                                                                         Version 1.1.0",
+      "bounding": [
+        -485.87870460294204,
+        428.4236418891843,
+        6670.997035795876,
+        140
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Masked Attention",
+      "bounding": [
+        -485.87870460294204,
+        608.4236418891843,
+        800,
+        1480
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "SR Upscale",
+      "bounding": [
+        334.1212953970576,
+        608.4236418891843,
+        711.8103345816648,
+        1989.8159298273622
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "Refiner Mods + Tile conditioning",
+      "bounding": [
+        1054.1212953970578,
+        608.4236418891843,
+        1540,
+        140
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 9,
+      "title": "ETUR Refiner",
+      "bounding": [
+        3614.1212953970576,
+        608.4236418891843,
+        985.7329834459179,
+        2998.1487873175092
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 10,
+      "title": "Final Image",
+      "bounding": [
+        4626.28763581654,
+        608.4236418891843,
+        1560,
+        2100
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 11,
+      "title": "TBG_ETUR PRO  V 1.1.0  – More Muscle, More Speed, Less VRAM",
+      "bounding": [
+        -499.80303514032363,
+        286.9891822266152,
+        6673.378742991753,
+        127.14528513047685
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 12,
+      "title": "Upscaler Tiler",
+      "bounding": [
+        2700.0928054259975,
+        616.4939768020474,
+        800,
+        980
+      ],
+      "color": "#8AA",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 13,
+      "title": "1.67 x Fastes Flux FP8 turbo Setup",
+      "bounding": [
+        1054.1212953970578,
+        768.4236418891841,
+        700,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 14,
+      "title": "Cropped or tiled ControlNet. The ControlNet input is based on the full image and then cropped to the tile space -ideal for pose",
+      "bounding": [
+        1074.1212953970578,
+        1788.4236418891846,
+        1540,
+        520
+      ],
+      "color": "#8A8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 15,
+      "title": "Group",
+      "bounding": [
+        2693.402805425995,
+        1690.1708270153065,
+        820,
+        2440
+      ],
+      "color": "#8AA",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 16,
+      "title": "QWEN IMAGE EDIT",
+      "bounding": [
+        1434.1212953970578,
+        1428.4236418891842,
+        980,
+        340
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 17,
+      "title": "8.35 x faster Nunchaku FLUX DiT Loader",
+      "bounding": [
+        1774.1212953970573,
+        768.4236418891841,
+        640,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 18,
+      "title": "SDXL",
+      "bounding": [
+        1054.1212953970578,
+        1428.4236418891842,
+        360,
+        340
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 19,
+      "title": "Group",
+      "bounding": [
+        2434.121295397058,
+        768.4236418891841,
+        180,
+        1000
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.23939204936916353,
+      "offset": [
+        1639.2087182909474,
+        469.3324148780755
+      ]
+    },
+    "workflowRendererVersion": "LG",
+    "frontendVersion": "1.35.9"
+  },
+  "version": 0.4
+}
