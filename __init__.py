@@ -1,7 +1,34 @@
-# Project: TBG ETUR
-
-import os
+# TBG ETUR Custom Node - Global UTF-8 Fix for Windows
 import sys
+import os
+import logging
+
+if sys.platform == "win32":
+    # Force UTF-8 for entire node package
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+    
+    # Reconfigure streams globally for TBG imports
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+
+# ASCII-safe emojis for all TBG logs
+TBG_OK = "✓"
+TBG_ERROR = "✗"
+TBG_WARN = "⚠"
+
+# Auto-patch logging for TBG modules
+logging.getLogger("TBG_APP").addFilter(
+    lambda record: setattr(record, 'msg', str(record.msg).encode('ascii', 'replace').decode('ascii'))
+    or True
+)
+
+
+
+
+
+
+
 
 # Ensure the parent folder of 'py' is in sys.path so relative imports work
 node_root = os.path.dirname(os.path.dirname(__file__))  # parent of 'py'
