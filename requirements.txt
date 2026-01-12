@@ -10,6 +10,7 @@ color-matcher
 pygments
 rotary_embedding_torch
 omegaconf
+timm
 
 # Linux / WSL / other non-Windows
 triton>=3.0 ; sys_platform != "win32"
