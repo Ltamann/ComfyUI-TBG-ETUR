@@ -1,7 +1,7 @@
 # ComfyUI-TBG-ETUR: 100MP Enhanced Tiled Upscaler & Refiner FLUX Pro. Enhance Your Images with TBG's Upscaler
 **TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.1.0**
 
-  ![environment_var.png](img/108v3.png)
+  ![TBG_ETUR_v1-1-0.png.png](img/TBG_ETUR_v1-1-0.png)
 **Keep in mind this is still an beta version, and we're updating and fine-tuning it daily. So do the same**
 
 Tutorials of old version and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@TBG_AI)). 
@@ -446,6 +446,7 @@ We're actively working to improve this behavior and aim to address it in the nex
 
 ## Checkpoints
 - [SDXL-Juggernaut-XI-byRunDiffusion.safetensors](https://huggingface.co/RunDiffusion/Juggernaut-XI-v11/resolve/main/Juggernaut-XI-byRunDiffusion.safetensors) (checkpoints)
+
 
 
 
