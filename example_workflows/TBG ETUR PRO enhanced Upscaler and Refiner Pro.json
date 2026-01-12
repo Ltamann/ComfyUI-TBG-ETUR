@@ -122,8 +122,8 @@
       "id": 6,
       "type": "Reroute",
       "pos": [
-        5940.19696485967,
-        306.9891822266152
+        5959.376413269561,
+        276.30239137114995
       ],
       "size": [
         75,
@@ -1687,19 +1687,19 @@
         "Seed": "",
         "CNet Strength": "unchanged",
         "Reset": false,
-        "tile_edits_json": "{\"prompts\":[\"The image shows a white book with a black cover sitting on top of a gray wall. The book appears to be a hardcover with a glossy finish, and the cover is slightly raised, giving it a 3D effect. The white color of the book stands out against the gray wall, creating a striking contrast.\",\"The image shows a black and white poster with the letter 'T' in the center, surrounded by a grey and white background. The letter is bold and stands out against the stark contrast of the two colors, creating a striking visual.\",\"The image shows a black and white poster with the letter 'B' on it. The letter is bold and stands out against the white background, creating a striking contrast.\",\"The image shows a black letter 'G' on a white background, creating a striking contrast between the two colors. The letter is bold and stands out against the stark white background.\",\"The image shows a black and white painting on a white wall with a black arrow pointing to the right. The painting is composed of a combination of white and black colors, creating a stark contrast against the white background.\",\"The image shows a painting on a wall with a red and blue square in the center, surrounded by a black border. The painting is composed of a variety of colors, including red, blue, and white, creating a vibrant and eye-catching composition.\",\"The image shows a painting by Jean-Michel Basquiat titled Untitled. It is composed of a combination of black, white, blue and red colors, creating a striking contrast against the white background.\",\"The image shows a black and blue poster with the words BFI written in bold white lettering against a black background.\",\"The image shows a black and blue Google logo on a white background. The logo consists of the letter 'G' in the center, surrounded by a blue border.\",\"The image shows a black and blue letter 'G' on a white background, creating a striking contrast between the two colors.\",\"The image shows a close up of a blue and white sign on a wall. The sign is rectangular in shape and has a white background with blue lettering. The lettering is clearly visible and stands out against the wall.\",\"The image shows a blue and white poster with the words FET DPO written in bold, capitalized letters. The background of the poster is a bright, vibrant blue, and the text stands out against it.\",\"The image shows a blue and red sign with the word TU on it against a white background.\",\"The image shows a blue and red sign with the number 10 on it against a white background. The sign is likely for a public domain, as indicated by the text at the bottom of the image.\",\"The image shows a blue and red letter 'R' on a white and grey background. The letter is bold and stands out against the stark contrast of the two colors.\",\"The image shows a blue and white parking sign on the side of a building, with a black and white background. The sign is a free parking sign template, with the letter 'P' prominently displayed.\",\"The image shows the Pro logo on a white background with blue text that reads How to Make Money with Pro. The logo is a blue circle with the word Pro in the center, surrounded by a white border. The text is written in a bold, black font and is centered in the middle of the circle. The background is a bright white, providing a stark contrast to the blue of the logo.\",\"The image shows a white background with the text move more now written in bold black font. The text is centered in the middle of the image and is surrounded by a thin black border. The font is modern and eye-catching, making it stand out against the white background.\",\"The image shows a poster with the text 1.10 the muscle, the speed, and vram written in bold black font against a white background. The text is centered in the middle of the poster and is surrounded by a black border.\",\"The image shows a poster with the words Google, Red, and More written in bold, black font against a white background. The poster is framed by a thin black border, giving it a modern and professional look.\",\"The image shows a white book with a blue speech bubble on the cover. The speech bubble is filled with text, giving the impression that the book is open.\",\"The image shows a blue speech bubble with the word PRO on it against a white background.\",\"The image shows a white board with black text that reads more money, more money, less money against a blue background.\",\"The image shows a white board with the words The Muscle, the Speed, and VRAM written on it against a wall in the background.\",\"The image shows a white board with the words circle, bed, m written on it against a grey background.\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}",
-        "prompt_0": "The image shows a white book with a black cover sitting on top of a gray wall. The book appears to be a hardcover with a glossy finish, and the cover is slightly raised, giving it a 3D effect. The white color of the book stands out against the gray wall, creating a striking contrast.",
-        "prompt_1": "The image shows a black and white poster with the letter 'T' in the center, surrounded by a grey and white background. The letter is bold and stands out against the stark contrast of the two colors, creating a striking visual.",
-        "prompt_2": "The image shows a black and white poster with the letter 'B' on it. The letter is bold and stands out against the white background, creating a striking contrast.",
-        "prompt_3": "The image shows a black letter 'G' on a white background, creating a striking contrast between the two colors. The letter is bold and stands out against the stark white background.",
-        "prompt_4": "The image shows a black and white painting on a white wall with a black arrow pointing to the right. The painting is composed of a combination of white and black colors, creating a stark contrast against the white background.",
-        "prompt_5": "The image shows a painting on a wall with a red and blue square in the center, surrounded by a black border. The painting is composed of a variety of colors, including red, blue, and white, creating a vibrant and eye-catching composition.",
-        "prompt_6": "The image shows a painting by Jean-Michel Basquiat titled Untitled. It is composed of a combination of black, white, blue and red colors, creating a striking contrast against the white background.",
-        "prompt_7": "The image shows a black and blue poster with the words BFI written in bold white lettering against a black background.",
-        "prompt_8": "The image shows a black and blue Google logo on a white background. The logo consists of the letter 'G' in the center, surrounded by a blue border.",
-        "prompt_9": "The image shows a black and blue letter 'G' on a white background, creating a striking contrast between the two colors.",
-        "prompt_10": "The image shows a close up of a blue and white sign on a wall. The sign is rectangular in shape and has a white background with blue lettering. The lettering is clearly visible and stands out against the wall.",
-        "prompt_11": "The image shows a blue and white poster with the words FET DPO written in bold, capitalized letters. The background of the poster is a bright, vibrant blue, and the text stands out against it.",
+        "tile_edits_json": "{\"prompts\":[\"The image shows a white book with a black letter 'F' on the cover, set against a grey background.\",\"The image shows a black and white photo of the letter 'T' on a white background. The letter is bold and stands out against the stark contrast of the white background, creating a striking visual.\",\"The image shows a black and white poster with the letter 'B' prominently displayed in the center. The letter is bold and stands out against the white background, creating a striking contrast.\",\"The image shows a black letter G on a white background with a grey border, creating a stark contrast between the two colors. The letter G is the focal point of the image, standing out against the stark white background.\",\"The image shows a close up of a black and white sign on a gray background. The sign is composed of a white board with a black letter 'F' in the center, surrounded by a black border.\",\"The image shows a painting on a wall with a red, white and blue square in the center. The painting is composed of a combination of white, blue and red colors, creating a vibrant and eye-catching composition.\",\"The image shows a poster with a white background featuring black, red, and blue squares arranged in a geometric pattern.\",\"The image shows a black and white poster with the word BFF written in bold blue letters against a white background.\",\"The image shows the Google logo on a white background with blue text. The logo is composed of the letter 'G' in the center, surrounded by a blue border. The text is bold and stands out against the white background.\",\"The image shows a black and blue number 5 on a white and grey background. The number 5 is bold and stands out against the stark contrast of the two colors.\",\"The image shows a close up of a blue and white sign on a wall. The sign is clearly visible, with the blue lettering standing out against the white background.\",\"The image shows a blue and white poster with the words FET on it against a white background. The text is bold and stands out against the blue background, creating a striking contrast.\",\"The image shows a blue and red sign with the letter 'J' on it against a white background.\",\"The image shows a blue and red sign with the word JR on it against a white background.\",\"The image shows a blue and red letter 'R' on a white and grey background. The letter is bold and stands out against the stark contrast of the two colors.\",\"The image shows a blue and white parking sign on the side of a building. The sign is clearly visible and stands out against the wall of the building.\",\"The image shows a white background with the word Pro written in blue on the left side and a blue and white logo on the right side.\",\"The image shows a white background with the text pv1 - more money, more money written in bold black font. The text is centered in the middle of the image, giving it a prominent position.\",\"The image shows a poster with the text 1.10 the muscle, the speed, and vram written in bold black font against a white background. The text is centered in the middle of the poster and is surrounded by a thin black border.\",\"The image shows a poster with the words Google, Ted, and More written in bold, black font against a white background. The poster is framed by a thin black border, and the text is centered in the middle of the poster.\",\"The image shows a white book with a blue speech bubble on it, set against a grey background. The speech bubble contains text, suggesting that the book is being used to read the text.\",\"The image shows a blue speech bubble with the word PRO on it, set against a white background.\",\"The image shows a white background with black text that reads More New, More S, Less V. The text is bold and stands out against the white background, emphasizing its importance.\",\"The image shows a poster with the text The Muscle, the Speed, and VRAM written in bold, black lettering against a white background. The poster is framed by a thin black border, and the text is centered in the middle of the poster.\",\"The image shows a white board with the words circle, bed, m written on it against a grey background.\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}",
+        "prompt_0": "The image shows a white book with a black letter 'F' on the cover, set against a grey background.",
+        "prompt_1": "The image shows a black and white photo of the letter 'T' on a white background. The letter is bold and stands out against the stark contrast of the white background, creating a striking visual.",
+        "prompt_2": "The image shows a black and white poster with the letter 'B' prominently displayed in the center. The letter is bold and stands out against the white background, creating a striking contrast.",
+        "prompt_3": "The image shows a black letter G on a white background with a grey border, creating a stark contrast between the two colors. The letter G is the focal point of the image, standing out against the stark white background.",
+        "prompt_4": "The image shows a close up of a black and white sign on a gray background. The sign is composed of a white board with a black letter 'F' in the center, surrounded by a black border.",
+        "prompt_5": "The image shows a painting on a wall with a red, white and blue square in the center. The painting is composed of a combination of white, blue and red colors, creating a vibrant and eye-catching composition.",
+        "prompt_6": "The image shows a poster with a white background featuring black, red, and blue squares arranged in a geometric pattern.",
+        "prompt_7": "The image shows a black and white poster with the word BFF written in bold blue letters against a white background.",
+        "prompt_8": "The image shows the Google logo on a white background with blue text. The logo is composed of the letter 'G' in the center, surrounded by a blue border. The text is bold and stands out against the white background.",
+        "prompt_9": "The image shows a black and blue number 5 on a white and grey background. The number 5 is bold and stands out against the stark contrast of the two colors.",
+        "prompt_10": "The image shows a close up of a blue and white sign on a wall. The sign is clearly visible, with the blue lettering standing out against the white background.",
+        "prompt_11": "The image shows a blue and white poster with the words FET on it against a white background. The text is bold and stands out against the blue background, creating a striking contrast.",
         "denoise_0": "",
         "seed_0": "",
         "cnet_strength_0": "",
@@ -1736,18 +1736,18 @@
         "denoise_11": "",
         "seed_11": "",
         "cnet_strength_11": "",
-        "prompt_12": "The image shows a blue and red sign with the word TU on it against a white background.",
-        "prompt_13": "The image shows a blue and red sign with the number 10 on it against a white background. The sign is likely for a public domain, as indicated by the text at the bottom of the image.",
+        "prompt_12": "The image shows a blue and red sign with the letter 'J' on it against a white background.",
+        "prompt_13": "The image shows a blue and red sign with the word JR on it against a white background.",
         "prompt_14": "The image shows a blue and red letter 'R' on a white and grey background. The letter is bold and stands out against the stark contrast of the two colors.",
-        "prompt_15": "The image shows a blue and white parking sign on the side of a building, with a black and white background. The sign is a free parking sign template, with the letter 'P' prominently displayed.",
-        "prompt_16": "The image shows the Pro logo on a white background with blue text that reads How to Make Money with Pro. The logo is a blue circle with the word Pro in the center, surrounded by a white border. The text is written in a bold, black font and is centered in the middle of the circle. The background is a bright white, providing a stark contrast to the blue of the logo.",
-        "prompt_17": "The image shows a white background with the text move more now written in bold black font. The text is centered in the middle of the image and is surrounded by a thin black border. The font is modern and eye-catching, making it stand out against the white background.",
-        "prompt_18": "The image shows a poster with the text 1.10 the muscle, the speed, and vram written in bold black font against a white background. The text is centered in the middle of the poster and is surrounded by a black border.",
-        "prompt_19": "The image shows a poster with the words Google, Red, and More written in bold, black font against a white background. The poster is framed by a thin black border, giving it a modern and professional look.",
-        "prompt_20": "The image shows a white book with a blue speech bubble on the cover. The speech bubble is filled with text, giving the impression that the book is open.",
-        "prompt_21": "The image shows a blue speech bubble with the word PRO on it against a white background.",
-        "prompt_22": "The image shows a white board with black text that reads more money, more money, less money against a blue background.",
-        "prompt_23": "The image shows a white board with the words The Muscle, the Speed, and VRAM written on it against a wall in the background.",
+        "prompt_15": "The image shows a blue and white parking sign on the side of a building. The sign is clearly visible and stands out against the wall of the building.",
+        "prompt_16": "The image shows a white background with the word Pro written in blue on the left side and a blue and white logo on the right side.",
+        "prompt_17": "The image shows a white background with the text pv1 - more money, more money written in bold black font. The text is centered in the middle of the image, giving it a prominent position.",
+        "prompt_18": "The image shows a poster with the text 1.10 the muscle, the speed, and vram written in bold black font against a white background. The text is centered in the middle of the poster and is surrounded by a thin black border.",
+        "prompt_19": "The image shows a poster with the words Google, Ted, and More written in bold, black font against a white background. The poster is framed by a thin black border, and the text is centered in the middle of the poster.",
+        "prompt_20": "The image shows a white book with a blue speech bubble on it, set against a grey background. The speech bubble contains text, suggesting that the book is being used to read the text.",
+        "prompt_21": "The image shows a blue speech bubble with the word PRO on it, set against a white background.",
+        "prompt_22": "The image shows a white background with black text that reads More New, More S, Less V. The text is bold and stands out against the white background, emphasizing its importance.",
+        "prompt_23": "The image shows a poster with the text The Muscle, the Speed, and VRAM written in bold, black lettering against a white background. The poster is framed by a thin black border, and the text is centered in the middle of the poster.",
         "prompt_24": "The image shows a white board with the words circle, bed, m written on it against a grey background."
       },
       "widgets_values": [
@@ -3228,8 +3228,8 @@
       "id": 11,
       "title": "TBG_ETUR PRO  V 1.1.0  – More Muscle, More Speed, Less VRAM",
       "bounding": [
-        -499.80303514032363,
-        286.9891822266152,
+        -480.62358673042957,
+        256.30239137114995,
         6673.378742991753,
         127.14528513047685
       ],
@@ -3340,15 +3340,41 @@
       "color": "#3f789e",
       "font_size": 24,
       "flags": {}
+    },
+    {
+      "id": 20,
+      "title": "PRO requires an API key — here’s how to set it up: https://www.patreon.com/posts/138215572",
+      "bounding": [
+        -493.11559047255537,
+        -116.1273582236162,
+        6679.187584350881,
+        144.5821487314322
+      ],
+      "color": "#b58b2a",
+      "font_size": 100,
+      "flags": {}
+    },
+    {
+      "id": 21,
+      "title": "As member you can pickup the API key here’s: https://api.tbgetur.com/",
+      "bounding": [
+        -484.4394669849749,
+        62.25138198896294,
+        6670.141600741067,
+        140.92393628648517
+      ],
+      "color": "#b58b2a",
+      "font_size": 100,
+      "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.23939204936916353,
+      "scale": 0.21762913579014911,
       "offset": [
-        1639.2087182909474,
-        469.3324148780755
+        2028.8229523848756,
+        1070.7101806856645
       ]
     },
     "workflowRendererVersion": "LG",
