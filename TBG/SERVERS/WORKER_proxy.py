@@ -4,7 +4,7 @@ import time
 import cloudpickle
 import traceback
 
-
+"""
 ROOT_DIR = os.path.dirname(   # .../ComfyUI-TBG-ETUR
     os.path.dirname(          # .../TBG
         os.path.dirname(      # .../TBG/SERVERS
@@ -14,14 +14,29 @@ ROOT_DIR = os.path.dirname(   # .../ComfyUI-TBG-ETUR
 )
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
+"""
 
-from TBG.TBG_APP import TBG_APP
+# 1) Prefer explicit root from main process (works in Nuitka/frozen builds)
+ROOTDIR = os.environ.get("TBGETUR_ROOTDIR")
+print("WORKER ROOTDIR =", ROOTDIR, file=sys.stderr)
+print(os.environ.get("TBGETUR_ROOTDIR"))
+# 2) Fallback to old __file__-based logic if env var is missing
+if not ROOTDIR:
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    tbg_dir = os.path.dirname(this_dir)      # .../TBG
+    ROOTDIR = os.path.dirname(tbg_dir)       # .../ComfyUI-TBG-ETUR
+
+if ROOTDIR and ROOTDIR not in sys.path:
+    sys.path.insert(0, ROOTDIR)
+
+import TBG.TBG_APP as TBG_APP
 from TBG.TBG_APP.constants import (
     set_current_tiler_id,
     get_tbg,
     attach_shared_arrays_to_tbg,
 )
-from TBG.SERVERS.COMFYUI_proxy import MainController  # NEW: to get TBGMAINPORT
+from TBG.SERVERS.COMFYUI_proxy import MainController
+
 # Print immediately so we know the script started
 #print(f"🔧 WORKER SCRIPT STARTED: PID={os.getpid()}", file=sys.stderr)
 

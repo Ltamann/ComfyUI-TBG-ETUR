@@ -149,6 +149,16 @@ class TBG_Controller:
 
             # Start worker subprocess
             env = os.environ.copy()
+
+            # Compute plugin root: .../ComfyUI-TBG-ETUR
+            this_dir = os.path.dirname(os.path.abspath(__file__))
+            tbg_dir = os.path.dirname(this_dir)  # .../TBG
+            plugin_root = os.path.dirname(tbg_dir)  # .../ComfyUI-TBG-ETUR
+
+
+            # Start worker subprocess
+            env = os.environ.copy()
+            env["TBGETUR_ROOTDIR"] = plugin_root
             env["TBG_WORKER_PORT"] = str(cls._worker_port)
             env["TBG_MAIN_PORT"] = str(cls._main_rpc_port)
 
