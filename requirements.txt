@@ -9,6 +9,13 @@ opencv-contrib-python
 color-matcher
 pygments
 rotary_embedding_torch
+omegaconf
+
+# Linux / WSL / other non-Windows
+triton>=3.0 ; sys_platform != "win32"
+
+# Windows
+triton-windows>=3.0 ; sys_platform == "win32"
 
 # For Qwen 2.5 VL:
 hf_xet
