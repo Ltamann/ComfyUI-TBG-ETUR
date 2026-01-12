@@ -251,21 +251,22 @@ class VRAMOptimizer:
         if not pipe:
             return None, None
 
-        # Filter pipe entries to only those that actually have a ControlNet model
         filtered_pipe = []
         for p in pipe:
-            # Dict-based entries from TBG_ControlNetPipeline.update_pipe
-            if isinstance(p, dict):
-                cn = p.get("controlnet", None)
-                if cn is not None:
-                    filtered_pipe.append(p)
-            else:
-                # Object-based entries: try .controlnet or .model
-                cn = getattr(p, "controlnet", None)
-                if cn is None:
-                    cn = getattr(p, "model", None)
-                if cn is not None:
-                    filtered_pipe.append(p)
+            preprocessor = p.get('preprocessor')
+
+            # Skip image-dependent preprocessors if no input image
+            if preprocessor in ['DepthAnythingV2', 'Canny', 'Canny Edge']:
+                if (not hasattr(SELF.INPUTS, 'controlnetimage') or
+                        SELF.INPUTS.controlnetimage is None):
+                    log(f"[TBG] Skipping {preprocessor} - no controlnetimage", ...)
+                    continue
+
+            # Skip if no ControlNet model
+            cn = (p.get('controlnet') or getattr(p, 'controlnet') or
+                  getattr(p, 'model'))
+            if cn:
+                filtered_pipe.append(p)
 
         # If nothing valid remains, skip ControlNet for this tile
         if not filtered_pipe:
