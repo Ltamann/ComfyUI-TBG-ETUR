@@ -29,6 +29,11 @@ if not ROOTDIR:
 if ROOTDIR and ROOTDIR not in sys.path:
     sys.path.insert(0, ROOTDIR)
 
+COMFY_ROOT = os.environ.get("COMFYUI_ROOT")
+if COMFY_ROOT and COMFY_ROOT not in sys.path:
+    sys.path.insert(0, COMFY_ROOT)
+
+
 import TBG.TBG_APP as TBG_APP
 from TBG.TBG_APP.constants import (
     set_current_tiler_id,

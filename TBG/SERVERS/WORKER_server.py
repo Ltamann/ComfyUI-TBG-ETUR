@@ -162,6 +162,10 @@ class TBG_Controller:
             env["TBG_WORKER_PORT"] = str(cls._worker_port)
             env["TBG_MAIN_PORT"] = str(cls._main_rpc_port)
 
+            # ComfyUI root: .../ComfyUI (two levels above custom_nodes/ComfyUI-TBG-ETUR)
+            comfy_root = os.path.dirname(os.path.dirname(plugin_root))  # /workspace/ComfyUI
+            env["COMFYUI_ROOT"] = comfy_root
+
             startupinfo = None
             if sys.platform == "win32":
                 startupinfo = subprocess.STARTUPINFO()
