@@ -427,14 +427,14 @@ class TBG_Upscaler_v1():
         tbg.PARAMS.Tile_Fusion_Mode = kwargs.get('Fusion Mode', 'NONE')
         tbg.PARAMS.upscale_model_name=kwargs.get('upscale_model', "NONE")
         tbg.PARAMS.preset = kwargs.get('presets', "NONE")
-        tbg.PARAMS.fragmentation = kwargs.get('fragmentation', 1)
+        tbg.PARAMS.fragmentation = kwargs.get('Fragmentation', 1)
 
         tbg.SIZE.fullH = kwargs.get('tile_size_h', 1024)
         tbg.SIZE.fullW = kwargs.get('tile_size_w', 1024)
 
         if tbg.PARAMS.fragmentation and tbg.PARAMS.fragmentation != 0 or tbg.PARAMS.fragmentation != 1:
-            kwargs["tile_size_w"] = int(kwargs.get("tile_size_w", 1024) * tbg.PARAMS.fragmentation)
-            kwargs["tile_size_h"] = int(kwargs.get("tile_size_h", 1024) * tbg.PARAMS.fragmentation)
+            tbg.SIZE.fullW =tbg.SIZE.fullH * tbg.PARAMS.fragmentation
+            tbg.SIZE.fullH =tbg.SIZE.fullW * tbg.PARAMS.fragmentation
 
 
         tbg.SIZE.Fusion_margin = kwargs.get('Fusion Margin', 64)
