@@ -1,5 +1,4 @@
 # For TBG
-opencv-python
 matplotlib
 piexif
 ollama
@@ -11,7 +10,6 @@ pygments
 rotary_embedding_torch
 omegaconf
 timm
-cv2
 
 # Linux / WSL / other non-Windows
 triton>=3.0 ; sys_platform != "win32"
@@ -28,8 +26,8 @@ optimum
 
 # Correction for Nunchacu
 huggingface_hub>=0.34
---no-deps transformers>=4.56.0,<4.57.0
---no-deps diffusers>=0.34.0,<0.35.0
+transformers>=4.56.0,<4.57.0
+diffusers>=0.34.0,<0.35.0
 accelerate>=1.10
 numpy >= 2.3.5
 
