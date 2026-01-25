@@ -11,6 +11,7 @@ pygments
 rotary_embedding_torch
 omegaconf
 timm
+cv2
 
 # Linux / WSL / other non-Windows
 triton>=3.0 ; sys_platform != "win32"
@@ -33,4 +34,5 @@ accelerate>=1.10
 numpy >= 2.3.5
 
 cloudpickle
+
 
