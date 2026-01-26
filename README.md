@@ -8,7 +8,7 @@ Tutorials of old version and highlights available at [Youtube@TBG_AI](https://ww
 
 and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)). 
 
-
+Docker and Runpod Templates [Docker Image Confyui 0.10.0 + TBG ETUR + Nunchaku + Sage and Flash Attention] (https://www.patreon.com/posts/149096745)
 
 ## Table of Contents
 - [Overview](#overview)
