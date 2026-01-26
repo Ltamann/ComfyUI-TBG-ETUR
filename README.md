@@ -4,11 +4,11 @@
   ![TBG_ETUR_v1-1-0.png.png](img/TBG_ETUR_v1-1-0.png)
 **Keep in mind this is still an beta version, and we're updating and fine-tuning it daily. So do the same**
 
-Tutorials of old version and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@TBG_AI)). 
+Tutorials of old version and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@TBG_AI)
 
-and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)). 
+and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)
 
-Docker and Runpod Templates [Docker Image Confyui 0.10.0 + TBG ETUR + Nunchaku + Sage and Flash Attention] (https://www.patreon.com/posts/149096745)
+Docker and Runpod Templates [Docker Image Confyui 0.10.0 + TBG ETUR + Nunchaku + Sage and Flash Attention](https://www.patreon.com/posts/149096745)
 
 ## Table of Contents
 - [Overview](#overview)
