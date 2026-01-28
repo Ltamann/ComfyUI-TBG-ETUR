@@ -23,7 +23,14 @@ import psutil
 import torch
 from PIL import Image
 from huggingface_hub import snapshot_download
-from transformers import AutoModelForVision2Seq, AutoProcessor, AutoTokenizer, BitsAndBytesConfig
+
+try:
+    from transformers import AutoModelForVision2Seq
+except ImportError:  # 5.x
+    from transformers import AutoModelForImageTextToText as AutoModelForVision2Seq
+
+
+from transformers import AutoProcessor, AutoTokenizer, BitsAndBytesConfig
 
 import folder_paths
 
