@@ -42,6 +42,19 @@ from TBG.TBG_APP.constants import (
 )
 from TBG.SERVERS.COMFYUI_proxy import MainController
 
+# SAFEGUARD: Ensure getport() is available on MainController
+# This handles cases where the module was cached before getport() was added
+if not hasattr(MainController, "getport"):
+    # Dynamically add getport() if missing
+    @classmethod
+    def _getport_compat(cls) -> int:
+        port = os.environ.get("TBG_MAIN_PORT")
+        if not port:
+            raise RuntimeError("TBG_MAIN_PORT not set in worker environment")
+        return int(port)
+    MainController.getport = _getport_compat
+    print("[TBG_WORKER] Added getport() compatibility method to MainController", file=sys.stderr)
+
 # Print immediately so we know the script started
 #print(f"🔧 WORKER SCRIPT STARTED: PID={os.getpid()}", file=sys.stderr)
 
@@ -69,21 +82,42 @@ def start_mainrpc_watchdog() -> None:
 
     max_failures = 3  # how many consecutive failed checks before we shut down
 
+    def _resolve_main_port() -> int:
+        # Preferred source: environment provided by main process.
+        env_port = os.environ.get("TBG_MAIN_PORT")
+        if env_port:
+            return int(env_port)
+
+        # Fallback: internal accessor if available.
+        get_port_fn = getattr(MainController, "_get_port", None)
+        if callable(get_port_fn):
+            return int(get_port_fn())
+
+        # Last resort: backwards-compat alias.
+        getport_fn = getattr(MainController, "getport", None)
+        if callable(getport_fn):
+            return int(getport_fn())
+
+        raise RuntimeError("No usable main RPC port source (env/_get_port/getport)")
+
     def _loop():
         failures = 0
         while True:
             time.sleep(interval)
+            port = None
             try:
-                port = MainController.getport()  # reads TBGMAINPORT
+                port = _resolve_main_port()
+
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.settimeout(1.0)
-                    s.connect(("127.0.0.1", int(port)))
+                    s.connect(("127.0.0.1", port))
                 # success -> reset failure counter
                 failures = 0
             except Exception as e:
                 failures += 1
                 print(
-                    f"WORKER watchdog: main RPC check failed {failures}/{max_failures}: {e}",
+                    f"WORKER watchdog: main RPC check failed {failures}/{max_failures} "
+                    f"(port={port if port is not None else 'unknown'}): {e}",
                     file=sys.stderr,
                 )
                 if failures >= max_failures:

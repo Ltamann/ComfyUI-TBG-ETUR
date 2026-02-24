@@ -15,6 +15,9 @@ import atexit
 import time
 import threading
 import subprocess
+import signal
+import tempfile
+from pathlib import Path
 from typing import Any
 
 import cloudpickle  # pip install cloudpickle
@@ -34,6 +37,181 @@ class TBG_Controller:
     # Global worker idle / shutdown state (shared by all tilers)
     _worker_shutdown_timer: threading.Timer | None = None
     _worker_last_activity: float = 0.0
+    _worker_pidfile: Path | None = None
+
+    @classmethod
+    def _pidfile_dir(cls) -> Path:
+        p = Path(tempfile.gettempdir()) / "TBG"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    @classmethod
+    def _pidfile_path_for_port(cls, port: int) -> Path:
+        return cls._pidfile_dir() / f"worker_pid_{int(port)}.txt"
+
+    @classmethod
+    def _write_pidfile(cls, pid: int, port: int, bridge_script: str) -> None:
+        path = cls._pidfile_path_for_port(port)
+        path.write_text(
+            f"{int(pid)}\n{int(port)}\n{bridge_script}\n",
+            encoding="utf-8",
+        )
+        cls._worker_pidfile = path
+
+    @classmethod
+    def _remove_pidfile(cls, path: Path | None = None) -> None:
+        target = path or cls._worker_pidfile
+        if target is None:
+            return
+        try:
+            if target.exists():
+                target.unlink()
+        except Exception:
+            pass
+        if path is None or path == cls._worker_pidfile:
+            cls._worker_pidfile = None
+
+    @classmethod
+    def _is_pid_alive(cls, pid: int) -> bool:
+        try:
+            if pid <= 0:
+                return False
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
+
+    @classmethod
+    def _get_process_cmdline(cls, pid: int) -> str:
+        try:
+            if sys.platform == "win32":
+                ps_cmd = (
+                    f"(Get-CimInstance Win32_Process -Filter \"ProcessId={int(pid)}\").CommandLine"
+                )
+                result = subprocess.run(
+                    ["powershell", "-NoProfile", "-Command", ps_cmd],
+                    capture_output=True,
+                    text=True,
+                    timeout=3,
+                )
+                out = (result.stdout or "").strip()
+                if out:
+                    return out
+                return ""
+            result = subprocess.run(
+                ["ps", "-p", str(int(pid)), "-o", "args="],
+                capture_output=True,
+                text=True,
+                timeout=3,
+            )
+            return (result.stdout or "").strip()
+        except Exception:
+            return ""
+
+    @classmethod
+    def _is_tbg_worker_pid(cls, pid: int, expected_script: str | None = None) -> bool:
+        cmdline = cls._get_process_cmdline(pid)
+        if not cmdline:
+            return False
+        if "WORKER_proxy.py" not in cmdline:
+            return False
+        if expected_script and expected_script not in cmdline:
+            return False
+        return True
+
+    @classmethod
+    def _kill_verified_pid(cls, pid: int, expected_script: str | None = None) -> bool:
+        if pid <= 0:
+            return False
+        if not cls._is_pid_alive(pid):
+            return True
+        if not cls._is_tbg_worker_pid(pid, expected_script=expected_script):
+            print(
+                f"[TBG_MAIN] Skip killing PID {pid}: process identity not verified as TBG worker."
+            )
+            return False
+        try:
+            if sys.platform == "win32":
+                subprocess.run(
+                    ["taskkill", "/T", "/F", "/PID", str(int(pid))],
+                    capture_output=True,
+                    timeout=5,
+                )
+            else:
+                try:
+                    pgid = os.getpgid(pid)
+                    os.killpg(pgid, signal.SIGTERM)
+                    deadline = time.time() + 3
+                    while time.time() < deadline:
+                        if not cls._is_pid_alive(pid):
+                            return True
+                        time.sleep(0.1)
+                    os.killpg(pgid, signal.SIGKILL)
+                except Exception:
+                    os.kill(pid, signal.SIGKILL)
+            return not cls._is_pid_alive(pid)
+        except Exception as e:
+            print(f"[TBG_MAIN] Failed to kill stale worker PID {pid}: {e}")
+            return False
+
+    @classmethod
+    def _reap_stale_worker_pidfiles(cls) -> None:
+        for path in cls._pidfile_dir().glob("worker_pid_*.txt"):
+            try:
+                lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+                if not lines:
+                    cls._remove_pidfile(path)
+                    continue
+                pid = int(lines[0].strip())
+                expected_script = lines[2].strip() if len(lines) > 2 else None
+
+                if not cls._is_pid_alive(pid):
+                    cls._remove_pidfile(path)
+                    continue
+
+                if cls._kill_verified_pid(pid, expected_script=expected_script):
+                    cls._remove_pidfile(path)
+            except Exception:
+                # Corrupt pidfile or parse failure: remove and continue.
+                cls._remove_pidfile(path)
+
+    @staticmethod
+    def _is_retryable_worker_error(exc: Exception) -> bool:
+        if isinstance(exc, (ConnectionResetError, ConnectionAbortedError, BrokenPipeError)):
+            return True
+        if isinstance(exc, OSError):
+            winerror = getattr(exc, "winerror", None)
+            if winerror in {10053, 10054, 10061}:
+                return True
+            if exc.errno in {32, 54, 104, 107, 111}:
+                return True
+        return False
+
+    @classmethod
+    def _rpc_roundtrip(cls, worker_port: int, payload: dict) -> Any:
+        data = cloudpickle.dumps(payload)
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.settimeout(None)
+        client.connect(("127.0.0.1", int(worker_port)))
+        try:
+            client.sendall(struct.pack("!Q", len(data)))
+            client.sendall(data)
+            len_bytes = client.recv(8)
+            if not len_bytes:
+                raise RuntimeError("Worker closed connection without response")
+            result_len = struct.unpack("!Q", len_bytes)[0]
+            result_bytes = bytearray()
+            while len(result_bytes) < result_len:
+                chunk = client.recv(min(65536, result_len - len(result_bytes)))
+                if not chunk:
+                    break
+                result_bytes.extend(chunk)
+            result = cloudpickle.loads(result_bytes)
+            if isinstance(result, Exception):
+                raise result
+            return result
+        finally:
+            client.close()
 
     @classmethod
     def start_worker_on_init(cls) -> None:
@@ -128,14 +306,15 @@ class TBG_Controller:
         if cls._worker_process is not None and cls._worker_process.poll() is None:
             return
 
+        # Clean stale pidfiles/workers from previous sessions before spawn attempts.
+        cls._reap_stale_worker_pidfiles()
+
         max_retries = 4  # total attempts = max_retries + 1
         last_error: Exception | None = None
 
         for attempt in range(max_retries + 1):
             # Always start from a clean slate
             cls.cleanup_worker()
-            cls._worker_process = None
-            cls._worker_port = None
 
             # Ensure main RPC is ready before we spawn worker (so we can pass port)
             cls._ensure_main_rpc()
@@ -147,34 +326,37 @@ class TBG_Controller:
                 s.bind(("127.0.0.1", 0))
                 cls._worker_port = s.getsockname()[1]
 
-            # Start worker subprocess
-            env = os.environ.copy()
-
             # Compute plugin root: .../ComfyUI-TBG-ETUR
             this_dir = os.path.dirname(os.path.abspath(__file__))
             tbg_dir = os.path.dirname(this_dir)  # .../TBG
             plugin_root = os.path.dirname(tbg_dir)  # .../ComfyUI-TBG-ETUR
-
 
             # Start worker subprocess
             env = os.environ.copy()
             env["TBGETUR_ROOTDIR"] = plugin_root
             env["TBG_WORKER_PORT"] = str(cls._worker_port)
             env["TBG_MAIN_PORT"] = str(cls._main_rpc_port)
+            env["TBGETUR_WORKER"] = "1"
 
             # ComfyUI root: .../ComfyUI (two levels above custom_nodes/ComfyUI-TBG-ETUR)
             comfy_root = os.path.dirname(os.path.dirname(plugin_root))  # /workspace/ComfyUI
             env["COMFYUI_ROOT"] = comfy_root
 
             startupinfo = None
+            creationflags = 0
+            preexec_fn = None
             if sys.platform == "win32":
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+            else:
+                preexec_fn = os.setsid
 
             bridge_script = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
                 "WORKER_proxy.py",
             )
+            env["TBGETUR_WORKER_SCRIPT"] = bridge_script
 
             def _pipe_worker_output(proc: subprocess.Popen) -> None:
                 if proc.stdout is None:
@@ -189,12 +371,19 @@ class TBG_Controller:
                     [sys.executable, "-u", bridge_script, str(cls._worker_port)],
                     env=env,
                     startupinfo=startupinfo,
+                    creationflags=creationflags,
+                    preexec_fn=preexec_fn,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
                     encoding="utf-8",
                     errors="replace",
                     bufsize=1,
+                )
+                cls._write_pidfile(
+                    pid=cls._worker_process.pid,
+                    port=int(cls._worker_port),
+                    bridge_script=bridge_script,
                 )
 
                 t = threading.Thread(
@@ -238,6 +427,7 @@ class TBG_Controller:
 
             except Exception as e:
                 last_error = e
+                cls.cleanup_worker()
                 print(
                     f"[TBG_MAIN] Worker startup failed on attempt "
                     f"{attempt + 1}/{max_retries + 1}: {e}"
@@ -256,16 +446,77 @@ class TBG_Controller:
 
     @classmethod
     def cleanup_worker(cls) -> None:
-        """Terminate the worker subprocess (if any) and wait for exit."""
-        if cls._worker_process:
-            try:
-                cls._worker_process.terminate()
-            except Exception:
-                pass
-            try:
-                cls._worker_process.wait(timeout=5)
-            except Exception:
-                pass
+        """Terminate worker subprocess deterministically and clear controller state."""
+        proc = cls._worker_process
+        pid = proc.pid if proc is not None else None
+
+        try:
+            if proc is not None and proc.poll() is None:
+                if sys.platform == "win32":
+                    try:
+                        # Send CTRL_BREAK to process group leader when available.
+                        os.kill(proc.pid, signal.CTRL_BREAK_EVENT)
+                    except Exception:
+                        pass
+                    try:
+                        proc.terminate()
+                    except Exception:
+                        pass
+                    try:
+                        proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        # Last resort on Windows: terminate process tree.
+                        try:
+                            subprocess.run(
+                                ["taskkill", "/T", "/F", "/PID", str(proc.pid)],
+                                capture_output=True,
+                                timeout=5,
+                            )
+                        except Exception:
+                            pass
+                        try:
+                            proc.wait(timeout=2)
+                        except Exception:
+                            pass
+                else:
+                    # Unix: terminate process group first, then force kill group.
+                    try:
+                        pgid = os.getpgid(proc.pid)
+                        os.killpg(pgid, signal.SIGTERM)
+                    except Exception:
+                        try:
+                            proc.terminate()
+                        except Exception:
+                            pass
+                    try:
+                        proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        try:
+                            pgid = os.getpgid(proc.pid)
+                            os.killpg(pgid, signal.SIGKILL)
+                        except Exception:
+                            try:
+                                proc.kill()
+                            except Exception:
+                                pass
+                        try:
+                            proc.wait(timeout=2)
+                        except Exception:
+                            pass
+        finally:
+            if proc is not None and proc.poll() is None:
+                try:
+                    proc.kill()
+                    proc.wait(timeout=2)
+                except Exception:
+                    pass
+            # Remove known pidfile and clear state even if process handle is broken.
+            cls._remove_pidfile()
+            cls._worker_process = None
+            cls._worker_port = None
+            # Best-effort cleanup for stale worker handle from earlier session.
+            if pid is not None and cls._is_pid_alive(pid):
+                cls._kill_verified_pid(pid)
 
     @classmethod
     def call_worker_method_old(
@@ -336,35 +587,19 @@ class TBG_Controller:
                 )
                 raise
 
-        data = cloudpickle.dumps(payload)
-
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.settimeout(None)  # Remove timeout completely
-        client.connect(("127.0.0.1", int(worker_port)))
-        try:
-            client.sendall(struct.pack("!Q", len(data)))
-            client.sendall(data)
-
-            len_bytes = client.recv(8)
-            if not len_bytes:
-                raise RuntimeError("Worker closed connection without response")
-
-            result_len = struct.unpack("!Q", len_bytes)[0]
-            result_bytes = bytearray()
-            while len(result_bytes) < result_len:
-                chunk = client.recv(
-                    min(65536, result_len - len(result_bytes))
-                )
-                if not chunk:
-                    break
-                result_bytes.extend(chunk)
-
-            result = cloudpickle.loads(result_bytes)
-            if isinstance(result, Exception):
-                raise result
-            return result
-        finally:
-            client.close()
+        for rpc_attempt in range(2):
+            try:
+                return cls._rpc_roundtrip(int(worker_port), payload)
+            except Exception as e:
+                if rpc_attempt == 0 and cls._is_retryable_worker_error(e):
+                    print(f"[TBG_MAIN] Worker RPC failed ({e}); restarting worker and retrying once.")
+                    cls.cleanup_worker()
+                    cls.ensure_worker()
+                    worker_port = cls._worker_port or os.environ.get("TBG_WORKER_PORT")
+                    if not worker_port:
+                        raise RuntimeError("Worker restart failed: no worker port available")
+                    continue
+                raise
 
     @classmethod
     def _build_full_shared_meta(cls, tiler_id) -> dict:
@@ -468,29 +703,19 @@ class TBG_Controller:
                 print(f"❌ PREFLIGHT FAIL: args[{i}] of type {type(arg)} cannot be pickled: {e}")
                 raise
 
-        data = cloudpickle.dumps(payload)
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.settimeout(None)
-        client.connect(("127.0.0.1", int(worker_port)))
-        try:
-            client.sendall(struct.pack("!Q", len(data)))
-            client.sendall(data)
-            len_bytes = client.recv(8)
-            if not len_bytes:
-                raise RuntimeError("Worker closed connection without response")
-            result_len = struct.unpack("!Q", len_bytes)[0]
-            result_bytes = bytearray()
-            while len(result_bytes) < result_len:
-                chunk = client.recv(min(65536, result_len - len(result_bytes)))
-                if not chunk:
-                    break
-                result_bytes.extend(chunk)
-            result = cloudpickle.loads(result_bytes)
-            if isinstance(result, Exception):
-                raise result
-            return result
-        finally:
-            client.close()
+        for rpc_attempt in range(2):
+            try:
+                return cls._rpc_roundtrip(int(worker_port), payload)
+            except Exception as e:
+                if rpc_attempt == 0 and cls._is_retryable_worker_error(e):
+                    print(f"[TBG_MAIN] Worker RPC failed ({e}); restarting worker and retrying once.")
+                    cls.cleanup_worker()
+                    cls.ensure_worker()
+                    worker_port = cls._worker_port or os.environ.get("TBG_WORKER_PORT")
+                    if not worker_port:
+                        raise RuntimeError("Worker restart failed: no worker port available")
+                    continue
+                raise
 
     @classmethod
     def worker_close(cls) -> None:
@@ -553,3 +778,5 @@ WORKER = WORKER_NS()
 
 # Clean up worker on interpreter exit
 atexit.register(TBG_Controller.cleanup_worker)
+
+

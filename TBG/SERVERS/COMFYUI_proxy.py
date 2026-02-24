@@ -56,12 +56,27 @@ def _compress_structure(obj):
     return obj
 
 class MainController:
+    # Class-level cache for the port to avoid repeated env lookups
+    _port_cache: int | None = None
+
     @classmethod
     def _get_port(cls) -> int:
+        if cls._port_cache is not None:
+            return cls._port_cache
         port = os.environ.get("TBG_MAIN_PORT")
         if not port:
             raise RuntimeError("TBG_MAIN_PORT not set in worker environment")
-        return int(port)
+        cls._port_cache = int(port)
+        return cls._port_cache
+
+    # 👇 ADD THIS for compatibility with WORKER_proxy watchdog
+    @classmethod
+    def getport(cls) -> int:
+        """
+        Backwards‑compat alias used by WORKER_proxy watchdog.
+        Kept separate so existing code using _get_port() still works.
+        """
+        return cls._get_port()
 
     @classmethod
     def call_main_method_old(

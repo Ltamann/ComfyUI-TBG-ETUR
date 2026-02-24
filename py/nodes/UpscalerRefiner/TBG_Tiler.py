@@ -251,7 +251,7 @@ class TBG_Upscaler_v1():
         end_time = time.time()
         elapsed = end_time - tbg.start_time
 
-        tbg.PARAMS.TBG_APP_ShutDown = kwargs.get(' TBG_APP_ShutDown', 'Close with Comfyui')
+        tbg.PARAMS.TBG_APP_ShutDown = kwargs.get('TBG_APP_ShutDown', 'Close with Comfyui')
 
         # INIT SEGMENTS
         tbg.SEGMENTS.Segment_Mask = kwargs.get('Segment_Mask', None)
