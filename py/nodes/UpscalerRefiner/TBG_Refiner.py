@@ -25,6 +25,7 @@ from .inc.image import TBG_Image
 from .inc.sigmas import get_sigmas
 from .inc.sigmas import denoise_sigmas_tgb
 from .inc.cnet import get_Kontext_stiched_o_chained_cond
+from .inc.memory_probe import get_ram_info
 import comfy.model_management as mm
 from types import SimpleNamespace
 
@@ -127,6 +128,9 @@ from ....TBG.SERVERS.COMFYUI_server import register_main_class
 class TBG_Refiner_v1():
     NAME = "TBG Enhanced Refiner FLUX PRO 1"
     VRAM_OPTIMIZER = None
+    VRAM_PROFILE_FAST = "Fast Cache (Max Speed)"
+    VRAM_PROFILE_LOW = "Low VRAM Cache (Unload Models)"
+    VRAM_PROFILE_ULTRA = "Ultra Low Memory (Per-Tile Streaming)"
     MODEL_TYPE_SIZES = {
         'FLUX1': 1024,
         'FLUX2': 2048,
@@ -173,6 +177,59 @@ class TBG_Refiner_v1():
         'Neuro_Generative_Tile_Fusion',
 
     ]
+
+    @classmethod
+    def _normalize_vram_profile(cls, kwargs):
+        profile = kwargs.get("VRAM_Profile", None)
+        if profile in {cls.VRAM_PROFILE_FAST, cls.VRAM_PROFILE_LOW, cls.VRAM_PROFILE_ULTRA}:
+            return profile
+        # Legacy workflow compatibility
+        low_vram = kwargs.get("Low_Vram", True)
+        return cls.VRAM_PROFILE_LOW if low_vram else cls.VRAM_PROFILE_FAST
+
+    @classmethod
+    def _estimate_ram_for_profile(cls, profile):
+        # Heuristic estimate for cache pressure; RAM-only gate as requested.
+        tiles = max(1, len(getattr(tbg.OUTPUTS, "grid_images_all", []) or []))
+        prompts = getattr(tbg.PROMPTER, "output_prompts", []) or []
+        unique_prompts = max(1, len(set(map(str, prompts))) if prompts else tiles)
+        cnet_pipe = getattr(tbg.KSAMPLER, "Controlnet_Pipe", None) or []
+        cnet_count = len(cnet_pipe)
+        redux_enabled = bool(
+            getattr(tbg.PARAMS, "Redux_Clip_Vision", None)
+            and getattr(tbg.PARAMS, "Redux_Style_Model", None)
+            and getattr(tbg.PARAMS, "Redux_strength", 0) > 0.01
+        )
+
+        # Baseline process + models not controlled by this optimizer.
+        baseline = int(1.5 * 1024**3)
+        # Approximate per-tile conditioning cache in full-precompute modes.
+        per_tile_full = int((90 + (35 * cnet_count) + (25 if redux_enabled else 0)) * 1024**2)
+        # Text-only prompt cache (deduped) in ultra mode.
+        per_prompt_text = int(8 * 1024**2)
+        # Single-tile transient overhead for streaming composition.
+        transient_stream = int((220 + (60 * cnet_count) + (60 if redux_enabled else 0)) * 1024**2)
+
+        if profile == cls.VRAM_PROFILE_ULTRA:
+            return baseline + (unique_prompts * per_prompt_text) + transient_stream
+        return baseline + (tiles * per_tile_full)
+
+    @classmethod
+    def _ultra_low_unload(cls, stage_name):
+        if getattr(tbg.KSAMPLER, "vram_profile", "") != cls.VRAM_PROFILE_ULTRA:
+            return
+        before = torch.cuda.memory_allocated() / 1024**3 if torch.cuda.is_available() else 0.0
+        mm.unload_all_models()
+        mm.soft_empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        after = torch.cuda.memory_allocated() / 1024**3 if torch.cuda.is_available() else 0.0
+        log(
+            f"[TBG][UltraLow] unload after {stage_name}: {before:.2f}GB -> {after:.2f}GB",
+            None,
+            None,
+            f"Node {tbg.INFO.id}",
+        )
 
     @classmethod
     def tbg_mark_worker_job_started(cls):
@@ -253,6 +310,16 @@ class TBG_Refiner_v1():
             None,
             None,
             f"Node {tbg.INFO.id}"
+        )
+        cache_sz = 0
+        if cls.VRAM_OPTIMIZER is not None and hasattr(cls.VRAM_OPTIMIZER, "text_embeddings_cache"):
+            cache_sz = len(cls.VRAM_OPTIMIZER.text_embeddings_cache)
+        log(
+            f"TBG[Node {tbg.INFO.id}] Summary: profile={getattr(tbg.KSAMPLER, 'vram_profile', 'unknown')}, "
+            f"tiles={len(tbg.OUTPUTS.grid_images_all)}, text_cache_entries={cache_sz}",
+            None,
+            None,
+            f"Node {tbg.INFO.id}",
         )
 
 
@@ -371,7 +438,14 @@ class TBG_Refiner_v1():
         tbg.DUALMODEL.detail_enhancer=kwargs.get('Detail Enhancer', 0)
 
 
-        tbg.lowvram = kwargs.get('Low_Vram', True)
+        tbg.KSAMPLER.vram_profile = cls._normalize_vram_profile(kwargs)
+        tbg.lowvram = tbg.KSAMPLER.vram_profile != cls.VRAM_PROFILE_FAST
+        log(
+            f"TBG[Node {tbg.INFO.id}] VRAM profile requested/effective: {kwargs.get('VRAM_Profile', 'legacy')} -> {tbg.KSAMPLER.vram_profile}",
+            None,
+            None,
+            f"Node {tbg.INFO.id}",
+        )
 
 
 
@@ -628,11 +702,37 @@ class TBG_Refiner_v1():
         if cls.VRAM_OPTIMIZER is not None:
             cls.VRAM_OPTIMIZER.cleanup()
 
+        requested_profile = getattr(tbg.KSAMPLER, "vram_profile", cls.VRAM_PROFILE_LOW)
+        effective_profile = requested_profile
+        estimate_bytes = cls._estimate_ram_for_profile(requested_profile)
+        ram_info = get_ram_info()
+        if ram_info.get("ok"):
+            avail = int(ram_info["available_bytes"])
+            required = int((estimate_bytes * 1.25) + (1.5 * 1024**3))
+            if requested_profile in {cls.VRAM_PROFILE_FAST, cls.VRAM_PROFILE_LOW} and avail < required:
+                effective_profile = cls.VRAM_PROFILE_ULTRA
+                tbg.KSAMPLER.vram_profile = effective_profile
+                tbg.lowvram = True
+            log(
+                f"TBG[Node {tbg.INFO.id}] RAM gate: profile={requested_profile}, est={estimate_bytes/1024**3:.2f}GB, "
+                f"avail={avail/1024**3:.2f}GB, required={required/1024**3:.2f}GB, effective={effective_profile}, source={ram_info.get('source')}",
+                None,
+                None,
+                f"Node {tbg.INFO.id}",
+            )
+        else:
+            log(
+                f"TBG[Node {tbg.INFO.id}] RAM gate skipped: {ram_info.get('reason', 'unknown probe error')}",
+                None,
+                None,
+                f"Node {tbg.INFO.id}",
+            )
+
 
         cls.VRAM_OPTIMIZER = VRAMOptimizer(tbg)
         vram_before = torch.cuda.memory_allocated() / 1024 ** 3
 
-        if tbg.lowvram and cls.VRAM_OPTIMIZER is not None:
+        if tbg.KSAMPLER.vram_profile == cls.VRAM_PROFILE_LOW and cls.VRAM_OPTIMIZER is not None:
             mm.unload_all_models()
             mm.soft_empty_cache()
 
@@ -657,15 +757,27 @@ class TBG_Refiner_v1():
         negative = None
         positive = None
         tbg.TEMP.latent_index = index  # used in Cnet.py
+        ultra_low = getattr(tbg.KSAMPLER, "vram_profile", "") == cls.VRAM_PROFILE_ULTRA
+        if ultra_low:
+            cls._ultra_low_unload("tile-start")
+
         # Flux conditioning + Guidance + cnet if Kontext
         if tbg.KSAMPLER.model_type in {"FLUX2", "FLUX1", "FLUX1 Kontext"}:
             # FLUX KONTEXT conditioning
             if tbg.KSAMPLER.model_type in {"FLUX2", "FLUX1 Kontext"}:
 
-                positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
+                if ultra_low:
+                    positive, negative = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "high")
+                    cls._ultra_low_unload("conditioning-high")
+                else:
+                    positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
 
                 if tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
-                    pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
+                    if ultra_low:
+                        pos_low, neg_low = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "low")
+                        cls._ultra_low_unload("conditioning-low")
+                    else:
+                        pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
 
                 if tbg.KSAMPLER.Controlnet_Pipe:
                     # build from Cnet stitched and chaind referent latent combination
@@ -677,9 +789,17 @@ class TBG_Refiner_v1():
             else:
                 # FLUX standard conditioning (no Kontext)
 
-                positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
+                if ultra_low:
+                    positive, negative = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "high")
+                    cls._ultra_low_unload("conditioning-high")
+                else:
+                    positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
                 if tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
-                    pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
+                    if ultra_low:
+                        pos_low, neg_low = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "low")
+                        cls._ultra_low_unload("conditioning-low")
+                    else:
+                        pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
 
             negative = nodes.ConditioningZeroOut.zero_out(0, positive)[0]
             positive = FluxGuidance_execute(positive, tbg.KSAMPLER.Flux_Guidance)[0]
@@ -687,9 +807,17 @@ class TBG_Refiner_v1():
         # Qwen Edit conditioning
         elif tbg.KSAMPLER.model_type in {"Qwen Image", "Qwen Image Edit"}:
             if tbg.KSAMPLER.model_type == "Qwen Image Edit":
-                positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
+                if ultra_low:
+                    positive, negative = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "high")
+                    cls._ultra_low_unload("conditioning-high")
+                else:
+                    positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
                 if tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
-                    pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
+                    if ultra_low:
+                        pos_low, neg_low = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "low")
+                        cls._ultra_low_unload("conditioning-low")
+                    else:
+                        pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
                 if tbg.KSAMPLER.Controlnet_Pipe:
                     # build from Cnet stitched and chaind referent latent combination
                     positive = get_Kontext_stiched_o_chained_cond(cls, positive, tbg.KSAMPLER.Controlnet_Pipe, tile_to_process)
@@ -699,15 +827,31 @@ class TBG_Refiner_v1():
                     positive = ReferenceLatent_execute(positive, kontext_latent_image)[0]
             else:
 
-                positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
+                if ultra_low:
+                    positive, negative = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "high")
+                    cls._ultra_low_unload("conditioning-high")
+                else:
+                    positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
                 if tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
-                    pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
+                    if ultra_low:
+                        pos_low, neg_low = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "low")
+                        cls._ultra_low_unload("conditioning-low")
+                    else:
+                        pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
 
         # SDXL and Other conditioning
         else:
-            positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
+            if ultra_low:
+                positive, negative = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "high")
+                cls._ultra_low_unload("conditioning-high")
+            else:
+                positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
             if tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
-                pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
+                if ultra_low:
+                    pos_low, neg_low = cls.VRAM_OPTIMIZER.build_tile_conditioning_streaming(index, "low")
+                    cls._ultra_low_unload("conditioning-low")
+                else:
+                    pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
 
         # ------------------------------------------------------------------
         # PRO Step 3.5.4 Conditioning cropped_positive cropped_negative
@@ -1137,6 +1281,7 @@ class TBG_Refiner_v1():
                     tbg.OUTPUTS.grid_images_all[index] = tile_processed
                     storage = persistent_storage[tbg.storage_key]
                     storage["generated_tiles"] = copy.deepcopy(tbg.OUTPUTS.grid_images_all)
+                    cls._ultra_low_unload("tile-end")
                     return tile_processed
 
 # Refiner end --------------------------------------------------------------------------------------------------------------------------------------

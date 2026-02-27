@@ -238,6 +238,7 @@ class TBG_ETUR_Refiner_CE():
 
     @classmethod
     def fn(self, **kwargs):
+        kwargs["VRAM_Profile"] = "Ultra Low Memory (Per-Tile Streaming)"
         return {
             "ui": {"value": [f"{kwargs.get('seed', None)}"]},
             "result": (TBG_Refiner_v1.fn(**kwargs))

@@ -415,8 +415,26 @@ class TBG_ETUR_Refiner_PRO():
                 "Selected_Tiles_By_Numbers": ("STRING", {"label": "Selected_Tiles_Index_Numbers to process", "default": '',
                                                          "tooltip": "You can set a list of selected tiles to process like 1,2,3,6 and activate Selected_Tiles_Only"}),
 
-                "Low_Vram": ("BOOLEAN", {"label": "Low Vram", "default": True, "label_on": "on", "label_off": "off",
-                                        "tooltip": "Reduced VRAM Usage achieves lower memory consumption through conditioning compression, process separation, model unloading, and automatic memory cleanup."}),
+                "VRAM_Profile": (
+                    [
+                        "Fast Cache (Max Speed)",
+                        "Low VRAM Cache (Unload Models)",
+                        "Ultra Low Memory (Per-Tile Streaming)",
+                    ],
+                    {
+                        "label": "VRAM Profile",
+                        "default": "Low VRAM Cache (Unload Models)",
+                        "tooltip": (
+                            "Fast Cache (Max Speed): Precomputes full tile conditioning (text + Redux + ControlNet) "
+                            "for all tiles and keeps models loaded. Fastest sampling, highest RAM/VRAM usage. "
+                            "Low VRAM Cache (Unload Models): Same full precompute, then unloads models to reduce VRAM. "
+                            "RAM can still be high with many tiles. "
+                            "Ultra Low Memory (Per-Tile Streaming): Caches repeated text conditioning only; Redux/ControlNet "
+                            "are rebuilt per tile and released immediately. Also unloads/reloads models between steps/tiles "
+                            "for minimum VRAM. Slowest mode; best for very low-spec systems."
+                        ),
+                    },
+                ),
 
             },
             "hidden": {

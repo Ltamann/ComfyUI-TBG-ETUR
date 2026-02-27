@@ -35,6 +35,11 @@ class VRAMOptimizer:
         self.DUALMODELGeneral_Prompt = SELF.DUALMODEL.General_Prompt
         self.DUALMODELGeneral_Prompt_Negative = SELF.DUALMODEL.General_Prompt_Negative
         self.lowvram = SELF.lowvram
+        self.vram_profile = getattr(
+            self.KSAMPLER,
+            "vram_profile",
+            "Low VRAM Cache (Unload Models)",
+        )
         #self.encode_all_text_prompts()
         self.grid_prompts = self.PROMPTER.output_prompts
 
@@ -61,6 +66,25 @@ class VRAMOptimizer:
         self.last_timestamp = getattr(self.PARAMS, "timestamp", 0)
 
         self.precompute_all_embeddings(SELF)
+
+    def is_ultra_low(self):
+        return self.vram_profile == "Ultra Low Memory (Per-Tile Streaming)"
+
+    def _ultra_stage_unload(self, stage):
+        if not self.is_ultra_low():
+            return
+        before = torch.cuda.memory_allocated() / 1024**3 if torch.cuda.is_available() else 0.0
+        model_management.unload_all_models()
+        model_management.soft_empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        after = torch.cuda.memory_allocated() / 1024**3 if torch.cuda.is_available() else 0.0
+        log(
+            f"[TBG][UltraLow] stage unload {stage}: {before:.2f}GB -> {after:.2f}GB",
+            None,
+            None,
+            f"Node {self.node_id}",
+        )
 
     # ------------------------------------------------------------------ utils
 
@@ -251,35 +275,55 @@ class VRAMOptimizer:
         if not pipe:
             return None, None
 
+        tile_image = self.get_tile_image(tile_idx)
         filtered_pipe = []
         for p in pipe:
             preprocessor = p.get('preprocessor')
-
-            # Skip image-dependent preprocessors if no input image
-            if preprocessor in ['DepthAnythingV2', 'Canny', 'Canny Edge']:
-                if (not hasattr(SELF.INPUTS, 'controlnetimage') or
-                        SELF.INPUTS.controlnetimage is None):
-                    log(f"[TBG] Skipping {preprocessor} - no controlnetimage", ...)
-                    continue
+            noise_image = p.get("noise_image")
 
             # Skip if no ControlNet model
             cn = (p.get('controlnet') or getattr(p, 'controlnet') or
                   getattr(p, 'model'))
-            if cn:
-                filtered_pipe.append(p)
+            if not cn:
+                log(
+                    f"[TBG] Skipping {preprocessor} - missing controlnet model",
+                    None,
+                    None,
+                    f"Node {self.node_id}",
+                )
+                continue
+
+            # Preprocessors need an image source: custom control image or tile image.
+            if preprocessor in ['DepthAnythingV2', 'Canny', 'Canny Edge']:
+                if noise_image is None and tile_image is None:
+                    log(
+                        f"[TBG] Skipping {preprocessor} - missing tile/custom control image",
+                        None,
+                        None,
+                        f"Node {self.node_id}",
+                    )
+                    continue
+
+            filtered_pipe.append(p)
 
         # If nothing valid remains, skip ControlNet for this tile
         if not filtered_pipe:
             return None, None
+        chosen = [str(p.get("preprocessor", "None")) for p in filtered_pipe]
+        log(
+            f"[TBG][ControlNet] Tile {tile_idx + 1}: selected {len(filtered_pipe)} entries for precompute -> {chosen}",
+            None,
+            None,
+            f"Node {self.node_id}",
+        )
 
         base = self.text_embeddings_cache.get(tile_idx)
         if base is None:
             return None, None
-        tile_image = self.get_tile_image(tile_idx)
         pos, neg = apply_controlnets_from_pipe(
             self,
             SELF,
-            pipe,
+            filtered_pipe,
             self._nuclear_gpu(base["conditioning"]),
             self._nuclear_gpu(base["negative"]),
             self.OUTPUTS.upscaled_image,
@@ -360,19 +404,39 @@ class VRAMOptimizer:
             "fingerprint": fp,
         }
 
-    def precompute_all_embeddings(self,SELF):
-
-        log("Starting VRAM Optimization (unified conditioning)", None, None, f"Node {self.node_id}")
-        self.encode_all_text_prompts() #CLIP
-
+    def precompute_text_only(self):
+        log(
+            "Starting VRAM Optimization (text-only cache for Ultra Low mode)",
+            None,
+            None,
+            f"Node {self.node_id}",
+        )
+        self.encode_all_text_prompts()
         if self.DUALMODELmodel is not None and self.DUALMODELclip is not None and self.DUALMODELvae is not None:
             self.encode_all_text_prompts_low()
+        log(
+            "VRAM Optimization Complete (text-only cache)",
+            None,
+            None,
+            f"Node {self.node_id}",
+        )
 
+    def precompute_full_layers(self, SELF):
+        log("Starting VRAM Optimization (unified conditioning)", None, None, f"Node {self.node_id}")
+        self.encode_all_text_prompts()  # CLIP
+        if self.DUALMODELmodel is not None and self.DUALMODELclip is not None and self.DUALMODELvae is not None:
+            self.encode_all_text_prompts_low()
         for tile_idx in range(len(self.grid_prompts)):
             if self.PARAMS.tiles_to_process and tile_idx not in self.PARAMS.tiles_to_process:
                 continue
-            self._combine_all_layers_for_tile(SELF,tile_idx)
+            self._combine_all_layers_for_tile(SELF, tile_idx)
         log("VRAM Optimization Complete (unified conditioning precomputed)", None, None, f"Node {self.node_id}")
+
+    def precompute_all_embeddings(self, SELF):
+        if self.is_ultra_low():
+            self.precompute_text_only()
+        else:
+            self.precompute_full_layers(SELF)
 
     # ----------------------------------------------------- public sampling API
 
@@ -407,6 +471,96 @@ class VRAMOptimizer:
                 ) from e
             else:
                 raise  # Re-raise if it's a different AttributeError
+
+    def build_tile_conditioning_streaming(self, tile_idx, model_type="high"):
+        if model_type == "low":
+            base = self.text_embeddings_cache_low.get(tile_idx)
+        else:
+            base = self.text_embeddings_cache.get(tile_idx)
+        if base is None:
+            return None, None
+
+        pos = self._nuclear_gpu(base["conditioning"])
+        neg = self._nuclear_gpu(base["negative"])
+        log(
+            f"[TBG][UltraLow] Tile {tile_idx + 1}: streaming conditioning start ({model_type})",
+            None,
+            None,
+            f"Node {self.node_id}",
+        )
+
+        if model_type != "low":
+            if self.redux_enabled and self.redux_strength > 1e-4:
+                try:
+                    tile_image = self.get_tile_image(tile_idx)
+                    redux_cond, = FluxRedux_ForTiles(
+                        self.SELF,
+                        conditioning=pos,
+                        image=tile_image,
+                    )
+                    if redux_cond is not None:
+                        pos = self._nuclear_gpu(redux_cond)
+                    log(
+                        f"[TBG][UltraLow] Tile {tile_idx + 1}: Redux applied",
+                        None,
+                        None,
+                        f"Node {self.node_id}",
+                    )
+                    self._ultra_stage_unload("redux")
+                except Exception as e:
+                    log(
+                        f"[TBG][UltraLow] Tile {tile_idx + 1}: Redux failed ({e})",
+                        None,
+                        None,
+                        f"Node {self.node_id}",
+                    )
+
+            pipe = getattr(self.KSAMPLER, "Controlnet_Pipe", None)
+            if pipe:
+                tile_image = self.get_tile_image(tile_idx)
+                filtered_pipe = []
+                for p in pipe:
+                    cn = (p.get('controlnet') or getattr(p, 'controlnet', None) or getattr(p, 'model', None))
+                    preprocessor = p.get("preprocessor")
+                    if not cn:
+                        log(
+                            f"[TBG] Skipping {preprocessor} - missing controlnet model",
+                            None,
+                            None,
+                            f"Node {self.node_id}",
+                        )
+                        continue
+                    filtered_pipe.append(p)
+                if not filtered_pipe:
+                    return pos, neg
+                pos, neg = apply_controlnets_from_pipe(
+                    self,
+                    self.SELF,
+                    filtered_pipe,
+                    pos,
+                    neg,
+                    self.OUTPUTS.upscaled_image,
+                    tile_image,
+                    self.KSAMPLER.vae,
+                    tile_idx,
+                )
+                pos = self._nuclear_gpu(pos)
+                neg = self._nuclear_gpu(neg)
+                log(
+                    f"[TBG][UltraLow] Tile {tile_idx + 1}: ControlNet applied",
+                    None,
+                    None,
+                    f"Node {self.node_id}",
+                )
+                self._ultra_stage_unload("controlnet")
+
+        log(
+            f"[TBG][UltraLow] Tile {tile_idx + 1}: streaming conditioning done ({model_type})",
+            None,
+            None,
+            f"Node {self.node_id}",
+        )
+        return pos, neg
 
 
 
