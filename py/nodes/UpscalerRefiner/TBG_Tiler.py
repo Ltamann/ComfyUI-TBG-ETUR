@@ -21,6 +21,8 @@ import copy
 import comfy.utils
 import re
 import comfy.text_encoders.llama
+import comfy.model_management as mm
+import torch
 import time
 import PIL
 import nodes
@@ -36,6 +38,9 @@ from ...vendor.ComfyUI_Janus_Pro.nodes.model_loader import JanusModelLoader
 from ...vendor.ComfyUI_Janus_Pro.nodes.image_understanding import JanusImageUnderstanding
 from ...vendor.ComfyUI_Unload_Models_main.py.unload_one_model import UnloadOneModelNode
 from ...vendor.ComfyUI_QwenVL.AILab_QwenVL import QwenVLBase
+from ...vendor.ComfyUI_QwenVL.AILab_QwenVL_GGUF import QwenVLGGUFBase
+from ...vendor.ComfyUI_QwenVL.TBG_QwenVL_Server import QwenVLServerClient
+from ...vendor.ComfyUI_QwenVL.TBG_QwenVL_ServerManager import get_server_manager
 from ...vendor.ComfyUI_QwenVL.nodes import Qwen2VL_TBG
 from ...vendor.ComfyUI_Florence2.nodes import DownloadAndLoadFlorence2Model,Florence2Run
 from ...vendor.ComfyUI_Impact_Pack.masktoseg import MaskToSEGS, combine_segs
@@ -49,6 +54,22 @@ from ...vendor.seedvr2_videoupscaler.src.interfaces.video_upscaler import TBG_Se
 from ...vendor.flashvsr_ultra_fast.nodes import flashvr
 Tiler_Upscale_Cache = True
 Only_Upscale = False
+OPENAI_COMPAT_MODEL = "OpenAI-Compatible (Labs Server)"
+
+
+def _runtime_device_string():
+    try:
+        dev = mm.get_torch_device()
+        if hasattr(dev, "type"):
+            if dev.type == "cuda":
+                idx = dev.index if dev.index is not None else 0
+                return f"cuda:{idx}"
+            return str(dev)
+        return str(dev)
+    except Exception:
+        if torch.cuda.is_available():
+            return f"cuda:{torch.cuda.current_device()}"
+        return "cpu"
 nodes_upscale_model_UpscaleModelLoader = nodes_upscale_model.UpscaleModelLoader
 if hasattr(nodes_upscale_model_UpscaleModelLoader, "execute"):
     nodes_upscale_model_UpscaleModelLoader_execute = nodes_upscale_model_UpscaleModelLoader.execute
@@ -383,26 +404,39 @@ class TBG_Upscaler_v1():
         except ImportError:
             attention_mode = 'sdpa'
         global Tiler_Upscale_Cache,Only_Upscale
+        runtime_device = _runtime_device_string()
         tbg.PARAMS.Prompt_seed =  kwargs.get('VLM_seed', None)
         labs_upscaler_dict = kwargs.get('labs_upscaler', None)
         if labs_upscaler_dict:
             # Optional
             Tiler_Upscale_Cache = labs_upscaler_dict.get('Tiler_Upscale_Cache', True)
             Only_Upscale = labs_upscaler_dict.get('Only_Upscale', True)
-            tbg.PARAMS.SEEDVR2_VAE = labs_upscaler_dict.get('SEEDVR2_VAE', {'model': 'ema_vae_fp16.safetensors', 'device': 'cuda:0', 'offload_device': 'none',
+            tbg.PARAMS.VLM_Server_Base_URL = labs_upscaler_dict.get('VLM_Server_Base_URL', "http://127.0.0.1:8080/v1")
+            tbg.PARAMS.VLM_Server_Model = labs_upscaler_dict.get('VLM_Server_Model', "")
+            # Keep these internal defaults for backwards compatibility in GGUF server paths.
+            tbg.PARAMS.VLM_Server_API_Key_Env = "TBG_ETUR_OPENAI_API_KEY"
+            tbg.PARAMS.VLM_Server_Launch_Mode = "external_only"
+            tbg.PARAMS.VLM_Server_Command = ""
+            tbg.PARAMS.VLM_Server_Args = ""
+            tbg.PARAMS.VLM_Server_Health_Endpoint = "/v1/models"
+            tbg.PARAMS.VLM_Server_Startup_Timeout_s = 30
+            tbg.PARAMS.VLM_Server_Request_Timeout_s = 90
+            tbg.PARAMS.VLM_Server_Stop_On_Refiner_Start = True
+            tbg.PARAMS.VLM_Server_Stop_On_Run_End = True
+            tbg.PARAMS.SEEDVR2_VAE = labs_upscaler_dict.get('SEEDVR2_VAE', {'model': 'ema_vae_fp16.safetensors', 'device': runtime_device, 'offload_device': 'none',
                            'cache_model': True, 'encode_tiled': True, 'encode_tile_size': 512,
                            'encode_tile_overlap': 64,
                            'decode_tiled': True,
                            'decode_tile_size': 512, 'decode_tile_overlap': 64, 'tile_debug': 'false',
                            'torch_compile_args': 'reduce-overhead', 'node_id': '9'})
             tbg.PARAMS.SEEDVR2_DIT = labs_upscaler_dict.get('SEEDVR2_DIT',  {'model': 'seedvr2_ema_7b_fp8_e4m3fn_mixed_block35_fp16.safetensors',
-                           'device': 'cuda:0', 'offload_device': 'none', 'cache_model': True,
+                           'device': runtime_device, 'offload_device': 'none', 'cache_model': True,
                            'blocks_to_swap': 0,
                            'swap_io_components': False,
                            'attention_mode': attention_mode,
                            'torch_compile_args': 'reduce-overhead', 'node_id': '8'})
             tbg.PARAMS.SEEDVR2_DIT_low = labs_upscaler_dict.get('SEEDVR2_DIT_low',  {'model': 'seedvr2_ema_7b_fp8_e4m3fn_mixed_block35_fp16.safetensors',
-                           'device': 'cuda:0', 'offload_device': 'none', 'cache_model': True,
+                           'device': runtime_device, 'offload_device': 'none', 'cache_model': True,
                            'blocks_to_swap': 0,
                            'swap_io_components': False,
                            'attention_mode': attention_mode,
@@ -412,6 +446,17 @@ class TBG_Upscaler_v1():
             if tbg.API.status in ["Free", "Pro", "Premium", "Unlimited", "Dev"]:
                 Tiler_Upscale_Cache = True
             Only_Upscale = False
+            tbg.PARAMS.VLM_Server_Base_URL = "http://127.0.0.1:8080/v1"
+            tbg.PARAMS.VLM_Server_Model = ""
+            tbg.PARAMS.VLM_Server_API_Key_Env = "TBG_ETUR_OPENAI_API_KEY"
+            tbg.PARAMS.VLM_Server_Launch_Mode = "external_only"
+            tbg.PARAMS.VLM_Server_Command = ""
+            tbg.PARAMS.VLM_Server_Args = ""
+            tbg.PARAMS.VLM_Server_Health_Endpoint = "/v1/models"
+            tbg.PARAMS.VLM_Server_Startup_Timeout_s = 30
+            tbg.PARAMS.VLM_Server_Request_Timeout_s = 90
+            tbg.PARAMS.VLM_Server_Stop_On_Refiner_Start = True
+            tbg.PARAMS.VLM_Server_Stop_On_Run_End = True
         tbg.PARAMS.Inventivity=kwargs.get('Inventivity', None)
         tbg.PARAMS.Resemblance=kwargs.get('Resemblance', None)
         tbg.PARAMS.Fractality=kwargs.get('Fractality', None)
@@ -423,6 +468,8 @@ class TBG_Upscaler_v1():
         tbg.LLM.prompt = kwargs.get('VLM_Prompt', " ")
         tbg.LLM.quantization =   kwargs.get('VLM_Quantization', "None (FP16)")
         tbg.LLM.model = kwargs.get('VLM_Model', 'NONE')
+        tbg.PARAMS.VLM_Model = tbg.LLM.model
+        tbg.PARAMS.VLM_Server_Active = False
         tbg.PARAMS.MODEL_TYPE_SIZES = kwargs.get('MODEL_TYPE_SIZES', False)
         tbg.PARAMS.Tile_Fusion_Mode = kwargs.get('Fusion Mode', 'NONE')
         tbg.PARAMS.upscale_model_name=kwargs.get('upscale_model', "NONE")
@@ -618,12 +665,73 @@ class TBG_Upscaler_v1():
     def prompter(cls, iteration):
         print("len(tbg.OUTPUTS.grid_images_all)",len(tbg.OUTPUTS.grid_images_all))
         grid_prompts = []
+        qwen = None
+        janus = None
+        QwenVL = None
+        QwenVLGGUF = None
+        OpenAIServer = None
+        openai_server_model = ""
+        florence_loader = None
+        if tbg.LLM.model.startswith("GGUF\\"):
+            print(f"[QwenVL-GGUF] Selected backend=gguf model='{tbg.LLM.model}'")
+        elif tbg.LLM.model.startswith("Qwen"):
+            print(f"[QwenVL] Selected backend=transformers model='{tbg.LLM.model}'")
         if not tbg.LLM.model == "NONE":
+            if tbg.LLM.model == OPENAI_COMPAT_MODEL:
+                base_url = str(getattr(tbg.PARAMS, "VLM_Server_Base_URL", "") or "").strip()
+                openai_server_model = str(getattr(tbg.PARAMS, "VLM_Server_Model", "") or "").strip()
+                if not base_url:
+                    raise ValueError(
+                        "[OpenAI-VLM] VLM_Model is 'OpenAI-Compatible (Labs Server)' but Labs VLM_Server_Base_URL is empty."
+                    )
+                if not openai_server_model:
+                    raise ValueError(
+                        "[OpenAI-VLM] VLM_Model is 'OpenAI-Compatible (Labs Server)' but Labs VLM_Server_Model is empty."
+                    )
+                OpenAIServer = QwenVLServerClient(
+                    {
+                        "base_url": base_url,
+                        "api_key_env": "TBG_ETUR_OPENAI_API_KEY",
+                        "health_endpoint": "/v1/models",
+                        "request_timeout_s": float(getattr(tbg.PARAMS, "VLM_Server_Request_Timeout_s", 90)),
+                    }
+                )
+                try:
+                    status, _ = OpenAIServer.health_check()
+                except Exception as e:
+                    raise RuntimeError(
+                        f"[OpenAI-VLM] OpenAI-compatible server is not reachable at '{base_url}': {e}"
+                    ) from e
+                if status < 200 or status >= 300:
+                    raise RuntimeError(
+                        f"[OpenAI-VLM] OpenAI-compatible server health check failed at '{base_url}' status={status}"
+                    )
+                try:
+                    available_models = OpenAIServer.list_models()
+                except Exception as models_err:
+                    raise RuntimeError(
+                        f"[OpenAI-VLM] Connected but failed to read models from '{base_url}'. {models_err}"
+                    ) from models_err
+                if openai_server_model not in available_models:
+                    preview = ", ".join(available_models[:25])
+                    if len(available_models) > 25:
+                        preview = f"{preview}, ... (+{len(available_models) - 25} more)"
+                    raise RuntimeError(
+                        "[OpenAI-VLM] OpenAI-compatible VLM model not found.\n"
+                        f"Requested model: '{openai_server_model}'\n"
+                        f"Server URL: '{base_url}'\n"
+                        f"Available models: {preview or '(none returned)'}"
+                    )
+                print(
+                    f"[OpenAI-VLM] Selected backend=openai model='{openai_server_model}' base_url='{base_url}'"
+                )
+            if tbg.LLM.model.startswith("GGUF\\"):
+                QwenVLGGUF = QwenVLGGUFBase()
             if "sky" in tbg.LLM.model.lower():
                 qwen = Qwen2VL_TBG()
             if "janus" in tbg.LLM.model.lower():
                 janus = JanusModelLoader()
-            if "qwen" in tbg.LLM.model.lower():
+            if tbg.LLM.model.startswith("Qwen"):
                 QwenVL = QwenVLBase()
             if "florence" in tbg.LLM.model.lower():
                 florence_loader = DownloadAndLoadFlorence2Model()
@@ -666,6 +774,37 @@ class TBG_Upscaler_v1():
                 return JanusImageUnderstanding.analyze_image(
                     tbg, janusmodel, janusprocessor, images[0], januspromt,
                     tbg.PARAMS.Prompt_seed, 0.1, 0.9, 512
+                )[0]
+
+            elif llm_model.startswith("GGUF\\"):
+                seed = tbg.PARAMS.Prompt_seed
+                print(f"[QwenVL-GGUF] VLM_Quantization is ignored for GGUF models: '{tbg.LLM.quantization}'")
+                return QwenVLGGUF.run(
+                    llm_model,
+                    tbg.LLM.quantization,
+                    preset_prompt="🖼️ Detailed Analysis",
+                    custom_prompt=januspromt,
+                    image=images[0],
+                    video=None,
+                    frame_count=16,
+                    max_tokens=1024,
+                    temperature=0.6,
+                    top_p=0.9,
+                    num_beams=1,
+                    repetition_penalty=1.2,
+                    seed=seed,
+                    keep_model_loaded=True,
+                    attention_mode="auto",
+                    use_torch_compile=False,
+                    device="auto",
+                )[0]
+            elif llm_model == OPENAI_COMPAT_MODEL:
+                seed = tbg.PARAMS.Prompt_seed
+                return OpenAIServer.run_with_model(
+                    model_name=openai_server_model,
+                    custom_prompt=januspromt,
+                    image=images[0],
+                    seed=seed,
                 )[0]
 
             elif tbg.LLM.model.startswith("Qwen"):
@@ -747,49 +886,60 @@ class TBG_Upscaler_v1():
 
         print(
             f"TBG[Node {tbg.INFO.id}] VLM {tbg.LLM.model} working  of {len(tbg.OUTPUTS.grid_images_all)}")
+        try:
+            for index, tile_to_process in enumerate(tbg.OUTPUTS.grid_images_all):
+                # Skip tile only if user selected some tiles AND this index is not one of them
+                if len(tbg.PROMPTER.tiles_to_process) != 0 and index not in tbg.PROMPTER.tiles_to_process:
+                    prompt_tile = ""
+                    grid_prompts.append(prompt_tile)
+                    continue
 
-        for index, tile_to_process in enumerate(tbg.OUTPUTS.grid_images_all):
-            # Skip tile only if user selected some tiles AND this index is not one of them
-            if len(tbg.PROMPTER.tiles_to_process) != 0 and index not in tbg.PROMPTER.tiles_to_process:
-                prompt_tile = ""
+
+                prompt_tile = prompt_context
+                if tbg.LLM.model != "NONE":
+                    print(f"TBG[Node {tbg.INFO.id}] VLM {tbg.LLM.model} working on Tile {index} of {len(tbg.OUTPUTS.grid_images_all)}")
+                    prompt_tile = get_prompt_tile(tile_to_process)
+                    sentences_with_words_to_remove = [
+                        "assistant", "helpful", "vision", "Thedescription", "TheUser", "The睿", "The description",
+                        "The User",
+                        "It can assist", "natural language", "It can understand"
+                    ]
+                    prompt_tile = cls.remove_sentences_with_words(prompt_tile, sentences_with_words_to_remove)
+
+                    log(f"tile {index + 1}/{total} - [tile prompt] {prompt_tile}", None, None,
+                        f"Node {tbg.INFO.id} - Prompting {iteration}")
                 grid_prompts.append(prompt_tile)
-                continue
 
+            tbg.PROMPTER.tiler_prompts = grid_prompts
 
-            prompt_tile = prompt_context
+            # if the input comes direct from tiler ignore and rebuild empty values from prompter
+            tbg.PROMPTER.output_prompts = tbg.PROMPTER.tiler_prompts
+            tiles_len = len(tbg.PROMPTER.tiler_prompts)
+            tbg.PROMPTER.output_denoises = cls._normalize([], tiles_len)
+            tbg.PROMPTER.output_seeds_js = cls._normalize([], tiles_len)
+            tbg.PROMPTER.output_cnet_js = cls._normalize([], tiles_len)
+        finally:
             if tbg.LLM.model != "NONE":
-                print(f"TBG[Node {tbg.INFO.id}] VLM {tbg.LLM.model} working on Tile {index} of {len(tbg.OUTPUTS.grid_images_all)}")
-                prompt_tile = get_prompt_tile(tile_to_process)
-                sentences_with_words_to_remove = [
-                    "assistant", "helpful", "vision", "Thedescription", "TheUser", "The睿", "The description",
-                    "The User",
-                    "It can assist", "natural language", "It can understand"
-                ]
-                prompt_tile = cls.remove_sentences_with_words(prompt_tile, sentences_with_words_to_remove)
-
-                log(f"tile {index + 1}/{total} - [tile prompt] {prompt_tile}", None, None,
-                    f"Node {tbg.INFO.id} - Prompting {iteration}")
-            grid_prompts.append(prompt_tile)
-
-        tbg.PROMPTER.tiler_prompts = grid_prompts
-
-        # if the input comes direct from tiler ignore and rebuild empty values from prompter
-
-        tbg.PROMPTER.output_prompts = tbg.PROMPTER.tiler_prompts
-        tiles_len = len(tbg.PROMPTER.tiler_prompts)
-        tbg.PROMPTER.output_denoises = cls._normalize([], tiles_len)
-        tbg.PROMPTER.output_seeds_js = cls._normalize([], tiles_len)
-        tbg.PROMPTER.output_cnet_js = cls._normalize([], tiles_len)
-
-        if tbg.LLM.model != "NONE":
-            if "Sky" in tbg.LLM.model.lower():
-                UnloadOneModelNode.route(qwen)
-            if "janus" in tbg.LLM.model.lower():
-                UnloadOneModelNode.route(janus)
-            if "Qwen" in tbg.LLM.model.lower():
-                UnloadOneModelNode.route(QwenVL)
-            if "florence" in tbg.LLM.model.lower():
-                UnloadOneModelNode.route(florence_loader)
+                if "sky" in tbg.LLM.model.lower() and qwen is not None:
+                    UnloadOneModelNode.route(qwen)
+                if "janus" in tbg.LLM.model.lower() and janus is not None:
+                    UnloadOneModelNode.route(janus)
+                if tbg.LLM.model.startswith("GGUF\\") and QwenVLGGUF is not None:
+                    print("[QwenVL-GGUF] unloading cached GGUF model after prompting")
+                    QwenVLGGUF.clear()
+                    try:
+                        launch_mode = str(getattr(tbg.PARAMS, "VLM_Server_Launch_Mode", "managed_local") or "managed_local")
+                        if launch_mode == "managed_local":
+                            stopped = get_server_manager().stop(reason="prompt_end", timeout_s=0)
+                            if stopped:
+                                print("[OpenAI-VLM] managed server stopped after prompting")
+                            tbg.PARAMS.VLM_Server_Active = False
+                    except Exception as stop_err:
+                        print(f"[OpenAI-VLM] post-prompt stop skipped: {stop_err}")
+                if tbg.LLM.model.startswith("Qwen") and QwenVL is not None:
+                    UnloadOneModelNode.route(QwenVL)
+                if "florence" in tbg.LLM.model.lower() and florence_loader is not None:
+                    UnloadOneModelNode.route(florence_loader)
 
     @classmethod
     def min_final_imagesize(cls, full_upscaled_image, tile_h, tile_w):
@@ -889,3 +1039,4 @@ class TBG_Upscaler_v1():
         elif len(arr) > n:
             arr = arr[:n]
         return arr
+

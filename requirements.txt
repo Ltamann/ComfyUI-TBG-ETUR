@@ -25,6 +25,13 @@ pillow
 qwen-vl-utils
 bitsandbytes
 optimum
+setuptools
+wheel
+# GGUF VLM backend:
+# llama-cpp runtime/server dependencies are optional and are NOT installed
+# during default custom-node installation.
+# GGUF users must install a compatible llama-cpp-python wheel manually
+# when they explicitly opt in to GGUF usage.
 
 # Correction for Nunchacu
 huggingface_hub>=0.34

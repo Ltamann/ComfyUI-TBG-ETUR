@@ -34,6 +34,12 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_CE():
         "Qwen3-VL-8B-Thinking-FP8",
         "Qwen2.5-VL-3B-Instruct",
         "Qwen2.5-VL-7B-Instruct",
+        "GGUF\\Qwen3-VL-4B-Instruct-F16",
+        "GGUF\\Qwen3-VL-4B-Instruct-Q4_K_M",
+        "GGUF\\Qwen3-VL-4B-Instruct-Q8_0",
+        "GGUF\\Qwen3-VL-8B-Instruct-F16",
+        "GGUF\\Qwen3-VL-8B-Instruct-Q4_K_M",
+        "GGUF\\Qwen3-VL-8B-Instruct-Q8_0",
         "microsoft/Florence-2-base",
         "microsoft/Florence-2-large",
         "MiaoshouAI/Florence-2-large-PromptGen-v2.0",
@@ -152,6 +158,7 @@ class TBG_ETUR_Refiner_CE():
         'FLUX1 Kontext': 1024,
         'Qwen Image': 1328,
         'Qwen Image Edit': 1328,
+        'Z-Image': 1024,
         'Others': 1024,
     }
 
@@ -200,8 +207,8 @@ class TBG_ETUR_Refiner_CE():
 
                 "vae_encode": ("BOOLEAN", {"label": "VAE Encode type", "default": True, "label_on": "tiled slow","label_off": "tbg Color-preserving fast",  "tooltip": ""}),
                 "tile_size_vae": ("INT",{"label": "Tile Size (VAE)", "default": 1024, "min": 256, "max": 4096, "step": 64}),
-                "General_Prompt_Positive": ("STRING", {"tooltip": "General_Prompt_Positive", "multiline": True, "label": "General Prompt for all Tiles", "default": ""}),
-                "General_Prompt_Negative": ("STRING",  {"tooltip": "General_Prompt_Negative", "multiline": True, "label": "General Prompt for all Tiles",
+                "General_Prompt_Positive": ("STRING", {"tooltip": "General_Prompt_Positive", "multiline": True, "label": "General Positive Prompt for all Tiles", "default": ""}),
+                "General_Prompt_Negative": ("STRING",  {"tooltip": "General_Prompt_Negative", "multiline": True, "label": "General Negative Prompt for all Tiles",
                                                         "default": "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理"}),
 
                 "denoise": ("FLOAT", {"label": "Denoise", "default": 0.27, "min": 0.0, "max": 1.0, "step": 0.01}),
@@ -243,3 +250,4 @@ class TBG_ETUR_Refiner_CE():
             "ui": {"value": [f"{kwargs.get('seed', None)}"]},
             "result": (TBG_Refiner_v1.fn(**kwargs))
         }
+

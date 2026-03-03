@@ -1,9 +1,8 @@
 {
   "id": "9e3799e2-16c0-4853-8f0a-a4e45855ed51",
   "revision": 0,
-  "last_node_id": 776,
-  "last_link_id": 738,
-
+  "last_node_id": 782,
+  "last_link_id": 763,
   "nodes": [
     {
       "id": 510,
@@ -48,10 +47,10 @@
       ],
       "size": [
         434.3565808105468,
-        1200.0000000000002
+        2220
       ],
       "flags": {},
-      "order": 16,
+      "order": 18,
       "mode": 0,
       "inputs": [
         {
@@ -65,11 +64,13 @@
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
           "links": [
-            704
+            744
           ]
         }
       ],
       "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
         "Node name for S&R": "TBG ETUR Tile Overrides",
         "Filter by Indexes": "",
         "Prompt": "",
@@ -77,52 +78,53 @@
         "Seed": "",
         "CNet Strength": "unchanged",
         "Reset": false,
-        "tile_edits_json": "{\"prompts\":[\"The image shows a bedroom with wooden paneling on the walls and a bed with pillows, two lamps on either side of the bed, a table with various objects on it, and a window with window blinds in the background.\",\"The image shows a living room with a blue chair sitting in front of a window, with a cushion on the chair, a curtain on the right side, and a ceiling fan at the top. Through the window, we can see trees and the sky, creating a peaceful atmosphere.\",\"The image shows a chair sitting in front of a window with a view of trees and plants outside. The window is framed by wooden doors and curtains, and the ceiling is visible at the top of the image.\",\"The image shows a bedroom with a bed adorned with pillows and a blanket, two lamps on either side of the bed, a carpet on the floor, and wooden walls in the background.\",\"The image shows a bedroom with a large bed with a white bed sheet and pillows, a chair, a carpet on the floor, a wooden cupboard with drawers, curtains, and a window with a view of trees and sky outside.\",\"The image shows a room with a chair and a table in it, a carpet on the floor, a door with a handle, curtains, windows, and trees visible through the glass doors.\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\"]}",
-        "prompt_0": "The image shows a bedroom with wooden paneling on the walls and a bed with pillows, two lamps on either side of the bed, a table with various objects on it, and a window with window blinds in the background.",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "tile_edits_json": "{\"prompts\":[\"The image shows a room with a white ceiling and a window, illuminated by a light fixture. The walls are visible in the background, and there is a building visible through the window.\",\"The image shows a room with a white wall and a light on the ceiling. The light is illuminating the room, casting a warm glow on the walls and ceiling.\",\"The image shows a room with a wall featuring a metal object on the right side and a light on the left side. The metal object appears to be a corrugated metal sheet, giving the room a rustic and homely feel.\",\"The image shows a room with a large window and a door in it. Through the window, we can see a building with pillars and a board with text on it. On the right side of the image, there is a wall.\",\"The image shows a wall with a quote written on it that reads a smile is a curve that everything straight. The quote is written in a bold, black font against a white background, creating a stark contrast. The wall is a light beige color, and the quote stands out against it, making it the focal point of the image.\",\"The image shows a close up of a wall with a metal object on it. On the left side of the wall, there is some text written, and at the bottom of the image there is a door with a handle.\",\"The image shows a living room with a white couch and a table in it. On the table there are glasses and a bottle, and in the background there is a wall and a glass door. The floor is covered with a carpet, giving the room a cozy and inviting atmosphere.\",\"The image shows a row of white chairs sitting next to each other in a room, with a wall in the background. The chairs have a curved backrest and armrests, and the floor is visible at the bottom of the image.\",\"The image shows a white toilet sitting next to a wall in a bathroom. The toilet seat is on the left side of the image and the wall is in the background.\",\"The image shows a close up of a wall in a room with a white background. The wall is painted in a neutral color, and the surface of the wall is smooth and glossy.\",\"The image shows a room with a cream-colored floor and a white wall. On the right side of the image, there is a cupboard, and at the top of the picture, there appears to be a pillar.\",\"The image shows a close up of a wall with a curved edge, and in the center of the image there is a watermark. The wall appears to be made of plywood, with a smooth, glossy finish. The curved edge of the wall is slightly raised, giving it a modern and stylish look.\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}",
+        "prompt_0": "The image shows a room with a white ceiling and a window, illuminated by a light fixture. The walls are visible in the background, and there is a building visible through the window.",
         "denoise_0": "",
         "seed_0": "",
         "cnet_strength_0": "",
-        "prompt_1": "The image shows a living room with a blue chair sitting in front of a window, with a cushion on the chair, a curtain on the right side, and a ceiling fan at the top. Through the window, we can see trees and the sky, creating a peaceful atmosphere.",
+        "prompt_1": "The image shows a room with a white wall and a light on the ceiling. The light is illuminating the room, casting a warm glow on the walls and ceiling.",
         "denoise_1": "",
         "seed_1": "",
         "cnet_strength_1": "",
-        "prompt_2": "The image shows a chair sitting in front of a window with a view of trees and plants outside. The window is framed by wooden doors and curtains, and the ceiling is visible at the top of the image.",
+        "prompt_2": "The image shows a room with a wall featuring a metal object on the right side and a light on the left side. The metal object appears to be a corrugated metal sheet, giving the room a rustic and homely feel.",
         "denoise_2": "",
         "seed_2": "",
         "cnet_strength_2": "",
-        "prompt_3": "The image shows a bedroom with a bed adorned with pillows and a blanket, two lamps on either side of the bed, a carpet on the floor, and wooden walls in the background.",
+        "prompt_3": "The image shows a room with a large window and a door in it. Through the window, we can see a building with pillars and a board with text on it. On the right side of the image, there is a wall.",
         "denoise_3": "",
         "seed_3": "",
         "cnet_strength_3": "",
-        "prompt_4": "The image shows a bedroom with a large bed with a white bed sheet and pillows, a chair, a carpet on the floor, a wooden cupboard with drawers, curtains, and a window with a view of trees and sky outside.",
+        "prompt_4": "The image shows a wall with a quote written on it that reads a smile is a curve that everything straight. The quote is written in a bold, black font against a white background, creating a stark contrast. The wall is a light beige color, and the quote stands out against it, making it the focal point of the image.",
         "denoise_4": "",
         "seed_4": "",
         "cnet_strength_4": "",
-        "prompt_5": "The image shows a room with a chair and a table in it, a carpet on the floor, a door with a handle, curtains, windows, and trees visible through the glass doors.",
+        "prompt_5": "The image shows a close up of a wall with a metal object on it. On the left side of the wall, there is some text written, and at the bottom of the image there is a door with a handle.",
         "denoise_5": "",
         "seed_5": "",
         "cnet_strength_5": "",
-        "prompt_6": "",
+        "prompt_6": "The image shows a living room with a white couch and a table in it. On the table there are glasses and a bottle, and in the background there is a wall and a glass door. The floor is covered with a carpet, giving the room a cozy and inviting atmosphere.",
         "denoise_6": "",
         "seed_6": "",
         "cnet_strength_6": "",
-        "prompt_7": "",
+        "prompt_7": "The image shows a row of white chairs sitting next to each other in a room, with a wall in the background. The chairs have a curved backrest and armrests, and the floor is visible at the bottom of the image.",
         "denoise_7": "",
         "seed_7": "",
         "cnet_strength_7": "",
-        "prompt_8": "",
+        "prompt_8": "The image shows a white toilet sitting next to a wall in a bathroom. The toilet seat is on the left side of the image and the wall is in the background.",
         "denoise_8": "",
         "seed_8": "",
         "cnet_strength_8": "",
-        "prompt_9": "",
+        "prompt_9": "The image shows a close up of a wall in a room with a white background. The wall is painted in a neutral color, and the surface of the wall is smooth and glossy.",
         "denoise_9": "",
         "seed_9": "",
         "cnet_strength_9": "",
-        "prompt_10": "",
+        "prompt_10": "The image shows a room with a cream-colored floor and a white wall. On the right side of the image, there is a cupboard, and at the top of the picture, there appears to be a pillar.",
         "denoise_10": "",
         "seed_10": "",
         "cnet_strength_10": "",
-        "prompt_11": "",
+        "prompt_11": "The image shows a close up of a wall with a curved edge, and in the center of the image there is a watermark. The wall appears to be made of plywood, with a smooth, glossy finish. The curved edge of the wall is slightly raised, giving it a modern and stylish look.",
         "denoise_11": "",
         "seed_11": "",
         "cnet_strength_11": ""
@@ -136,6 +138,12 @@
         "",
         "unchanged",
         false,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
         "",
         "",
         "",
@@ -170,8 +178,8 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            701,
-            709
+            741,
+            750
           ]
         }
       ],
@@ -212,16 +220,16 @@
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            702,
-            710
+            742,
+            751
           ]
         },
         {
           "name": "VAE",
           "type": "VAE",
           "links": [
-            703,
-            711
+            743,
+            752
           ]
         }
       ],
@@ -232,106 +240,6 @@
       },
       "widgets_values": [
         "SDXL\\juggernautXL_ragnarokBy.safetensors"
-      ]
-    },
-    {
-      "id": 717,
-      "type": "LoadImage",
-      "pos": [
-        -360,
-        260
-      ],
-      "size": [
-        420,
-        460
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            673
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.47",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "img_00243_.png",
-        "image"
-      ]
-    },
-    {
-      "id": 747,
-      "type": "TBG ETUR Control Net Pipeline",
-      "pos": [
-        93.73906693424082,
-        498.56947464635283
-      ],
-      "size": [
-        395.66980951538085,
-        266.4016070922853
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "controlnet",
-          "shape": 7,
-          "type": "CONTROL_NET",
-          "link": 681
-        },
-        {
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        },
-        {
-          "name": "custom_controlnet_image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Controlnet_Pipe",
-          "type": "Controlnet_Pipe",
-          "links": [
-            705
-          ]
-        },
-        {
-          "name": "INFO",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TBG ETUR Control Net Pipeline"
-      },
-      "widgets_values": [
-        0.5,
-        0,
-        1,
-        100,
-        150,
-        "None",
-        "NONE"
       ]
     },
     {
@@ -346,7 +254,7 @@
         60
       ],
       "flags": {},
-      "order": 3,
+      "order": 2,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -354,8 +262,8 @@
           "name": "CONTROL_NET",
           "type": "CONTROL_NET",
           "links": [
-            681,
-            708
+            739,
+            748
           ]
         }
       ],
@@ -380,13 +288,13 @@
         917.4005033807985
       ],
       "flags": {},
-      "order": 22,
+      "order": 23,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 707
+          "link": 747
         }
       ],
       "outputs": [],
@@ -415,7 +323,7 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 715
+          "link": 755
         }
       ],
       "outputs": [],
@@ -438,13 +346,13 @@
         464
       ],
       "flags": {},
-      "order": 21,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 706
+          "link": 746
         },
         {
           "name": "Segment_Mask",
@@ -458,7 +366,7 @@
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
           "links": [
-            714
+            753
           ]
         },
         {
@@ -468,7 +376,10 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE"
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
       },
       "widgets_values": [
         1024,
@@ -484,254 +395,6 @@
       ]
     },
     {
-      "id": 756,
-      "type": "TBG ETUR Refiner CE",
-      "pos": [
-        2416.804459747679,
-        -0.19793519468808185
-      ],
-      "size": [
-        493.16999999999985,
-        921.8477868041989
-      ],
-      "flags": {},
-      "order": 24,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 709
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 710
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 711
-        },
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 714
-        },
-        {
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": 716
-        },
-        {
-          "name": "Enrichment_Pipe",
-          "shape": 7,
-          "type": "Enrichment_Pipe",
-          "link": null
-        },
-        {
-          "name": "Redux_Style_Model",
-          "shape": 7,
-          "type": "STYLE_MODEL",
-          "link": null
-        },
-        {
-          "name": "Redux_Clip_Vision",
-          "shape": 7,
-          "type": "CLIP_VISION",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Refined",
-          "type": "IMAGE",
-          "links": [
-            715
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TBG ETUR Refiner CE"
-      },
-      "widgets_values": [
-        "Others",
-        4,
-        8,
-        1,
-        "fixed",
-        3.5,
-        "euler",
-        "sgm_uniform",
-        false,
-        1024,
-        "",
-        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
-        0.37,
-        "none",
-        0,
-        false,
-        false,
-        ""
-      ]
-    },
-    {
-      "id": 754,
-      "type": "TBG ETUR Control Net Pipeline",
-      "pos": [
-        1983.2035536324443,
-        511.86755363136126
-      ],
-      "size": [
-        395.66980951538085,
-        266.4016070922853
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "controlnet",
-          "shape": 7,
-          "type": "CONTROL_NET",
-          "link": 708
-        },
-        {
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        },
-        {
-          "name": "custom_controlnet_image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Controlnet_Pipe",
-          "type": "Controlnet_Pipe",
-          "links": [
-            716
-          ]
-        },
-        {
-          "name": "INFO",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TBG ETUR Control Net Pipeline"
-      },
-      "widgets_values": [
-        0.7,
-        0,
-        1,
-        100,
-        150,
-        "None",
-        "NONE"
-      ]
-    },
-    {
-      "id": 753,
-      "type": "TBG ETUR Refiner CE",
-      "pos": [
-        980.908519651406,
-        -15.506645794735784
-      ],
-      "size": [
-        493.16999999999985,
-        921.8477868041989
-      ],
-      "flags": {},
-      "order": 19,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 701
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 702
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 703
-        },
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 704
-        },
-        {
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": 705
-        },
-        {
-          "name": "Enrichment_Pipe",
-          "shape": 7,
-          "type": "Enrichment_Pipe",
-          "link": null
-        },
-        {
-          "name": "Redux_Style_Model",
-          "shape": 7,
-          "type": "STYLE_MODEL",
-          "link": null
-        },
-        {
-          "name": "Redux_Clip_Vision",
-          "shape": 7,
-          "type": "CLIP_VISION",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Refined",
-          "type": "IMAGE",
-          "links": [
-            706,
-            707
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TBG ETUR Refiner CE"
-      },
-      "widgets_values": [
-        "Others",
-        4,
-        8,
-        2,
-        "fixed",
-        3.5,
-        "euler",
-        "sgm_uniform",
-        false,
-        1024,
-        "",
-        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
-        0.5,
-        "none",
-        0,
-        false,
-        false,
-        ""
-      ]
-    },
-    {
       "id": 744,
       "type": "TBG ETUR Upscaler and Tile Generator CE",
       "pos": [
@@ -743,7 +406,7 @@
         464
       ],
       "flags": {},
-      "order": 10,
+      "order": 15,
       "mode": 0,
       "inputs": [
         {
@@ -773,7 +436,10 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE"
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
       },
       "widgets_values": [
         1024,
@@ -800,7 +466,7 @@
         82
       ],
       "flags": {},
-      "order": 13,
+      "order": 12,
       "mode": 0,
       "inputs": [
         {
@@ -814,7 +480,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            729
+            758
           ]
         }
       ],
@@ -840,7 +506,7 @@
         100
       ],
       "flags": {},
-      "order": 4,
+      "order": 3,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -855,14 +521,14 @@
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            730
+            759
           ]
         },
         {
           "name": "VAE",
           "type": "VAE",
           "links": [
-            731
+            760
           ]
         }
       ],
@@ -873,45 +539,6 @@
       },
       "widgets_values": [
         "SDXL\\juggernautXL_ragnarokBy.safetensors"
-      ]
-    },
-    {
-      "id": 763,
-      "type": "LoadImage",
-      "pos": [
-        -354.00193990648864,
-        1836.1619641126304
-      ],
-      "size": [
-        420,
-        460
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            734
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.47",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "img_00243_.png",
-        "image"
       ]
     },
     {
@@ -926,7 +553,7 @@
         60
       ],
       "flags": {},
-      "order": 6,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -934,7 +561,7 @@
           "name": "CONTROL_NET",
           "type": "CONTROL_NET",
           "links": [
-            719
+            756
           ]
         }
       ],
@@ -945,67 +572,6 @@
       },
       "widgets_values": [
         "xinsir_controlnet-tile-sdxl-1.safetensors"
-      ]
-    },
-    {
-      "id": 764,
-      "type": "TBG ETUR Control Net Pipeline",
-      "pos": [
-        96.40381403947063,
-        2081.3980952531238
-      ],
-      "size": [
-        395.66980951538085,
-        266.4016070922853
-      ],
-      "flags": {},
-      "order": 15,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "controlnet",
-          "shape": 7,
-          "type": "CONTROL_NET",
-          "link": 719
-        },
-        {
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        },
-        {
-          "name": "custom_controlnet_image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Controlnet_Pipe",
-          "type": "Controlnet_Pipe",
-          "links": [
-            733
-          ]
-        },
-        {
-          "name": "INFO",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TBG ETUR Control Net Pipeline"
-      },
-      "widgets_values": [
-        0.5,
-        0,
-        1,
-        100,
-        150,
-        "None",
-        "NONE"
       ]
     },
     {
@@ -1020,7 +586,7 @@
         204.6207969739528
       ],
       "flags": {},
-      "order": 7,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1044,7 +610,7 @@
         913.7489341500695
       ],
       "flags": {},
-      "order": 17,
+      "order": 16,
       "mode": 0,
       "inputs": [
         {
@@ -1059,7 +625,8 @@
         "cnr_id": "comfy-core",
         "ver": "0.7.0",
         "Node name for S&R": "PreviewImage"
-      }
+      },
+      "widgets_values": []
     },
     {
       "id": 776,
@@ -1073,7 +640,7 @@
         464
       ],
       "flags": {},
-      "order": 18,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
@@ -1103,7 +670,10 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE"
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
       },
       "widgets_values": [
         1024,
@@ -1161,7 +731,10 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE"
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
       },
       "widgets_values": [
         1024,
@@ -1188,13 +761,13 @@
         927.1991950654824
       ],
       "flags": {},
-      "order": 25,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 720
+          "link": 763
         }
       ],
       "outputs": [],
@@ -1205,99 +778,6 @@
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": []
-    },
-    {
-      "id": 771,
-      "type": "TBG ETUR Refiner CE",
-      "pos": [
-        2425.6768258937727,
-        1579.4257922861602
-      ],
-      "size": [
-        493.16999999999985,
-        921.8477868041989
-      ],
-      "flags": {},
-      "order": 23,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 729
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 730
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 731
-        },
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 732
-        },
-        {
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": 733
-        },
-        {
-          "name": "Enrichment_Pipe",
-          "shape": 7,
-          "type": "Enrichment_Pipe",
-          "link": null
-        },
-        {
-          "name": "Redux_Style_Model",
-          "shape": 7,
-          "type": "STYLE_MODEL",
-          "link": null
-        },
-        {
-          "name": "Redux_Clip_Vision",
-          "shape": 7,
-          "type": "CLIP_VISION",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Refined",
-          "type": "IMAGE",
-          "links": [
-            720
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TBG ETUR Refiner CE"
-      },
-      "widgets_values": [
-        "Others",
-        4,
-        8,
-        2,
-        "fixed",
-        3.5,
-        "euler",
-        "sgm_uniform",
-        false,
-        1024,
-        "",
-        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
-        0.37,
-        "none",
-        0,
-        false,
-        false,
-        ""
-      ]
     },
     {
       "id": 760,
@@ -1311,7 +791,7 @@
         1200.0000000000002
       ],
       "flags": {},
-      "order": 20,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
@@ -1325,11 +805,13 @@
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
           "links": [
-            732
+            761
           ]
         }
       ],
       "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
         "Node name for S&R": "TBG ETUR Tile Overrides",
         "Filter by Indexes": "",
         "Prompt": "",
@@ -1337,7 +819,8 @@
         "Seed": "",
         "CNet Strength": "unchanged",
         "Reset": false,
-        "tile_edits_json": "{\"prompts\":[\"The image shows a bedroom with wooden paneling on the walls and a bed with pillows, lamps, a telephone, and other objects on the table, and a window with wooden blinds in the background.\",\"The image shows a room with a chair and a ceiling fan in it. There are cushions on the chair, a table with various objects on it, curtains on the right side, and a window with wooden blinds. Through the window, we can see trees and the sky.\",\"The image shows a room with a chair sitting in front of a sliding glass door, a desk, curtains, and a ceiling fan. Through the glass doors, we can see trees and the sky, creating a peaceful atmosphere.\",\"The image shows a bedroom with a bed adorned with pillows and a blanket, two lamps on either side of the bed, a carpet on the floor, and a window in the background.\",\"The image shows a bedroom with a large bed with a white bed sheet and pillows, a carpet on the floor, a chair, a table with various objects on it, a window with a curtain, and a view of trees outside.\",\"The image shows a room with a chair and a table in it, a carpet on the floor, a cupboard, a door with a handle, curtains, and a glass door leading to a view of trees and plants outside.\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\"]}",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "tile_edits_json": "{\"prompts\":[],\"denoises\":[],\"seeds\":[],\"cnet_strength\":[]}",
         "prompt_0": "The image shows a bedroom with wooden paneling on the walls and a bed with pillows, lamps, a telephone, and other objects on the table, and a window with wooden blinds in the background.",
         "denoise_0": "",
         "seed_0": "",
@@ -1395,13 +878,7 @@
         "unchanged",
         "",
         "unchanged",
-        false,
-        "",
-        "",
-        "",
-        "",
-        "",
-        ""
+        false
       ]
     },
     {
@@ -1416,7 +893,7 @@
         204.6207969739528
       ],
       "flags": {},
-      "order": 8,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1427,6 +904,604 @@
       ],
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 777,
+      "type": "TBG ETUR Control Net Pipeline",
+      "pos": [
+        93.73906693424082,
+        498.56947464635283
+      ],
+      "size": [
+        340.359375,
+        262
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 739
+        },
+        {
+          "name": "model_patch",
+          "shape": 7,
+          "type": "MODEL_PATCH",
+          "link": null
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "custom_controlnet_image",
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            745
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
+      },
+      "widgets_values": [
+        0.5,
+        0,
+        0.5,
+        100,
+        150,
+        "None",
+        "ControlNet"
+      ]
+    },
+    {
+      "id": 779,
+      "type": "TBG ETUR Control Net Pipeline",
+      "pos": [
+        1983.2035536324443,
+        511.86755363136126
+      ],
+      "size": [
+        340.359375,
+        262
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 748
+        },
+        {
+          "name": "model_patch",
+          "shape": 7,
+          "type": "MODEL_PATCH",
+          "link": null
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "custom_controlnet_image",
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            754
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
+      },
+      "widgets_values": [
+        0.5,
+        0,
+        0.5,
+        100,
+        150,
+        "None",
+        "ControlNet"
+      ]
+    },
+    {
+      "id": 780,
+      "type": "TBG ETUR Refiner CE",
+      "pos": [
+        2416.804459747679,
+        -0.19793519468808185
+      ],
+      "size": [
+        495.48704274779766,
+        952.4614553290883
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 750
+        },
+        {
+          "label": "Clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 751
+        },
+        {
+          "label": "VAE",
+          "name": "vae",
+          "type": "VAE",
+          "link": 752
+        },
+        {
+          "label": "TBG Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 753
+        },
+        {
+          "label": "TBG ControlNet Pipe",
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 754
+        },
+        {
+          "label": "TBG enrichment Pipe",
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": null
+        },
+        {
+          "label": "Redux_Style_Model",
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": null
+        },
+        {
+          "label": "Redux_Clip_Vision",
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Refined",
+          "type": "IMAGE",
+          "links": [
+            755
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Refiner CE"
+      },
+      "widgets_values": [
+        "FLUX1",
+        1,
+        30,
+        562828281463911,
+        "randomize",
+        3.5,
+        "euler",
+        "simple",
+        true,
+        1024,
+        "",
+        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        0.27,
+        "none",
+        0,
+        false,
+        false,
+        ""
+      ]
+    },
+    {
+      "id": 778,
+      "type": "TBG ETUR Refiner CE",
+      "pos": [
+        980.908519651406,
+        -15.506645794735784
+      ],
+      "size": [
+        486.7178752679242,
+        929.076856076101
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 741
+        },
+        {
+          "label": "Clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 742
+        },
+        {
+          "label": "VAE",
+          "name": "vae",
+          "type": "VAE",
+          "link": 743
+        },
+        {
+          "label": "TBG Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 744
+        },
+        {
+          "label": "TBG ControlNet Pipe",
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 745
+        },
+        {
+          "label": "TBG enrichment Pipe",
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": null
+        },
+        {
+          "label": "Redux_Style_Model",
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": null
+        },
+        {
+          "label": "Redux_Clip_Vision",
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Refined",
+          "type": "IMAGE",
+          "links": [
+            746,
+            747
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Refiner CE"
+      },
+      "widgets_values": [
+        "FLUX1",
+        1,
+        30,
+        1051166507913440,
+        "randomize",
+        3.5,
+        "euler",
+        "simple",
+        true,
+        1024,
+        "",
+        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        0.27,
+        "none",
+        0,
+        false,
+        false,
+        ""
+      ]
+    },
+    {
+      "id": 781,
+      "type": "TBG ETUR Control Net Pipeline",
+      "pos": [
+        96.40381403947063,
+        2081.3980952531238
+      ],
+      "size": [
+        340.359375,
+        262
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 756
+        },
+        {
+          "name": "model_patch",
+          "shape": 7,
+          "type": "MODEL_PATCH",
+          "link": null
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "custom_controlnet_image",
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            762
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
+      },
+      "widgets_values": [
+        0.5,
+        0,
+        0.5,
+        100,
+        150,
+        "None",
+        "ControlNet"
+      ]
+    },
+    {
+      "id": 782,
+      "type": "TBG ETUR Refiner CE",
+      "pos": [
+        2425.6768258937727,
+        1579.4257922861602
+      ],
+      "size": [
+        470.15373234182334,
+        926.1537566380503
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 758
+        },
+        {
+          "label": "Clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 759
+        },
+        {
+          "label": "VAE",
+          "name": "vae",
+          "type": "VAE",
+          "link": 760
+        },
+        {
+          "label": "TBG Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 761
+        },
+        {
+          "label": "TBG ControlNet Pipe",
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 762
+        },
+        {
+          "label": "TBG enrichment Pipe",
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": null
+        },
+        {
+          "label": "Redux_Style_Model",
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": null
+        },
+        {
+          "label": "Redux_Clip_Vision",
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Refined",
+          "type": "IMAGE",
+          "links": [
+            763
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Refiner CE"
+      },
+      "widgets_values": [
+        "FLUX1",
+        1,
+        30,
+        189366981812732,
+        "randomize",
+        3.5,
+        "euler",
+        "simple",
+        true,
+        1024,
+        "",
+        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        0.27,
+        "none",
+        0,
+        false,
+        false,
+        ""
+      ]
+    },
+    {
+      "id": 763,
+      "type": "LoadImage",
+      "pos": [
+        -354.00193990648864,
+        1836.1619641126304
+      ],
+      "size": [
+        420,
+        460
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            734
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.47",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "5ef0a5165852795.640eed1664a4b.jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 717,
+      "type": "LoadImage",
+      "pos": [
+        -360,
+        260
+      ],
+      "size": [
+        420,
+        460
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            673
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.47",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "5ef0a5165852795.640eed1664a4b.jpg",
+        "image"
+      ]
     }
   ],
   "links": [
@@ -1455,188 +1530,12 @@
       "TBG_Pipe"
     ],
     [
-      681,
-      721,
-      0,
-      747,
-      0,
-      "CONTROL_NET"
-    ],
-    [
-      701,
-      719,
-      0,
-      753,
-      0,
-      "MODEL"
-    ],
-    [
-      702,
-      720,
-      1,
-      753,
-      1,
-      "CLIP"
-    ],
-    [
-      703,
-      720,
-      2,
-      753,
-      2,
-      "VAE"
-    ],
-    [
-      704,
-      745,
-      0,
-      753,
-      3,
-      "TBG_Pipe"
-    ],
-    [
-      705,
-      747,
-      0,
-      753,
-      4,
-      "Controlnet_Pipe"
-    ],
-    [
-      706,
-      753,
-      0,
-      748,
-      0,
-      "IMAGE"
-    ],
-    [
-      707,
-      753,
-      0,
-      751,
-      0,
-      "IMAGE"
-    ],
-    [
-      708,
-      721,
-      0,
-      754,
-      0,
-      "CONTROL_NET"
-    ],
-    [
-      709,
-      719,
-      0,
-      756,
-      0,
-      "MODEL"
-    ],
-    [
-      710,
-      720,
-      1,
-      756,
-      1,
-      "CLIP"
-    ],
-    [
-      711,
-      720,
-      2,
-      756,
-      2,
-      "VAE"
-    ],
-    [
-      714,
-      748,
-      0,
-      756,
-      3,
-      "TBG_Pipe"
-    ],
-    [
-      715,
-      756,
-      0,
-      757,
-      0,
-      "IMAGE"
-    ],
-    [
-      716,
-      754,
-      0,
-      756,
-      4,
-      "Controlnet_Pipe"
-    ],
-    [
       718,
       762,
       0,
       761,
       0,
       "MODEL"
-    ],
-    [
-      719,
-      765,
-      0,
-      764,
-      0,
-      "CONTROL_NET"
-    ],
-    [
-      720,
-      771,
-      0,
-      766,
-      0,
-      "IMAGE"
-    ],
-    [
-      729,
-      761,
-      0,
-      771,
-      0,
-      "MODEL"
-    ],
-    [
-      730,
-      762,
-      1,
-      771,
-      1,
-      "CLIP"
-    ],
-    [
-      731,
-      762,
-      2,
-      771,
-      2,
-      "VAE"
-    ],
-    [
-      732,
-      760,
-      0,
-      771,
-      3,
-      "TBG_Pipe"
-    ],
-    [
-      733,
-      764,
-      0,
-      771,
-      4,
-      "Controlnet_Pipe"
     ],
     [
       734,
@@ -1669,6 +1568,182 @@
       760,
       0,
       "TBG_Pipe"
+    ],
+    [
+      739,
+      721,
+      0,
+      777,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      741,
+      719,
+      0,
+      778,
+      0,
+      "MODEL"
+    ],
+    [
+      742,
+      720,
+      1,
+      778,
+      1,
+      "CLIP"
+    ],
+    [
+      743,
+      720,
+      2,
+      778,
+      2,
+      "VAE"
+    ],
+    [
+      744,
+      745,
+      0,
+      778,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      745,
+      777,
+      0,
+      778,
+      4,
+      "Controlnet_Pipe"
+    ],
+    [
+      746,
+      778,
+      0,
+      748,
+      0,
+      "IMAGE"
+    ],
+    [
+      747,
+      778,
+      0,
+      751,
+      0,
+      "IMAGE"
+    ],
+    [
+      748,
+      721,
+      0,
+      779,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      750,
+      719,
+      0,
+      780,
+      0,
+      "MODEL"
+    ],
+    [
+      751,
+      720,
+      1,
+      780,
+      1,
+      "CLIP"
+    ],
+    [
+      752,
+      720,
+      2,
+      780,
+      2,
+      "VAE"
+    ],
+    [
+      753,
+      748,
+      0,
+      780,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      754,
+      779,
+      0,
+      780,
+      4,
+      "Controlnet_Pipe"
+    ],
+    [
+      755,
+      780,
+      0,
+      757,
+      0,
+      "IMAGE"
+    ],
+    [
+      756,
+      765,
+      0,
+      781,
+      0,
+      "CONTROL_NET"
+    ],
+    [
+      758,
+      761,
+      0,
+      782,
+      0,
+      "MODEL"
+    ],
+    [
+      759,
+      762,
+      1,
+      782,
+      1,
+      "CLIP"
+    ],
+    [
+      760,
+      762,
+      2,
+      782,
+      2,
+      "VAE"
+    ],
+    [
+      761,
+      760,
+      0,
+      782,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      762,
+      781,
+      0,
+      782,
+      4,
+      "Controlnet_Pipe"
+    ],
+    [
+      763,
+      782,
+      0,
+      766,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [
@@ -1741,13 +1816,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.1978446689001351,
+      "scale": 0.35049389948139253,
       "offset": [
-        3678.023577615325,
-        1745.6373931176963
+        1174.3337468274515,
+        269.85618395979486
       ]
     },
-    "frontendVersion": "1.35.9",
+    "frontendVersion": "1.39.19",
     "workflowRendererVersion": "LG",
     "ue_links": [],
     "groupNodes": {}

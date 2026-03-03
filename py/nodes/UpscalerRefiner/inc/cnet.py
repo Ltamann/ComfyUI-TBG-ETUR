@@ -12,19 +12,40 @@ from ....vendor.comfyui_controlnet_aux.utils import common_annotator_call
 
 
 import comfy.model_management as model_management
-from ....utils.log import log
 
 
-def _controlnet_label(controlnet_model):
-    if controlnet_model is None:
-        return "None"
-    name = getattr(controlnet_model, "name", None)
-    if name:
-        return str(name)
-    model_file = getattr(controlnet_model, "model_file", None)
-    if model_file:
-        return str(model_file)
-    return type(controlnet_model).__name__
+def normalize_controlnet_mode(control):
+    """
+    Backward/forward-compatible mode resolver used by vram_optimizing.
+    Accepts dict-like and object-like control pipe entries.
+    """
+    if control is None:
+        return "ControlNet"
+
+    mode = None
+    if isinstance(control, dict):
+        mode = control.get("mode")
+        if mode is None:
+            mode = control.get("type")
+        if mode is None:
+            mode = control.get("patch_for_Flux_Kontext")
+    else:
+        mode = getattr(control, "mode", None)
+        if mode is None:
+            mode = getattr(control, "type", None)
+        if mode is None:
+            mode = getattr(control, "patch_for_Flux_Kontext", None)
+
+    if isinstance(mode, str):
+        m = mode.strip().lower()
+        if m in ("model_patch", "model patch", "patch"):
+            return "Model_Patch"
+        if m in ("reference_image", "reference image", "reference"):
+            return "Reference_Image"
+        if m in ("controlnet", "control net", "", "none"):
+            return "ControlNet"
+
+    return "ControlNet"
 
 
 def stitch(
@@ -192,15 +213,7 @@ elif hasattr(ReferenceLatent, "execute"):
 
 def apply_controlnets_from_pipe(self,SELF, cnetpipe, positive, negative, full_image, tile_image, vae, index):
     controlnet_node = nodes.ControlNetApplyAdvanced()
-    tile_no = index + 1
-    total_entries = len(cnetpipe) if cnetpipe is not None else 0
-    log(
-        f"[TBG][ControlNet] Tile {tile_no}: precompute start with {total_entries} pipe entries",
-        None,
-        None,
-        f"Node {self.node_id}",
-    )
-    for entry_idx, control in enumerate(cnetpipe):
+    for control in cnetpipe:
         controlnet_model = control["controlnet"]
         strength = control["strength"]
         start = control["start"]
@@ -224,19 +237,6 @@ def apply_controlnets_from_pipe(self,SELF, cnetpipe, positive, negative, full_im
 
             strength = strength * self.KSAMPLER.cnet_multiply
 
-        source = "custom_controlnet_image" if noise_image is not None else "tile_image"
-        model_label = _controlnet_label(controlnet_model)
-        cnet_shape = tuple(cnet_image.shape) if hasattr(cnet_image, "shape") else "unknown"
-        log(
-            f"[TBG][ControlNet] Tile {tile_no} entry {entry_idx + 1}/{total_entries}: "
-            f"model={model_label}, preprocessor={preprocessor}, source={source}, "
-            f"strength={float(strength):.4f}, start={float(start):.3f}, end={float(end):.3f}, "
-            f"image_shape={cnet_shape}",
-            None,
-            None,
-            f"Node {self.node_id}",
-        )
-
         # Preprocessero
 
         if preprocessor == "DepthAnythingV2":
@@ -247,12 +247,6 @@ def apply_controlnets_from_pipe(self,SELF, cnetpipe, positive, negative, full_im
             cnet_image = common_annotator_call(CannyDetector(), cnet_image, canny_low_threshold=canny_low_threshold, canny_high_threshold=canny_high_threshold, resolution=1024)
         positive, negative = controlnet_node.apply_controlnet(
             positive, negative, controlnet_model, cnet_image, strength, start, end, vae
-        )
-        log(
-            f"[TBG][ControlNet] Tile {tile_no} entry {entry_idx + 1}/{total_entries}: conditioning applied",
-            None,
-            None,
-            f"Node {self.node_id}",
         )
         if preprocessor == "ControlNetInpaintingAliMama":
             from .image import TBG_Image

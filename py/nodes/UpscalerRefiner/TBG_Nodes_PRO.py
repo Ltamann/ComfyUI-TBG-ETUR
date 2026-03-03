@@ -97,6 +97,13 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_PRO():
             "Qwen3-VL-32B-Thinking-FP8",
             "Qwen2.5-VL-3B-Instruct",
             "Qwen2.5-VL-7B-Instruct",
+            "OpenAI-Compatible (Labs Server)",
+            "GGUF\\Qwen3-VL-4B-Instruct-F16",
+            "GGUF\\Qwen3-VL-4B-Instruct-Q4_K_M",
+            "GGUF\\Qwen3-VL-4B-Instruct-Q8_0",
+            "GGUF\\Qwen3-VL-8B-Instruct-F16",
+            "GGUF\\Qwen3-VL-8B-Instruct-Q4_K_M",
+            "GGUF\\Qwen3-VL-8B-Instruct-Q8_0",
             "microsoft/Florence-2-base",
             "microsoft/Florence-2-base-ft",
             "microsoft/Florence-2-large",
@@ -139,6 +146,13 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_PRO():
             "Qwen3-VL-32B-Thinking-FP8",
             "Qwen2.5-VL-3B-Instruct",
             "Qwen2.5-VL-7B-Instruct",
+            "OpenAI-Compatible (Labs Server)",
+            "GGUF\\Qwen3-VL-4B-Instruct-F16",
+            "GGUF\\Qwen3-VL-4B-Instruct-Q4_K_M",
+            "GGUF\\Qwen3-VL-4B-Instruct-Q8_0",
+            "GGUF\\Qwen3-VL-8B-Instruct-F16",
+            "GGUF\\Qwen3-VL-8B-Instruct-Q4_K_M",
+            "GGUF\\Qwen3-VL-8B-Instruct-Q8_0",
             "microsoft/Florence-2-base",
             "microsoft/Florence-2-base-ft",
             "microsoft/Florence-2-large",
@@ -198,7 +212,7 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_PRO():
             "required": {
                 "image": ("IMAGE", {"label": "Image"}),
                 "presets": (self.PRESETS, {"label": "presets", "default": "NONE"}),
-                "Fragmentation":("FLOAT",{"label": "inpaint_max", "default": 1, "min": 0.5, "max": 4, "step": 0.01, "round": 0.01}),
+                "Fragmentation":("FLOAT",{"label": "Fragmentation", "default": 1, "min": 0.5, "max": 4, "step": 0.01, "round": 0.01}),
                 "tile_size_w": ("INT",{"label": "Tile Size height", "default": 1024, "min": 320, "max": 8192, "step": 64}),
                 "tile_size_h": ("INT",{"label": "Tile Size width", "default": 1024, "min": 320, "max": 8192, "step": 64}),
                 "upscale_model": (self.upscale_models, {"label": "Upscale Model","default":"NONE"}),
@@ -212,7 +226,8 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_PRO():
                         "tooltip": (
                             "Check the license for all models. "
                             "Apple’s model is for research use only and the files are not included in this custom node. "
-                            "It must be installed separately by the user."
+                            "It must be installed separately by the user. "
+                            "Use 'OpenAI-Compatible (Labs Server)' to route VLM requests to the server configured in the Labs Upscaler node."
                         )
                     }
                 ),
@@ -232,7 +247,7 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_PRO():
                 "Fusion Margin": ("INT",{"label": "PRO_Tile_Fusion_blur_margin","default": 64,"min": 0, "max": 128, "step": 8}),
                 #PRO_Fusion_Space_Denoise"
                 "Fusion Strength": ("FLOAT",
-                                             {"label": "inpaint_max", "default": 0.95, "min": 0,
+                                             {"label": "Fusion Strength", "default": 0.95, "min": 0,
                                               "max": 1, "step": 0.01, "round": 0.01,
                                               "tooltip": "Controls the fusion mask. If you see light color shifts on tile borders, lower this a little. Progressively reduces the fusion edge effect around tile borders: 0 = Off, 1 = Full."}),
                 "Feather Mask": ("INT",
@@ -304,6 +319,7 @@ class TBG_ETUR_Refiner_PRO():
         'FLUX1 Kontext': 1024,
         'Qwen Image': 1328,
         'Qwen Image Edit': 1328,
+        'Z-Image': 1024,
         'Others': 1024,
     }
 
@@ -380,7 +396,7 @@ class TBG_ETUR_Refiner_PRO():
                 "TBG_Pipe": ("TBG_Pipe", {"label": "TBG Pipe"}),
 
 
-                "seed": ("INT", {"label": "Seed", "default": 4, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"label": "Seed", "default": 4, "min": 0, "max": 0xffffffffffffffff, "control_after_generate": True, "fixed": True}),
                 "Flux_Guidance": ("FLOAT",{"label": "Flux Guidance for Tiles", "default": 3.5, "min": -100.0, "max": 100.0,"step": 0.1, "round": 0.01,  "tooltip": "All Fusion Modes benefit from high Guidance, so if you notice that certain areas aren't blending well, try increasing the Guidance value."}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS, {"label": "Sampler Name"}),
                 "basic_scheduler": (comfy.samplers.KSampler.SCHEDULERS, {"label": "Basic Scheduler"}),
@@ -388,17 +404,17 @@ class TBG_ETUR_Refiner_PRO():
 
                 "vae_encode": ("BOOLEAN", {"label": "VAE Encode type", "default": True, "label_on": "tiled slow","label_off": "tbg Color-preserving fast",  "tooltip": ""}),
                 "tile_size_vae": ("INT",{"label": "Tile Size (VAE)", "default": 1024, "min": 256, "max": 4096, "step": 64}),
-                "General_Prompt_Positive": ("STRING", {"tooltip": "General_Prompt_Positive", "multiline": True, "label": "General Prompt for all Tiles", "default": ""}),
-                "General_Prompt_Negative": ("STRING",  {"tooltip": "General_Prompt_Negative", "multiline": True, "label": "General Prompt for all Tiles",
+                "General_Prompt_Positive": ("STRING", {"tooltip": "General_Prompt_Positive", "multiline": True, "label": "General Positive Prompt for all Tiles", "default": ""}),
+                "General_Prompt_Negative": ("STRING",  {"tooltip": "General_Prompt_Negative", "multiline": True, "label": "General Negative Prompt for all Tiles",
                                                         "default": "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理"}),
 
                 "denoise": ("FLOAT", {"label": "Denoise", "default": 0.27, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "denoise_method": (self.DENOISE_METHODS, {"label": "DENOISE_METHODS", "default": 'normalized advanced',
                                     "tooltip":"Default: splits sigmas by step percentage and interpolates back to full steps | Normalize Advanced: splits by sigma noise values and interpolates back to full steps, best for sampler-independent creative control | Default Short: splits sigmas by step percentage and keeps only low-noise steps for efficient img2img denoising."}),
-                "Per_Pixel_Denoise_Mask_Strength": ("FLOAT", {"display": "slider", "label": "inpaint_max", "default": 1, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
+                "Per_Pixel_Denoise_Mask_Strength": ("FLOAT", {"display": "slider", "label": "Per Pixel Denoise Mask Strength", "default": 1, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
                                                                   "tooltip": "Changes the influence of the Per_Pixel_Denoise_Mask"}),
                 #PRO_Fusion_Complexity_Mask_Strength
-                "Image Stabilizer": ("FLOAT", {"display": "slider", "label": "inpaint_max", "default": 0, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
+                "Image Stabilizer": ("FLOAT", {"display": "slider", "label": "Image Stabilizer", "default": 0, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
                                                                   "tooltip": "0=OFF. Applys adaptive denoising based on local image complexity. Flat regions are stabilized to prevent color shifts, while detailed areas allow stronger creative changes. Useful for light backgrounds and large uniform areas and as alternative to cnets."}),
                 "Smoother - Sharper": ("FLOAT", {"default": 0, "min": -1.0, "max": 1.0, "display": "slider",
                                                "tooltip": "0=OFF. Dual-stage adaptive sharpening. At high sigma (early steps), adds structured noise for detail invention. At low sigma (late steps), applies high-pass edge sharpening. Positive values sharpen and add details. Negative values soften and blur. Zero disables sharpening. Higher absolute values create stronger effects."}),
@@ -575,6 +591,27 @@ class TBG_ETUR_Labs_Upscaler():
                 "Only_Upscale": ("BOOLEAN",
                                         {"label": "Only Upscale", "default": False, "label_on": "ON",
                                          "label_off": "OFF"}),
+                "VLM_Server_Base_URL": (
+                    "STRING",
+                    {
+                        "default": "http://127.0.0.1:8080/v1",
+                        "tooltip": (
+                            "OpenAI-compatible VLM server base URL used when PRO VLM_Model is set to "
+                            "'OpenAI-Compatible (Labs Server)'. ETUR normalizes this to /v1 and calls /v1/chat/completions. "
+                            "API key must be provided via environment variable: TBG_ETUR_OPENAI_API_KEY."
+                        ),
+                    },
+                ),
+                "VLM_Server_Model": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "tooltip": (
+                            "Model name passed to /v1/chat/completions when PRO VLM_Model is "
+                            "'OpenAI-Compatible (Labs Server)'. API key is env-only: TBG_ETUR_OPENAI_API_KEY."
+                        ),
+                    },
+                ),
                 "SEEDVR2_DIT": ("SEEDVR2_DIT",),
                 "SEEDVR2_VAE": ("SEEDVR2_VAE",),
                 "PRO_Tile_Fusion_shift_in_out": ("INT",{"label": "PRO_Tile_Fusion_shift_in_out", "default": 0, "min": -128, "max": 128,"step": 8}),
@@ -588,6 +625,7 @@ class TBG_ETUR_Labs_Upscaler():
     @classmethod
     def fn(self, **kwargs):
         return (kwargs,)
+
 
 
 

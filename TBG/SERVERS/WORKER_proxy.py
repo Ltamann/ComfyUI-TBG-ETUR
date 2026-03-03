@@ -184,6 +184,22 @@ def worker_main(port: int) -> None:
             method_name = payload["method_name"]
             args = payload["args"]
             kwargs = payload["kwargs"]
+
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    print(
+                        f"[TBG_WORKER][Device] job={class_name}.{method_name} tiler={tiler_id} "
+                        f"cuda_count={torch.cuda.device_count()} current_cuda={torch.cuda.current_device()}",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(
+                        f"[TBG_WORKER][Device] job={class_name}.{method_name} tiler={tiler_id} device=cpu",
+                        file=sys.stderr,
+                    )
+            except Exception as device_log_err:
+                print(f"[TBG_WORKER][Device] diagnostics failed: {device_log_err}", file=sys.stderr)
             """
             print(
                 f"🔧 WORKER: Calling {class_name}.{method_name} "

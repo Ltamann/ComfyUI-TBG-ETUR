@@ -557,7 +557,9 @@ class DaViT(nn.Module):
         assert self.num_stages == len(self.num_heads) == len(self.num_groups)
 
         num_stages = len(embed_dims)
-        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths)*2)]
+        # Keep drop-path schedule creation off the active default device context.
+        # Newer transformers may instantiate modules under a meta-device context.
+        dpr = torch.linspace(0, drop_path_rate, sum(depths) * 2, device="cpu").tolist()
 
         depth_offset = 0
         convs = []
@@ -2494,11 +2496,11 @@ class Florence2VisionModelWithProjection(Florence2PreTrainedModel):
             x = x.view(batch_size * T, -1, x.shape[-1])
             num_tokens = x.shape[-2]
             h, w = int(num_tokens ** 0.5), int(num_tokens ** 0.5)
-            assert h * w == num_tokens, 'only support square feature maps for now'
-            x = x.view(batch_size * T, h, w, x.shape[-1])
-            pos_embed = self.image_pos_embed(x)
-            x = x + pos_embed
-            x = x.view(batch_size, T * h*w, x.shape[-1])
+            if h * w == num_tokens:
+                x = x.view(batch_size * T, h, w, x.shape[-1])
+                pos_embed = self.image_pos_embed(x)
+                x = x + pos_embed
+                x = x.view(batch_size, T * h * w, x.shape[-1])
 
         if self.visual_temporal_embed is not None:
             visual_temporal_embed = self.visual_temporal_embed(x.view(batch_size, T, -1, x.shape[-1])[:, :, 0])
@@ -2613,11 +2615,11 @@ class Florence2ForConditionalGeneration(Florence2PreTrainedModel, GenerationMixi
             x = x.view(batch_size * T, -1, x.shape[-1])
             num_tokens = x.shape[-2]
             h, w = int(num_tokens ** 0.5), int(num_tokens ** 0.5)
-            assert h * w == num_tokens, 'only support square feature maps for now'
-            x = x.view(batch_size * T, h, w, x.shape[-1])
-            pos_embed = self.image_pos_embed(x)
-            x = x + pos_embed
-            x = x.view(batch_size, T * h*w, x.shape[-1])
+            if h * w == num_tokens:
+                x = x.view(batch_size * T, h, w, x.shape[-1])
+                pos_embed = self.image_pos_embed(x)
+                x = x + pos_embed
+                x = x.view(batch_size, T * h * w, x.shape[-1])
 
         if self.visual_temporal_embed is not None:
             visual_temporal_embed = self.visual_temporal_embed(x.view(batch_size, T, -1, x.shape[-1])[:, :, 0])
@@ -2664,6 +2666,23 @@ class Florence2ForConditionalGeneration(Florence2PreTrainedModel, GenerationMixi
 
         if len(task_prefix_attention_mask.shape) == 3:
             task_prefix_attention_mask = task_prefix_attention_mask[:, 0]
+
+        # Guard against positional embedding overflow in the text encoder.
+        # Florence language max positions are finite (typically 1024), while
+        # image token count scales with resolution.
+        max_positions = getattr(self.language_model.config, "max_position_embeddings", None)
+        if max_positions is None:
+            text_cfg = getattr(self.config, "text_config", None)
+            max_positions = getattr(text_cfg, "max_position_embeddings", None)
+        if max_positions is not None:
+            max_positions = int(max_positions)
+            prefix_len = int(task_prefix_embeds.size(1))
+            total_len = int(image_token_length + prefix_len)
+            if total_len > max_positions:
+                max_image_tokens = max(1, max_positions - prefix_len)
+                image_features = image_features[:, :max_image_tokens, :]
+                image_attention_mask = image_attention_mask[:, :max_image_tokens]
+                image_token_length = max_image_tokens
 
         # concat [image embeds, task prefix embeds]
         inputs_embeds = torch.cat([image_features, task_prefix_embeds], dim=1)

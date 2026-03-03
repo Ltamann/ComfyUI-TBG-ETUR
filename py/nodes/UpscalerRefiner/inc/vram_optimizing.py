@@ -2,13 +2,12 @@
 TBG VRAM Optimization Module - Unified Conditioning (minimal)
 """
 
-import copy
 import numpy as np
 import torch
 import nodes
 
 from ....utils.log import log
-from .cnet import apply_controlnets_from_pipe
+from .cnet import apply_controlnets_from_pipe, normalize_controlnet_mode
 from .redux import FluxRedux_ForTiles
 from comfy import model_management
 
@@ -23,6 +22,7 @@ class VRAMOptimizer:
 
     def __init__(self, SELF):
         self.SELF = SELF
+        self.INFO = SELF.INFO
         self.KSAMPLER = SELF.KSAMPLER
         self.INPUTS = SELF.INPUTS
         self.OUTPUTS = SELF.OUTPUTS
@@ -66,6 +66,28 @@ class VRAMOptimizer:
         self.last_timestamp = getattr(self.PARAMS, "timestamp", 0)
 
         self.precompute_all_embeddings(SELF)
+
+    def _copy_embedding_entry(self, emb):
+        if not isinstance(emb, dict):
+            return emb
+        return {
+            "conditioning": emb.get("conditioning"),
+            "negative": emb.get("negative"),
+            "fingerprint": emb.get("fingerprint"),
+        }
+
+    def _filtered_controlnet_pipe(self):
+        pipe = getattr(self.KSAMPLER, "Controlnet_Pipe", None) or []
+        filtered = []
+        for p in pipe:
+            mode = normalize_controlnet_mode(p)
+            if mode != "ControlNet":
+                continue
+            cn = (p.get('controlnet') or getattr(p, 'controlnet', None) or getattr(p, 'model', None))
+            if cn is None:
+                continue
+            filtered.append(p)
+        return filtered
 
     def is_ultra_low(self):
         return self.vram_profile == "Ultra Low Memory (Per-Tile Streaming)"
@@ -114,9 +136,17 @@ class VRAMOptimizer:
             return 0
         parts = []
         for p in pipe:
-            m = p.model.__class__.__name__ if hasattr(p, "model") else "none"
-            s = getattr(p, "strength", 1.0)
-            parts.append(f"m{m}_s{s}")
+            mode = normalize_controlnet_mode(p)
+            if mode == "Model_Patch":
+                model_obj = p.get("model_patch")
+            else:
+                model_obj = p.get("controlnet")
+            model_name = model_obj.__class__.__name__ if model_obj is not None else "none"
+            pre = str(p.get("preprocessor", "None"))
+            s = p.get("strength", 1.0)
+            st = p.get("start", 0.0)
+            en = p.get("end", 1.0)
+            parts.append(f"mode={mode}|m={model_name}|p={pre}|s={s}|st={st}|en={en}")
         return hash(tuple(parts))
 
     def _get_redux_hash(self):
@@ -206,13 +236,13 @@ class VRAMOptimizer:
 
 
             if ph in prompt_cache:
-                tile_cache[tile_idx] = copy.deepcopy(prompt_cache[ph])
+                tile_cache[tile_idx] = self._copy_embedding_entry(prompt_cache[ph])
                 cached_used += 1
 
             else:
                 emb = self.encode_single_prompt(combined_prompt)
                 prompt_cache[ph] = emb
-                tile_cache[tile_idx] = copy.deepcopy(emb)
+                tile_cache[tile_idx] = self._copy_embedding_entry(emb)
                 new_cached += 1
 
 
@@ -248,13 +278,13 @@ class VRAMOptimizer:
                 f"Node {self.node_id}",
             )
             if ph in prompt_cache_low:
-                tile_cache[tile_idx] = copy.deepcopy(prompt_cache_low[ph])
+                tile_cache[tile_idx] = self._copy_embedding_entry(prompt_cache_low[ph])
                 cached_used += 1
 
             else:
                 emb = self.encode_single_prompt_low(combined_prompt)
                 prompt_cache_low[ph] = emb
-                tile_cache[tile_idx] = copy.deepcopy(emb)
+                tile_cache[tile_idx] = self._copy_embedding_entry(emb)
                 new_cached += 1
         self.text_embeddings_cache_low = tile_cache
 
@@ -271,47 +301,14 @@ class VRAMOptimizer:
     # ---------------------------------------------------------- ControlNet/CN
 
     def _compute_single_controlnet(self, SELF, tile_idx):
-        pipe = getattr(self.KSAMPLER, "Controlnet_Pipe", None)
+        pipe = self._filtered_controlnet_pipe()
         if not pipe:
             return None, None
 
         tile_image = self.get_tile_image(tile_idx)
-        filtered_pipe = []
-        for p in pipe:
-            preprocessor = p.get('preprocessor')
-            noise_image = p.get("noise_image")
-
-            # Skip if no ControlNet model
-            cn = (p.get('controlnet') or getattr(p, 'controlnet') or
-                  getattr(p, 'model'))
-            if not cn:
-                log(
-                    f"[TBG] Skipping {preprocessor} - missing controlnet model",
-                    None,
-                    None,
-                    f"Node {self.node_id}",
-                )
-                continue
-
-            # Preprocessors need an image source: custom control image or tile image.
-            if preprocessor in ['DepthAnythingV2', 'Canny', 'Canny Edge']:
-                if noise_image is None and tile_image is None:
-                    log(
-                        f"[TBG] Skipping {preprocessor} - missing tile/custom control image",
-                        None,
-                        None,
-                        f"Node {self.node_id}",
-                    )
-                    continue
-
-            filtered_pipe.append(p)
-
-        # If nothing valid remains, skip ControlNet for this tile
-        if not filtered_pipe:
-            return None, None
-        chosen = [str(p.get("preprocessor", "None")) for p in filtered_pipe]
+        chosen = [str(p.get("preprocessor", "None")) for p in pipe]
         log(
-            f"[TBG][ControlNet] Tile {tile_idx + 1}: selected {len(filtered_pipe)} entries for precompute -> {chosen}",
+            f"[TBG][ControlNet] Tile {tile_idx + 1}: selected {len(pipe)} entries for precompute -> {chosen}",
             None,
             None,
             f"Node {self.node_id}",
@@ -323,7 +320,7 @@ class VRAMOptimizer:
         pos, neg = apply_controlnets_from_pipe(
             self,
             SELF,
-            filtered_pipe,
+            pipe,
             self._nuclear_gpu(base["conditioning"]),
             self._nuclear_gpu(base["negative"]),
             self.OUTPUTS.upscaled_image,
@@ -432,11 +429,22 @@ class VRAMOptimizer:
             self._combine_all_layers_for_tile(SELF, tile_idx)
         log("VRAM Optimization Complete (unified conditioning precomputed)", None, None, f"Node {self.node_id}")
 
+    def precompute_fast(self, SELF):
+        self.precompute_full_layers(SELF)
+
+    def precompute_low(self, SELF):
+        self.precompute_full_layers(SELF)
+
+    def precompute_ultra(self):
+        self.precompute_text_only()
+
     def precompute_all_embeddings(self, SELF):
-        if self.is_ultra_low():
-            self.precompute_text_only()
+        if self.vram_profile == "Fast Cache (Max Speed)":
+            self.precompute_fast(SELF)
+        elif self.vram_profile == "Low VRAM Cache (Unload Models)":
+            self.precompute_low(SELF)
         else:
-            self.precompute_full_layers(SELF)
+            self.precompute_ultra()
 
     # ----------------------------------------------------- public sampling API
 
@@ -515,28 +523,13 @@ class VRAMOptimizer:
                         f"Node {self.node_id}",
                     )
 
-            pipe = getattr(self.KSAMPLER, "Controlnet_Pipe", None)
+            pipe = self._filtered_controlnet_pipe()
             if pipe:
                 tile_image = self.get_tile_image(tile_idx)
-                filtered_pipe = []
-                for p in pipe:
-                    cn = (p.get('controlnet') or getattr(p, 'controlnet', None) or getattr(p, 'model', None))
-                    preprocessor = p.get("preprocessor")
-                    if not cn:
-                        log(
-                            f"[TBG] Skipping {preprocessor} - missing controlnet model",
-                            None,
-                            None,
-                            f"Node {self.node_id}",
-                        )
-                        continue
-                    filtered_pipe.append(p)
-                if not filtered_pipe:
-                    return pos, neg
                 pos, neg = apply_controlnets_from_pipe(
                     self,
                     self.SELF,
-                    filtered_pipe,
+                    pipe,
                     pos,
                     neg,
                     self.OUTPUTS.upscaled_image,
@@ -581,3 +574,5 @@ class VRAMOptimizer:
             None,
             f"Node {self.node_id}",
         )
+
+

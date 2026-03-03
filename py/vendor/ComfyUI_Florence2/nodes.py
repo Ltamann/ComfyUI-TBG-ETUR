@@ -11,7 +11,14 @@ from PIL import Image, ImageDraw, ImageColor, ImageFont
 import random
 import numpy as np
 import re
+import importlib.util
+import json
 from pathlib import Path
+from packaging import version as pkg_version
+import glob
+import re
+import gc
+import time
 
 #workaround for unnecessary flash_attn requirement
 from unittest.mock import patch
@@ -19,7 +26,44 @@ from transformers.dynamic_module_utils import get_imports
 
 import transformers
 
-from safetensors.torch import save_file
+from safetensors.torch import load_file, save_file
+
+FLORENCE_LOADER_REV = "2026-03-03-ms-seq2seq-fallback-v2"
+_FLORENCE_TIE_PATCH_ATTEMPTED = set()
+_FLORENCE_FORCE_BIN_CACHE = {}
+_FLORENCE_MODEL_CACHE = {}
+_FLORENCE_UNLOAD_PATCHED = False
+_FLORENCE_LOADER_LAST_MODEL = {}
+_FLORENCE_VERBOSE = os.environ.get("TBG_FLORENCE_VERBOSE", "").strip() == "1"
+_FLORENCE_LOG_ONCE = set()
+
+
+def _flog(msg, always=False):
+    if always or _FLORENCE_VERBOSE:
+        print(msg)
+
+
+def _flog_once(key, msg, always=False):
+    if key in _FLORENCE_LOG_ONCE:
+        return
+    _FLORENCE_LOG_ONCE.add(key)
+    _flog(msg, always=always)
+
+
+def _resolve_florence_repo_id(repo_id):
+    """
+    Keep user-selected repo by default.
+    Optional opt-in remap can be enabled with TBG_FLORENCE_REMAP_TO_COMMUNITY=1.
+    """
+    if os.environ.get("TBG_FLORENCE_REMAP_TO_COMMUNITY", "").strip() != "1":
+        return repo_id
+    mapping = {
+        "microsoft/Florence-2-base": "florence-community/Florence-2-base",
+        "microsoft/Florence-2-base-ft": "florence-community/Florence-2-base-ft",
+        "microsoft/Florence-2-large": "florence-community/Florence-2-large",
+        "microsoft/Florence-2-large-ft": "florence-community/Florence-2-large-ft",
+    }
+    return mapping.get(repo_id, repo_id)
 
 def fixed_get_imports(filename: str | os.PathLike) -> list[str]:
     try:
@@ -28,7 +72,7 @@ def fixed_get_imports(filename: str | os.PathLike) -> list[str]:
         imports = get_imports(filename)
         imports.remove("flash_attn")
     except:
-        print(f"No flash_attn import to remove")
+        _flog_once("no_flash_attn", "No flash_attn import to remove")
         pass
     return imports
 
@@ -65,9 +109,657 @@ os.makedirs(model_directory, exist_ok=True)
 # Ensure ComfyUI knows about the LLM model path
 folder_paths.add_model_folder_path("LLM", model_directory)
 
-from transformers import AutoModelForCausalLM, AutoProcessor, set_seed
+from transformers import AutoConfig, AutoImageProcessor, AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoProcessor, AutoTokenizer, set_seed
+try:
+    from transformers import Florence2ForConditionalGeneration as HFFlorence2ForConditionalGeneration
+except Exception:
+    HFFlorence2ForConditionalGeneration = None
+
+
+def _load_florence_processor(model_path, source_id=None, use_fast=None):
+    """
+    Load Florence processor with a compatibility fallback for newer transformers
+    where tokenizer objects may miss attributes expected by processing_florence2.py.
+    """
+    processor_source = source_id or model_path
+    processor_kwargs = {"trust_remote_code": True}
+    if use_fast is not None:
+        processor_kwargs["use_fast"] = bool(use_fast)
+    try:
+        return AutoProcessor.from_pretrained(processor_source, **processor_kwargs)
+    except AttributeError as exc:
+        msg = str(exc)
+        known_tokenizer_mismatch = (
+            "additional_special_tokens" in msg or "image_token" in msg
+        )
+        if not known_tokenizer_mismatch:
+            raise
+
+        image_kwargs = {"trust_remote_code": True}
+        if use_fast is not None:
+            image_kwargs["use_fast"] = bool(use_fast)
+        image_processor = AutoImageProcessor.from_pretrained(model_path, **image_kwargs)
+        tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=False)
+
+        if not hasattr(tokenizer, "additional_special_tokens"):
+            tokenizer.additional_special_tokens = []
+        if not hasattr(tokenizer, "image_token"):
+            tokenizer.image_token = "<image>"
+
+        processor_py = Path(model_path) / "processing_florence2.py"
+        if not processor_py.exists():
+            raise
+
+        spec = importlib.util.spec_from_file_location("local_processing_florence2", str(processor_py))
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        return module.Florence2Processor(image_processor=image_processor, tokenizer=tokenizer)
+
+
+def _is_transformers_lt_451():
+    """
+    Robust semver check that works for transformers 4.x/5.x and local build suffixes.
+    """
+    try:
+        current = pkg_version.parse(str(transformers.__version__).split("+", 1)[0])
+        return current < pkg_version.parse("4.51.0")
+    except Exception:
+        # Conservative fallback if version parsing fails.
+        return str(transformers.__version__) < "4.51.0"
+
+
+def _is_transformers_lt_500():
+    """
+    Gate new Florence compatibility layer to transformers >= 5 only.
+    transformers 4.x should keep the legacy optimized loading path.
+    """
+    try:
+        current = pkg_version.parse(str(transformers.__version__).split("+", 1)[0])
+        return current < pkg_version.parse("5.0.0")
+    except Exception:
+        return str(transformers.__version__) < "5.0.0"
+
+
+def _get_model_dtype_kwarg(dtype):
+    """
+    transformers 5.x prefers `dtype`; 4.x uses `torch_dtype`.
+    """
+    try:
+        current = pkg_version.parse(str(transformers.__version__).split("+", 1)[0])
+        if current >= pkg_version.parse("5.0.0"):
+            return {"dtype": dtype}
+    except Exception:
+        pass
+    return {"torch_dtype": dtype}
+
+
+def _normalize_hf_attention(attention):
+    """
+    Normalize external attention mode names to HF-supported values.
+    """
+    if attention in {"flash_attention_2", "sdpa", "eager"}:
+        return attention
+    attn = str(attention).strip().lower() if attention is not None else ""
+    if attn in {"sage", "sageattn", "sage_attention", "sage-attention"}:
+        _flog_once("attn_sage_map", "[Florence2] attention='sage' is not a HF attn_implementation; using 'sdpa'.")
+        return "sdpa"
+    if attn:
+        _flog_once(f"attn_bad_{attn}", f"[Florence2] unsupported attention '{attention}', falling back to 'eager'.")
+    return "eager"
+
+
+def _load_florence_legacy_model(model_path, attention, dtype, offload_device, repo_id=None):
+    """
+    Legacy auto-loading path for older transformers.
+    Prefer Seq2Seq (correct Florence architecture) and fallback to CausalLM for
+    older model configs that still map only AutoModelForCausalLM.
+    """
+    attention = _normalize_hf_attention(attention)
+    is_microsoft = _is_microsoft_florence_repo(repo_id)
+    prefer_causal = is_microsoft or _path_prefers_causallm(model_path)
+    force_bin = _should_force_bin_checkpoint(model_path)
+
+    with patch("transformers.dynamic_module_utils.get_imports", fixed_get_imports):
+        # For Microsoft Florence on transformers 4.x, prefer vendored model first so
+        # optimized attention paths (sdpa/flash_attention_2) can still be used.
+        if is_microsoft:
+            try:
+                _flog("[Florence2][legacy] trying vendored Florence2ForConditionalGeneration first.")
+                from .modeling_florence2 import Florence2ForConditionalGeneration
+                loaded = Florence2ForConditionalGeneration.from_pretrained(
+                    model_path,
+                    attn_implementation=attention,
+                    **_get_model_dtype_kwarg(dtype),
+                    use_safetensors=(not force_bin),
+                    output_loading_info=True,
+                )
+                if isinstance(loaded, tuple) and len(loaded) == 2:
+                    model, loading_info = loaded
+                else:
+                    model, loading_info = loaded, {}
+                _retie_florence_language_weights(model)
+                if _has_critical_lm_missing_keys(loading_info):
+                    _flog(
+                        "[Florence2][legacy] vendored load missing critical LM keys; "
+                        "falling back to CausalLM remote code."
+                    )
+                else:
+                    return model.to(offload_device)
+            except Exception as vendored_err:
+                _flog(f"[Florence2][legacy] vendored first-load failed: {vendored_err}")
+
+        if not prefer_causal:
+            try:
+                return AutoModelForSeq2SeqLM.from_pretrained(
+                    model_path,
+                    attn_implementation=attention,
+                    **_get_model_dtype_kwarg(dtype),
+                    trust_remote_code=True,
+                ).to(offload_device)
+            except AttributeError as seq_attr_err:
+                if "_supports_sdpa" in str(seq_attr_err) and attention != "eager":
+                    _flog("Florence legacy Seq2Seq missing _supports_sdpa; retrying with attn_implementation='eager'.")
+                    return AutoModelForSeq2SeqLM.from_pretrained(
+                        model_path,
+                        attn_implementation="eager",
+                        **_get_model_dtype_kwarg(dtype),
+                        trust_remote_code=True,
+                    ).to(offload_device)
+                _flog(f"Florence legacy Seq2Seq autoload failed, falling back to CausalLM: {seq_attr_err}")
+            except Exception as seq_err:
+                _flog(f"Florence legacy Seq2Seq autoload failed, falling back to CausalLM: {seq_err}")
+        else:
+            _flog("[Florence2][legacy] skipping Seq2Seq autoload (config/repo prefers CausalLM).")
+
+        try:
+            return AutoModelForCausalLM.from_pretrained(
+                model_path,
+                attn_implementation=attention,
+                **_get_model_dtype_kwarg(dtype),
+                use_safetensors=(not force_bin),
+                trust_remote_code=True,
+            ).to(offload_device)
+        except AttributeError as causal_attr_err:
+            if "_supports_sdpa" in str(causal_attr_err) and attention != "eager":
+                _flog("Florence legacy CausalLM missing _supports_sdpa; retrying with attn_implementation='eager'.")
+                return AutoModelForCausalLM.from_pretrained(
+                    model_path,
+                    attn_implementation="eager",
+                    **_get_model_dtype_kwarg(dtype),
+                    trust_remote_code=True,
+                ).to(offload_device)
+            raise
+
+
+def _read_config_json(model_path):
+    cfg_path = Path(model_path) / "config.json"
+    if not cfg_path.exists():
+        return {}
+    try:
+        return json.loads(cfg_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _is_microsoft_florence_repo(repo_id):
+    return isinstance(repo_id, str) and repo_id.lower().startswith("microsoft/florence-2")
+
+
+def _path_prefers_causallm(model_path):
+    cfg = _read_config_json(model_path)
+    auto_map = cfg.get("auto_map", {})
+    return "AutoModelForCausalLM" in auto_map and "AutoModelForSeq2SeqLM" not in auto_map
+
+
+def _has_critical_lm_missing_keys(loading_info):
+    if not isinstance(loading_info, dict):
+        return False
+    missing = set(loading_info.get("missing_keys", []))
+    critical = {
+        "language_model.model.encoder.embed_tokens.weight",
+        "language_model.model.decoder.embed_tokens.weight",
+        "language_model.lm_head.weight",
+    }
+    return len(missing.intersection(critical)) > 0
+
+
+def _retie_florence_language_weights(model):
+    """
+    Ensure encoder/decoder/lm_head share the main token embedding weights.
+    Some Florence checkpoints ship shared embeddings only; without tying, missing
+    keys can leave randomly initialized heads and produce garbage/OOB generation.
+    """
+    try:
+        lm = getattr(model, "language_model", None)
+        if lm is None:
+            return False
+        core = getattr(lm, "model", None)
+        if core is None or not hasattr(core, "shared"):
+            return False
+        shared = core.shared
+        if hasattr(core, "encoder") and hasattr(core.encoder, "embed_tokens"):
+            core.encoder.embed_tokens.weight = shared.weight
+        if hasattr(core, "decoder") and hasattr(core.decoder, "embed_tokens"):
+            core.decoder.embed_tokens.weight = shared.weight
+        if hasattr(lm, "lm_head"):
+            lm.lm_head.weight = shared.weight
+        # Run model-level tie as well where available.
+        if hasattr(model, "tie_weights"):
+            model.tie_weights()
+        return True
+    except Exception as e:
+        _flog(f"Florence re-tie skipped ({e})")
+        return False
+
+
+def _ensure_florence_checkpoint_tied_weights(model_path):
+    """
+    Patch local Florence checkpoint files so tied language weights physically exist.
+    This avoids repeated `MISSING` init for encoder/decoder embeds and lm_head on
+    transformer stacks that do not auto-materialize tied tensors from shared weights.
+    """
+    # Run once per model path per process to avoid repeated file-write attempts while
+    # weights are memory-mapped/locked during active runs.
+    if model_path in _FLORENCE_TIE_PATCH_ATTEMPTED:
+        return
+    _FLORENCE_TIE_PATCH_ATTEMPTED.add(model_path)
+
+    required = [
+        "language_model.model.encoder.embed_tokens.weight",
+        "language_model.model.decoder.embed_tokens.weight",
+        "language_model.lm_head.weight",
+    ]
+    shared_key = "language_model.model.shared.weight"
+
+    safepath = Path(model_path) / "model.safetensors"
+    if safepath.exists():
+        try:
+            sd = load_file(str(safepath), device="cpu")
+            if shared_key in sd:
+                missing = [k for k in required if k not in sd]
+                if missing:
+                    shared = sd[shared_key]
+                    for k in missing:
+                        sd[k] = shared.clone()
+                    save_file(sd, str(safepath))
+                    _flog(f"[Florence2] patched {safepath.name}: added tied keys {missing}")
+                    return
+        except Exception as e:
+            _flog(f"[Florence2] safetensors tie patch skipped ({e})")
+
+    binpath = Path(model_path) / "pytorch_model.bin"
+    if binpath.exists():
+        try:
+            sd = torch.load(str(binpath), map_location="cpu")
+            if isinstance(sd, dict) and shared_key in sd:
+                missing = [k for k in required if k not in sd]
+                if missing:
+                    shared = sd[shared_key]
+                    for k in missing:
+                        sd[k] = shared.clone()
+                    torch.save(sd, str(binpath))
+                    _flog(f"[Florence2] patched {binpath.name}: added tied keys {missing}")
+        except Exception as e:
+            _flog(f"[Florence2] bin tie patch skipped ({e})")
+
+
+def _should_force_bin_checkpoint(model_path):
+    """
+    If safetensors exists but lacks critical tied language weights, prefer loading
+    from pytorch_model.bin (which may contain full tensors).
+    """
+    cached = _FLORENCE_FORCE_BIN_CACHE.get(model_path)
+    if cached is not None:
+        return cached
+
+    required = {
+        "language_model.model.encoder.embed_tokens.weight",
+        "language_model.model.decoder.embed_tokens.weight",
+        "language_model.lm_head.weight",
+    }
+    safepath = Path(model_path) / "model.safetensors"
+    binpath = Path(model_path) / "pytorch_model.bin"
+    if not safepath.exists() or not binpath.exists():
+        _FLORENCE_FORCE_BIN_CACHE[model_path] = False
+        return False
+    try:
+        sd = load_file(str(safepath), device="cpu")
+        missing = [k for k in required if k not in sd]
+        if missing:
+            _flog(f"[Florence2] safetensors missing tied keys {missing}; forcing .bin checkpoint load.")
+            _FLORENCE_FORCE_BIN_CACHE[model_path] = True
+            return True
+    except Exception as e:
+        _flog(f"[Florence2] safetensors inspection failed ({e}); forcing .bin checkpoint load.")
+        _FLORENCE_FORCE_BIN_CACHE[model_path] = True
+        return True
+    _FLORENCE_FORCE_BIN_CACHE[model_path] = False
+    return False
+
+
+def _local_florence_config_from_json(model_path):
+    """
+    Build Florence2Config from local config.json but drop auto_map so transformers
+    won't require trust_remote_code for model loading.
+    """
+    from .configuration_florence2 import Florence2Config
+
+    cfg_dict = _read_config_json(model_path)
+    cfg_dict.pop("auto_map", None)
+    return Florence2Config(**cfg_dict)
+
+
+def _patch_cached_hf_florence_configs():
+    """
+    Patch cached HF microsoft Florence config files to avoid transformers 5.x
+    forced_bos_token_id AttributeError in remote code path.
+    """
+    patched = 0
+    home = Path.home()
+    cache_root = home / ".cache" / "huggingface" / "modules" / "transformers_modules"
+    if not cache_root.exists():
+        return 0
+
+    pattern = str(cache_root / "**" / "configuration_florence2.py")
+    for cfg_file in glob.glob(pattern, recursive=True):
+        p = Path(cfg_file)
+        try:
+            text = p.read_text(encoding="utf-8")
+        except Exception:
+            continue
+
+        # Match both quote styles and minor whitespace variations.
+        rx = r"if\s+self\.forced_bos_token_id\s+is\s+None\s+and\s+kwargs\.get\((['\"])force_bos_token_to_be_generated\1,\s*False\):"
+        new = "if getattr(self, \"forced_bos_token_id\", None) is None and kwargs.get(\"force_bos_token_to_be_generated\", False):"
+        patched_text, replacements = re.subn(rx, new, text)
+        if replacements > 0:
+            try:
+                p.write_text(patched_text, encoding="utf-8")
+                patched += 1
+            except Exception:
+                pass
+    return patched
+
+
+def _patch_local_model_florence_config(model_path):
+    """
+    Patch configuration_florence2.py in the local model directory so regenerated
+    dynamic-module cache files also carry the fix.
+    """
+    p = Path(model_path) / "configuration_florence2.py"
+    if not p.exists():
+        return 0
+    try:
+        text = p.read_text(encoding="utf-8")
+    except Exception:
+        return 0
+    rx = r"if\s+self\.forced_bos_token_id\s+is\s+None\s+and\s+kwargs\.get\((['\"])force_bos_token_to_be_generated\1,\s*False\):"
+    new = "if getattr(self, \"forced_bos_token_id\", None) is None and kwargs.get(\"force_bos_token_to_be_generated\", False):"
+    patched_text, replacements = re.subn(rx, new, text)
+    if replacements > 0:
+        try:
+            p.write_text(patched_text, encoding="utf-8")
+            return 1
+        except Exception:
+            return 0
+    return 0
+
+
+def _patch_florence_modeling_meta_issue(modeling_file):
+    """
+    Patch known meta-tensor-unsafe drop-path list build in Florence modeling files.
+    """
+    p = Path(modeling_file)
+    if not p.exists():
+        return 0
+    try:
+        text = p.read_text(encoding="utf-8")
+    except Exception:
+        return 0
+
+    old = "dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths)*2)]"
+    new = "dpr = torch.linspace(0, drop_path_rate, sum(depths)*2, device=\"cpu\").tolist()"
+    if old in text:
+        try:
+            p.write_text(text.replace(old, new), encoding="utf-8")
+            return 1
+        except Exception:
+            return 0
+    return 0
+
+
+def _patch_local_model_florence_modeling(model_path):
+    return _patch_florence_modeling_meta_issue(Path(model_path) / "modeling_florence2.py")
+
+
+def _patch_cached_hf_florence_modeling():
+    """
+    Patch cached HF Florence modeling files for meta-tensor safety on newer torch/transformers.
+    """
+    patched = 0
+    home = Path.home()
+    cache_root = home / ".cache" / "huggingface" / "modules" / "transformers_modules"
+    if not cache_root.exists():
+        return 0
+    pattern = str(cache_root / "**" / "modeling_florence2.py")
+    for mf in glob.glob(pattern, recursive=True):
+        patched += _patch_florence_modeling_meta_issue(mf)
+    return patched
+
+
+def _purge_florence_cache_for_model(target_model):
+    """
+    Remove only cache entries that reference the specific model object.
+    """
+    if target_model is None:
+        return 0
+    removed = 0
+    for cache in (_FLORENCE_MODEL_CACHE, DownloadAndLoadFlorence2Model._CACHE, Florence2ModelLoader._CACHE):
+        to_delete = []
+        for key, value in cache.items():
+            if isinstance(value, dict) and value.get("model") is target_model:
+                to_delete.append(key)
+        for key in to_delete:
+            del cache[key]
+            removed += 1
+    for loader_id, mdl in list(_FLORENCE_LOADER_LAST_MODEL.items()):
+        if mdl is target_model:
+            del _FLORENCE_LOADER_LAST_MODEL[loader_id]
+    return removed
+
+
+def _unload_specific_model(target_model):
+    """
+    Unload a concrete model object via comfy model-management APIs.
+    """
+    if target_model is None:
+        return False
+    loaded_models = mm.loaded_models()
+    removed = False
+    if target_model in loaded_models:
+        loaded_models.remove(target_model)
+        removed = True
+    mm.free_memory(1e30, mm.get_torch_device(), loaded_models)
+    mm.soft_empty_cache(True)
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+    except Exception:
+        pass
+    time.sleep(0.1)
+    _purge_florence_cache_for_model(target_model)
+    return removed
+
+
+def _find_loader_model_instance(loader_obj):
+    """
+    Resolve currently loaded model instance for a Florence loader object.
+    """
+    model = _FLORENCE_LOADER_LAST_MODEL.get(id(loader_obj))
+    if model is not None:
+        return model
+    for cache in (DownloadAndLoadFlorence2Model._CACHE, Florence2ModelLoader._CACHE, _FLORENCE_MODEL_CACHE):
+        for value in cache.values():
+            if isinstance(value, dict) and "model" in value:
+                return value["model"]
+    return None
+
+
+def _install_florence_unload_route_patch():
+    """
+    Patch UnloadOneModelNode.route to handle the existing Tiler class-style call
+    UnloadOneModelNode.route(florence_loader) without editing Tiler.
+    """
+    global _FLORENCE_UNLOAD_PATCHED
+    if _FLORENCE_UNLOAD_PATCHED:
+        return
+    try:
+        from ...vendor.ComfyUI_Unload_Models_main.py.unload_one_model import UnloadOneModelNode
+    except Exception:
+        return
+
+    original_route = UnloadOneModelNode.route
+
+    def patched_route(self, **kwargs):
+        # Compatibility path: route invoked as UnloadOneModelNode.route(florence_loader)
+        if not kwargs and isinstance(self, (DownloadAndLoadFlorence2Model, Florence2ModelLoader)):
+            target_model = _find_loader_model_instance(self)
+            if target_model is not None:
+                _flog("Unload Model:", always=True)
+                _flog(" - Florence compatibility route: unloading loader-resolved model...", always=True)
+                _unload_specific_model(target_model)
+                return ([self],)
+        return original_route(self, **kwargs)
+
+    UnloadOneModelNode.route = patched_route
+    _FLORENCE_UNLOAD_PATCHED = True
+
+
+def _load_microsoft_remote_fallback(model_path, attention, dtype, offload_device, force_bin):
+    attention = _normalize_hf_attention(attention)
+    _flog("Trying microsoft remote-code fallback from local model path.")
+    patched_local = _patch_local_model_florence_config(model_path)
+    if patched_local > 0:
+        _flog("Patched local model configuration_florence2.py for forced_bos compatibility.")
+    patched_local_modeling = _patch_local_model_florence_modeling(model_path)
+    if patched_local_modeling > 0:
+        _flog("Patched local model modeling_florence2.py for meta-tensor compatibility.")
+    patched = _patch_cached_hf_florence_configs()
+    if patched > 0:
+        _flog(f"Patched {patched} cached microsoft Florence config file(s) for forced_bos compatibility.")
+    patched_modeling = _patch_cached_hf_florence_modeling()
+    if patched_modeling > 0:
+        _flog(f"Patched {patched_modeling} cached microsoft Florence modeling file(s) for meta-tensor compatibility.")
+    with patch("transformers.dynamic_module_utils.get_imports", fixed_get_imports):
+        try:
+            model = AutoModelForSeq2SeqLM.from_pretrained(
+                model_path,
+                attn_implementation=attention,
+                **_get_model_dtype_kwarg(dtype),
+                use_safetensors=(not force_bin),
+                trust_remote_code=True,
+                local_files_only=True,
+            )
+        except AttributeError as e:
+            if "_supports_sdpa" not in str(e):
+                raise
+            _flog("Microsoft remote Florence model lacks _supports_sdpa; retrying with attn_implementation='eager'.")
+            model = AutoModelForSeq2SeqLM.from_pretrained(
+                model_path,
+                attn_implementation="eager",
+                **_get_model_dtype_kwarg(dtype),
+                use_safetensors=(not force_bin),
+                trust_remote_code=True,
+                local_files_only=True,
+            )
+    _retie_florence_language_weights(model)
+    return model.to(offload_device), model_path
+
+
+def _load_florence_modern_model(model_path, attention, dtype, offload_device, repo_id=None):
+    """
+    Modern path (transformers >= 4.51):
+    - Microsoft Florence repos: prefer transformers built-in Florence2 class, no remote code.
+    - Others: use vendored Florence2 class.
+    - Safety fallback: if vendored load reports critical LM weights missing, retry with CausalLM (non-microsoft only).
+    """
+    if _is_transformers_lt_500():
+        _flog(
+            f"[Florence2][modern] bypassed for transformers={transformers.__version__}; "
+            "using legacy loader."
+        )
+        return _load_florence_legacy_model(model_path, attention, dtype, offload_device), model_path
+
+    attention = _normalize_hf_attention(attention)
+    is_microsoft = _is_microsoft_florence_repo(repo_id)
+    force_bin = _should_force_bin_checkpoint(model_path)
+    use_causal = is_microsoft or _path_prefers_causallm(model_path)
+    causal_source = repo_id if is_microsoft else model_path
+    _flog(
+        f"[Florence2][modern] rev={FLORENCE_LOADER_REV} transformers={transformers.__version__} "
+        f"module={__file__} is_microsoft={is_microsoft} use_causal={use_causal} source={causal_source}"
+    )
+    if use_causal and is_microsoft:
+        _flog("[Florence2][modern] loader=Microsoft remote-code stable path")
+        return _load_microsoft_remote_fallback(model_path, attention, dtype, offload_device, force_bin)
+
+    if use_causal and (not is_microsoft):
+        try:
+            _flog("[Florence2][modern] loader=AutoModelForSeq2SeqLM (non-microsoft, no remote code)")
+            cfg = AutoConfig.from_pretrained(causal_source, trust_remote_code=False)
+            model = AutoModelForSeq2SeqLM.from_pretrained(
+                causal_source,
+                config=cfg,
+                attn_implementation=attention,
+                **_get_model_dtype_kwarg(dtype),
+                trust_remote_code=False,
+            )
+            _retie_florence_language_weights(model)
+            return model.to(offload_device), causal_source
+        except Exception as causal_err:
+            _flog(
+                f"Florence non-microsoft seq2seq loader failed ({causal_err}); "
+                "falling back to vendored Florence2ForConditionalGeneration."
+            )
+
+    _flog("[Florence2][modern] loader=Vendored Florence2ForConditionalGeneration")
+    from .modeling_florence2 import Florence2ForConditionalGeneration
+    loaded = Florence2ForConditionalGeneration.from_pretrained(
+        model_path,
+        attn_implementation=attention,
+        **_get_model_dtype_kwarg(dtype),
+        use_safetensors=(not force_bin),
+        output_loading_info=True,
+    )
+    if isinstance(loaded, tuple) and len(loaded) == 2:
+        model, loading_info = loaded
+    else:
+        model, loading_info = loaded, {}
+    _retie_florence_language_weights(model)
+
+    if _has_critical_lm_missing_keys(loading_info):
+        _flog("Florence vendored load reported missing LM embed/lm_head weights.")
+        if is_microsoft:
+            return _load_microsoft_remote_fallback(model_path, attention, dtype, offload_device, force_bin)
+        _flog("Retrying with AutoModelForSeq2SeqLM (non-microsoft repo).")
+        cfg = AutoConfig.from_pretrained(causal_source, trust_remote_code=False)
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            causal_source,
+            config=cfg,
+            attn_implementation=attention,
+            **_get_model_dtype_kwarg(dtype),
+            trust_remote_code=False,
+        )
+        _retie_florence_language_weights(model)
+        return model.to(offload_device), causal_source
+
+    return model.to(offload_device), model_path
 
 class DownloadAndLoadFlorence2Model:
+    _CACHE = {}
+
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
@@ -112,28 +804,50 @@ class DownloadAndLoadFlorence2Model:
     FUNCTION = "loadmodel"
     CATEGORY = "Florence2"
 
+    @classmethod
+    def clear_cache(cls):
+        cls._CACHE.clear()
+
     def loadmodel(self, model, precision, attention, lora=None, convert_to_safetensors=False):
+        _install_florence_unload_route_patch()
         device = mm.get_torch_device()
         offload_device = mm.unet_offload_device()
         dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[precision]
+        model_id = _resolve_florence_repo_id(model)
+        if model_id != model:
+            _flog(f"[Florence2] remap repo: {model} -> {model_id}")
 
-        model_name = model.rsplit('/', 1)[-1]
+        model_name = model_id.rsplit('/', 1)[-1]
         model_path = os.path.join(model_directory, model_name)
         
         if not os.path.exists(model_path):
-            print(f"Downloading Florence2 model to: {model_path}")
+            _flog(f"Downloading Florence2 model to: {model_path}", always=True)
             from huggingface_hub import snapshot_download
-            snapshot_download(repo_id=model,
+            snapshot_download(repo_id=model_id,
                             local_dir=model_path,
                             local_dir_use_symlinks=False)
             
-        print(f"Florence2 using {attention} for attention")
+        _flog(f"Florence2 using {attention} for attention", always=True)
+        attn_key = _normalize_hf_attention(attention)
+        model_cache_key = (
+            "global",
+            model_id,
+            model_name,
+            str(transformers.__version__),
+            precision,
+            str(attn_key),
+            str(lora) if lora is not None else "",
+        )
+        global_cached = _FLORENCE_MODEL_CACHE.get(model_cache_key)
+        if global_cached is not None:
+            _FLORENCE_LOADER_LAST_MODEL[id(self)] = global_cached.get("model")
+            return (global_cached,)
         
         if convert_to_safetensors:
             model_weight_path = os.path.join(model_path, 'pytorch_model.bin')
             if os.path.exists(model_weight_path):
                 safetensors_weight_path = os.path.join(model_path, 'model.safetensors')
-                print(f"Converting {model_weight_path} to {safetensors_weight_path}")
+                _flog(f"Converting {model_weight_path} to {safetensors_weight_path}")
                 if not os.path.exists(safetensors_weight_path):
                     sd = torch.load(model_weight_path, map_location=offload_device)
                     sd_new = {}
@@ -141,18 +855,40 @@ class DownloadAndLoadFlorence2Model:
                         sd_new[k] = v.clone()
                     save_file(sd_new, safetensors_weight_path)
                     if os.path.exists(safetensors_weight_path):
-                        print(f"Conversion successful. Deleting original file: {model_weight_path}")
+                        _flog(f"Conversion successful. Deleting original file: {model_weight_path}")
                         os.remove(model_weight_path)
-                        print(f"Original {model_weight_path} file deleted.")
+                        _flog(f"Original {model_weight_path} file deleted.")
+        _ensure_florence_checkpoint_tied_weights(model_path)
         
-        if transformers.__version__ < '4.51.0':
-            with patch("transformers.dynamic_module_utils.get_imports", fixed_get_imports): #workaround for unnecessary flash_attn requirement
-                 model = AutoModelForCausalLM.from_pretrained(model_path, attn_implementation=attention, torch_dtype=dtype,trust_remote_code=True).to(offload_device)
+        cache_key = (
+            "download_loader",
+            model_id,
+            model_path,
+            str(transformers.__version__),
+            precision,
+            str(attn_key),
+            str(lora) if lora is not None else "",
+        )
+        cached = self._CACHE.get(cache_key)
+        if cached is not None:
+            _FLORENCE_MODEL_CACHE[model_cache_key] = cached
+            _FLORENCE_LOADER_LAST_MODEL[id(self)] = cached.get("model")
+            return (cached,)
+
+        if _is_transformers_lt_500():
+            _flog(f"[Florence2] path=legacy transformers={transformers.__version__}")
+            model = _load_florence_legacy_model(model_path, attn_key, dtype, offload_device, repo_id=model_id)
+            processor_source = model_path
         else:
-            from .modeling_florence2 import Florence2ForConditionalGeneration
-            model = Florence2ForConditionalGeneration.from_pretrained(model_path, attn_implementation=attention, torch_dtype=dtype).to(offload_device)
+            _flog(f"[Florence2] path=modern transformers={transformers.__version__}")
+            model, processor_source = _load_florence_modern_model(
+                model_path, attn_key, dtype, offload_device, repo_id=model_id
+            )
     
-        processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
+        processor_use_fast = None
+        if (not _is_transformers_lt_500()) and _is_microsoft_florence_repo(model_id):
+            processor_use_fast = False
+        processor = _load_florence_processor(model_path, source_id=processor_source, use_fast=processor_use_fast)
 
         if lora is not None:
             from peft import PeftModel
@@ -164,6 +900,9 @@ class DownloadAndLoadFlorence2Model:
             'processor': processor,
             'dtype': dtype
             }
+        self._CACHE[cache_key] = florence2_model
+        _FLORENCE_MODEL_CACHE[model_cache_key] = florence2_model
+        _FLORENCE_LOADER_LAST_MODEL[id(self)] = florence2_model.get("model")
 
         return (florence2_model,)
     
@@ -190,7 +929,7 @@ class DownloadAndLoadFlorence2Lora:
         model_path = os.path.join(model_directory, model_name)
         
         if not os.path.exists(model_path):
-            print(f"Downloading Florence2 lora model to: {model_path}")
+            _flog(f"Downloading Florence2 lora model to: {model_path}", always=True)
             from huggingface_hub import snapshot_download
             snapshot_download(repo_id=model,
                             local_dir=model_path,
@@ -198,6 +937,7 @@ class DownloadAndLoadFlorence2Lora:
         return (model_path,)
     
 class Florence2ModelLoader:
+    _CACHE = {}
 
     @classmethod
     def INPUT_TYPES(s):
@@ -224,18 +964,37 @@ class Florence2ModelLoader:
     FUNCTION = "loadmodel"
     CATEGORY = "Florence2"
 
+    @classmethod
+    def clear_cache(cls):
+        cls._CACHE.clear()
+
     def loadmodel(self, model, precision, attention, lora=None, convert_to_safetensors=False):
+        _install_florence_unload_route_patch()
         device = mm.get_torch_device()
         offload_device = mm.unet_offload_device()
         dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[precision]
         model_path = Florence2ModelLoader.model_paths.get(model)
-        print(f"Loading model from {model_path}")
-        print(f"Florence2 using {attention} for attention")
+        _flog(f"Loading model from {model_path}")
+        _flog(f"Florence2 using {attention} for attention", always=True)
+        attn_key = _normalize_hf_attention(attention)
+        model_cache_key = (
+            "global_path_loader",
+            model,
+            model_path,
+            str(transformers.__version__),
+            precision,
+            str(attn_key),
+            str(lora) if lora is not None else "",
+        )
+        global_cached = _FLORENCE_MODEL_CACHE.get(model_cache_key)
+        if global_cached is not None:
+            _FLORENCE_LOADER_LAST_MODEL[id(self)] = global_cached.get("model")
+            return (global_cached,)
         if convert_to_safetensors:
             model_weight_path = os.path.join(model_path, 'pytorch_model.bin')
             if os.path.exists(model_weight_path):
                 safetensors_weight_path = os.path.join(model_path, 'model.safetensors')
-                print(f"Converting {model_weight_path} to {safetensors_weight_path}")
+                _flog(f"Converting {model_weight_path} to {safetensors_weight_path}")
                 if not os.path.exists(safetensors_weight_path):
                     sd = torch.load(model_weight_path, map_location=offload_device)
                     sd_new = {}
@@ -243,17 +1002,39 @@ class Florence2ModelLoader:
                         sd_new[k] = v.clone()
                     save_file(sd_new, safetensors_weight_path)
                     if os.path.exists(safetensors_weight_path):
-                        print(f"Conversion successful. Deleting original file: {model_weight_path}")
+                        _flog(f"Conversion successful. Deleting original file: {model_weight_path}")
                         os.remove(model_weight_path)
-                        print(f"Original {model_weight_path} file deleted.")
+                        _flog(f"Original {model_weight_path} file deleted.")
+        _ensure_florence_checkpoint_tied_weights(model_path)
 
-        if transformers.__version__ < '4.51.0':
-            with patch("transformers.dynamic_module_utils.get_imports", fixed_get_imports): #workaround for unnecessary flash_attn requirement
-                 model = AutoModelForCausalLM.from_pretrained(model_path, attn_implementation=attention, torch_dtype=dtype,trust_remote_code=True).to(offload_device)
+        cache_key = (
+            "path_loader",
+            model,
+            model_path,
+            str(transformers.__version__),
+            precision,
+            str(attn_key),
+            str(lora) if lora is not None else "",
+        )
+        cached = self._CACHE.get(cache_key)
+        if cached is not None:
+            _FLORENCE_MODEL_CACHE[model_cache_key] = cached
+            _FLORENCE_LOADER_LAST_MODEL[id(self)] = cached.get("model")
+            return (cached,)
+
+        if _is_transformers_lt_500():
+            _flog(f"[Florence2] path=legacy transformers={transformers.__version__}")
+            model = _load_florence_legacy_model(model_path, attn_key, dtype, offload_device, repo_id=None)
+            processor_source = model_path
         else:
-            from .modeling_florence2 import Florence2ForConditionalGeneration
-            model = Florence2ForConditionalGeneration.from_pretrained(model_path, attn_implementation=attention, torch_dtype=dtype).to(offload_device)
-        processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
+            _flog(f"[Florence2] path=modern transformers={transformers.__version__}")
+            model, processor_source = _load_florence_modern_model(
+                model_path, attn_key, dtype, offload_device, repo_id=None
+            )
+        processor_use_fast = None
+        if (not _is_transformers_lt_500()) and _path_prefers_causallm(model_path):
+            processor_use_fast = False
+        processor = _load_florence_processor(model_path, source_id=processor_source, use_fast=processor_use_fast)
 
         if lora is not None:
             from peft import PeftModel
@@ -265,6 +1046,9 @@ class Florence2ModelLoader:
             'processor': processor,
             'dtype': dtype
             }
+        self._CACHE[cache_key] = florence2_model
+        _FLORENCE_MODEL_CACHE[model_cache_key] = florence2_model
+        _FLORENCE_LOADER_LAST_MODEL[id(self)] = florence2_model.get("model")
    
         return (florence2_model,)
     
@@ -323,6 +1107,60 @@ class Florence2Run:
         # Ensure the hashed seed is within the acceptable range for set_seed
         return hashed_seed % (2**32)
 
+    def _prepare_inputs(self, processor, prompt, image_pil, device, dtype, model):
+        """
+        Keep token indices as int64 and cast only image tensors to model dtype.
+        Casting input_ids to fp16 can corrupt ids and trigger embedding index OOB.
+        """
+        inputs = processor(text=prompt, images=image_pil, return_tensors="pt", do_rescale=False)
+        inputs["input_ids"] = inputs["input_ids"].to(device=device, dtype=torch.long)
+        if "attention_mask" in inputs:
+            inputs["attention_mask"] = inputs["attention_mask"].to(device=device, dtype=torch.long)
+        inputs["pixel_values"] = inputs["pixel_values"].to(device=device, dtype=dtype)
+
+        vocab = int(model.get_input_embeddings().weight.shape[0])
+        input_min = int(inputs["input_ids"].min().item())
+        input_max = int(inputs["input_ids"].max().item())
+        if input_min < 0 or input_max >= vocab:
+            raise ValueError(
+                f"Florence input_ids out of range: min={input_min}, max={input_max}, vocab={vocab}."
+            )
+        return inputs
+
+    def _sanitize_generation_ids(self, model):
+        """
+        Ensure generation-critical ids are in-range for current embedding vocab.
+        Deterministic policy:
+        - invalid forced_bos_token_id -> disable (None)
+        - invalid bos/eos/decoder_start -> set to a safe id
+        """
+        vocab = int(model.get_input_embeddings().weight.shape[0])
+
+        def in_range(v):
+            return isinstance(v, int) and 0 <= v < vocab
+
+        # Build safe fallback id from valid config ids, else 0.
+        candidate_ids = []
+        for obj in (getattr(model, "generation_config", None), getattr(model, "config", None)):
+            if obj is None:
+                continue
+            for name in ("bos_token_id", "eos_token_id", "decoder_start_token_id"):
+                v = getattr(obj, name, None)
+                if in_range(v):
+                    candidate_ids.append(v)
+        safe_id = candidate_ids[0] if candidate_ids else 0
+
+        for obj in (getattr(model, "generation_config", None), getattr(model, "config", None)):
+            if obj is None:
+                continue
+            for name in ("bos_token_id", "eos_token_id", "decoder_start_token_id"):
+                v = getattr(obj, name, None)
+                if v is not None and not in_range(v):
+                    setattr(obj, name, int(safe_id))
+            forced_bos = getattr(obj, "forced_bos_token_id", None)
+            if forced_bos is not None and not in_range(forced_bos):
+                setattr(obj, "forced_bos_token_id", None)
+
     def encode(self, image, text_input, florence2_model, task, fill_mask, keep_model_loaded=False, 
             num_beams=3, max_new_tokens=1024, do_sample=True, output_mask_select="", seed=None):
         device = mm.get_torch_device()
@@ -377,7 +1215,8 @@ class Florence2Run:
         pbar = ProgressBar(len(image))
         for img in image:
             image_pil = F.to_pil_image(img)
-            inputs = processor(text=prompt, images=image_pil, return_tensors="pt", do_rescale=False).to(dtype).to(device)
+            inputs = self._prepare_inputs(processor, prompt, image_pil, device, dtype, model)
+            self._sanitize_generation_ids(model)
 
             generated_ids = model.generate(
                 input_ids=inputs["input_ids"],
@@ -389,7 +1228,7 @@ class Florence2Run:
             )
 
             results = processor.batch_decode(generated_ids, skip_special_tokens=False)[0]
-            print(results)
+            _flog(results)
             # cleanup the special tokens from the final list
             if task == 'ocr_with_region':
                 clean_results = str(results)       
@@ -421,7 +1260,7 @@ class Florence2Run:
                 # Determine mask indexes outside the loop
                 if output_mask_select != "":
                     mask_indexes = [n for n in output_mask_select.split(",")]
-                    print(mask_indexes)
+                    _flog(str(mask_indexes))
                 else:
                     mask_indexes = [str(i) for i in range(len(bboxes))]
 
@@ -443,10 +1282,10 @@ class Florence2Run:
                             x0, x1 = x1, x0
                             
                         if str(index) in mask_indexes:
-                            print("match index:", str(index), "in mask_indexes:", mask_indexes)
+                            _flog(f"match index: {str(index)} in mask_indexes: {mask_indexes}")
                             mask_draw.rectangle([x0, y0, x1, y1], fill=(255, 255, 255))
                         if label in mask_indexes:
-                            print("match label")
+                            _flog("match label")
                             mask_draw.rectangle([x0, y0, x1, y1], fill=(255, 255, 255))
 
                     # Create a Rectangle patch
@@ -549,7 +1388,7 @@ class Florence2Run:
                         # Clamp polygon points to image boundaries
                         _polygon = np.clip(_polygon, [0, 0], [W - 1, H - 1])
                         if len(_polygon) < 3:  
-                            print('Invalid polygon:', _polygon)
+                            _flog(f"Invalid polygon: {_polygon}")
                             continue  
                         
                         _polygon = _polygon.reshape(-1).tolist()
@@ -648,7 +1487,7 @@ class Florence2Run:
                     raise ValueError("Text input (prompt) is required for 'docvqa'")
                 prompt = "<DocVQA> " + text_input
 
-                inputs = processor(text=prompt, images=image_pil, return_tensors="pt", do_rescale=False).to(dtype).to(device)
+                inputs = self._prepare_inputs(processor, prompt, image_pil, device, dtype, model)
                 generated_ids = model.generate(
                     input_ids=inputs["input_ids"],
                     pixel_values=inputs["pixel_values"],
@@ -680,7 +1519,7 @@ class Florence2Run:
             out_mask_tensor = torch.zeros((1,64,64), dtype=torch.float32, device="cpu")
 
         if not keep_model_loaded:
-            print("Offloading model...")
+            _flog("Offloading model...")
             model.to(offload_device)
             mm.soft_empty_cache()
         

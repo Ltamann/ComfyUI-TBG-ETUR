@@ -1,15 +1,28 @@
-# ComfyUI-TBG-ETUR: 100MP Enhanced Tiled Upscaler & Refiner Pro. Enhance Your Images with TBG's Upscaler
-**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.1.0**  tested on Comfyui 0.8.2 to 0.11.0
+# ComfyUI-TBG-ETUR: 100MP Enhanced Tiled Upscaler & Refiner FLUX Pro. Enhance Your Images with TBG's Upscaler
+**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.1.0**  tested on Comfyui 0.8.2
 
   ![TBG_ETUR_v1-1-0.png.png](img/TBG_ETUR_v1-1-0.png)
 **Keep in mind this is still an beta version, and we're updating and fine-tuning it daily. So do the same**
-[TBG ETUR WEB](https://www.tbgetur.com)
-Tutorials of old version and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@TBG_AI)
 
-and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)
+Tutorials of old version and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@TBG_AI)). 
 
-Docker and Runpod Templates [Docker Image ComfyUI 0.10.0 + TBG ETUR 1.1.9 + Nunchaku + Sage and Flash Attention](https://www.patreon.com/posts/149096745)
+and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)). 
 
+
+
+
+## V3 Migration Status
+
+This branch is migrated to ComfyUI v3 node loading and pins the API import to:
+
+```python
+from comfy_api.v0_0_2 import ComfyExtension, io, ui
+```
+
+Notes:
+- v3-only registration is provided via `comfy_entrypoint()`.
+- Legacy `NODE_CLASS_MAPPINGS` loading is no longer the primary path.
+- Input ids were normalized to snake_case in the v3 schema layer while keeping display labels.
 ## Table of Contents
 - [Overview](#overview)
 - [Early_Access](#Early_Access)
@@ -446,6 +459,7 @@ We're actively working to improve this behavior and aim to address it in the nex
 
 ## Checkpoints
 - [SDXL-Juggernaut-XI-byRunDiffusion.safetensors](https://huggingface.co/RunDiffusion/Juggernaut-XI-v11/resolve/main/Juggernaut-XI-byRunDiffusion.safetensors) (checkpoints)
+
 
 
 

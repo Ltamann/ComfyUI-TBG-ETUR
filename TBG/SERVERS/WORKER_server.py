@@ -392,6 +392,17 @@ class TBG_Controller:
                     daemon=True,
                 )
                 t.start()
+                try:
+                    import torch
+                    if torch.cuda.is_available():
+                        print(
+                            f"[TBG_MAIN][Device] Worker spawned pid={cls._worker_process.pid} "
+                            f"cuda_count={torch.cuda.device_count()} current_cuda={torch.cuda.current_device()}",
+                        )
+                    else:
+                        print(f"[TBG_MAIN][Device] Worker spawned pid={cls._worker_process.pid} device=cpu")
+                except Exception as device_log_err:
+                    print(f"[TBG_MAIN][Device] Worker device diagnostics failed: {device_log_err}")
 
                 # Wait until worker is listening (max 30 sec)
                 start = time.time()

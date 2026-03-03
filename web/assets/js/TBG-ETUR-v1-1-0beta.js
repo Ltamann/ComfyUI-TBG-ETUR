@@ -1,5 +1,56 @@
 import { app } from "../../../scripts/app.js";
 import { ComfyWidgets } from "../../../scripts/widgets.js";
+import { api } from "../../../scripts/api.js";
+
+
+const TBG_GGUF_INSTALL_POPUP_SEEN = new Set();
+
+function tbgNormalizeExecutionError(event) {
+  const detail = event?.detail || {};
+  const message = String(detail.exception_message || "");
+  const trace = Array.isArray(detail.traceback) ? detail.traceback.join("\n") : String(detail.traceback || "");
+  const text = `${message}\n${trace}`.toLowerCase();
+  return {
+    key: `${detail.prompt_id || ""}|${detail.node_id || ""}|${message}` ,
+    text,
+  };
+}
+
+function tbgLooksLikeMissingLlamaCpp(text) {
+  return text.includes("llama-cpp-python") && (text.includes("missing dependency") || text.includes("modulenotfounderror") || text.includes("no module named"));
+}
+
+async function tbgInstallOptionalGgufRuntime() {
+  const advisory = "Optional GGUF install also sets up local llama-cpp server runtime dependencies. If you already have a llama-cpp/OpenAI-compatible server running, it is recommended to use that existing server through TBG ETUR Labs (OpenAI-Compatible setup) instead of running a second local server.";
+  const confirmed = window.confirm(
+    "GGUF runtime is missing (llama-cpp-python).\n\nInstall optional GGUF runtime now?\n\n" +
+      advisory +
+      "\n\nPress OK to install, Cancel to skip."
+  );
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch(api.apiURL("/TBG/install_gguf_runtime"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    const data = await response.json();
+    const manual = data?.manual_command ? `\nManual command:\n${data.manual_command}` : "";
+    const restart = data?.requires_restart ? "\n\nRestart ComfyUI to use GGUF." : "";
+    window.alert(`${data?.message || "GGUF install request finished."}${restart}${manual}`);
+  } catch (err) {
+    window.alert(`GGUF runtime install request failed: ${err}`);
+  }
+}
+
+api.addEventListener("execution_error", async (event) => {
+  const normalized = tbgNormalizeExecutionError(event);
+  if (!tbgLooksLikeMissingLlamaCpp(normalized.text)) return;
+  if (TBG_GGUF_INSTALL_POPUP_SEEN.has(normalized.key)) return;
+  TBG_GGUF_INSTALL_POPUP_SEEN.add(normalized.key);
+  await tbgInstallOptionalGgufRuntime();
+});
 
 app.registerExtension({
   name: "TBG ETUR Upscaler and Tile Generator",

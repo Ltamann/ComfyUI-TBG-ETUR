@@ -4,6 +4,9 @@
 from types import SimpleNamespace
 
 import torch
+from comfy import model_management
+
+device = model_management.get_torch_device()
 
 from ...TBG.SERVERS.COMFYUI_server import register_main_class
 
@@ -189,19 +192,19 @@ class tbg:
             upscale_method_inpainting=None,
             upscale_model_inpainting=None,
             SEEDVR2_DIT ={'model': 'seedvr2_ema_7b_fp8_e4m3fn_mixed_block35_fp16.safetensors',
-                                                   'device': 'cuda:0', 'offload_device': 'none', 'cache_model': True,
+                                                   'device': device, 'offload_device': 'none', 'cache_model': True,
                                                    'blocks_to_swap': 0,
                                                    'swap_io_components': False,
                                                    'attention_mode': attention_mode,
                                                    'torch_compile_args': 'reduce-overhead', 'node_id': '8'},
-            SEEDVR2_VAE={'model': 'ema_vae_fp16.safetensors', 'device': 'cuda:0', 'offload_device': 'none',
+            SEEDVR2_VAE={'model': 'ema_vae_fp16.safetensors', 'device': device, 'offload_device': 'none',
                                     'cache_model': True, 'encode_tiled': True, 'encode_tile_size': 512,
                                     'encode_tile_overlap': 64,
                                     'decode_tiled': True,
                                     'decode_tile_size': 512, 'decode_tile_overlap': 64, 'tile_debug': 'false',
                                     'torch_compile_args': 'reduce-overhead', 'node_id': '9'},
             SEEDVR2_DIT_low = {'model': 'seedvr2_ema_7b_fp8_e4m3fn_mixed_block35_fp16.safetensors',
-                                          'device': 'cuda:0', 'offload_device': 'cpu', 'cache_model': True,
+                                          'device': device, 'offload_device': 'cpu', 'cache_model': True,
                                           'blocks_to_swap': 36, 'swap_io_components': False,
                                           'attention_mode': attention_mode, 'torch_compile_args': 'reduce-overhead',
                                           'node_id': '8'},

@@ -226,6 +226,7 @@ class Florence2LanguageConfig(PretrainedConfig):
         eos_token_id=2,
         is_encoder_decoder=True,
         decoder_start_token_id=2,
+        forced_bos_token_id=None,
         forced_eos_token_id=2,
         **kwargs,
     ):
@@ -257,12 +258,13 @@ class Florence2LanguageConfig(PretrainedConfig):
             eos_token_id=eos_token_id,
             is_encoder_decoder=is_encoder_decoder,
             decoder_start_token_id=decoder_start_token_id,
+            forced_bos_token_id=forced_bos_token_id,
             forced_eos_token_id=forced_eos_token_id,
             **kwargs,
         )
 
         # ensure backward compatibility for BART CNN models
-        if self.forced_bos_token_id is None and kwargs.get("force_bos_token_to_be_generated", False):
+        if getattr(self, "forced_bos_token_id", None) is None and kwargs.get("force_bos_token_to_be_generated", False):
             self.forced_bos_token_id = self.bos_token_id
             warnings.warn(
                 f"Please make sure the config includes `forced_bos_token_id={self.bos_token_id}` in future versions. "
@@ -337,4 +339,3 @@ class Florence2Config(PretrainedConfig):
 
 
         super().__init__(**kwargs)
-

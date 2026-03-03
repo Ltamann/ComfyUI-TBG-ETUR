@@ -53,36 +53,34 @@ class TBG_ControlNetPipeline:
         'ControlNetInpaintingAliMama': "ControlNetInpaintingAliMama",
     }
 
-    KONTEXT_OPTIONS = {
-        'NONE': "NONE",
-        'Stitched': "Stitched",
-        'Chained': "Chained",
+    CONTROLNET_MODE_OPTIONS = {
+        'ControlNet': "ControlNet",
+        'Reference_Image': "Reference_Image",
+        'Model_Patch': "Model_Patch",
     }
 
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-
-                "strength": ("FLOAT", {"default": 0.50, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),  # Strength of ControlNet
-                "start": ("FLOAT", {"default": 0.00, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),  # Start influence
-                "end": ("FLOAT", {"default": 0.50, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),  # End influence
-                "canny_low_threshold": ("INT", {"default": 100, "min": 0, "max": 255}),  # Low threshold
-                "canny_high_threshold": ("INT", {"default": 150, "min": 0, "max": 255}),  # High threshold
-                "preprocessor": (list(cls.PREPROCESSOR_OPTIONS.keys()),),  # Now required
-                "patch_for_Flux_Kontext": (list(cls.KONTEXT_OPTIONS.keys()), {"label": "patch_for_Flux_Kontext", "default": 'NONE', }),  # Now required
-
+                "strength": ("FLOAT", {"default": 0.50, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),
+                "start": ("FLOAT", {"default": 0.00, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),
+                "end": ("FLOAT", {"default": 0.50, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),
+                "canny_low_threshold": ("INT", {"default": 100, "min": 0, "max": 255}),
+                "canny_high_threshold": ("INT", {"default": 150, "min": 0, "max": 255}),
+                "preprocessor": (list(cls.PREPROCESSOR_OPTIONS.keys()),),
             },
             "optional": {
-                "controlnet": ("CONTROL_NET",),  # ControlNet model
-                "Controlnet_Pipe": ("Controlnet_Pipe",),  # Incoming pipeline (empty or existing list)
+                "controlnet_mode": (list(cls.CONTROLNET_MODE_OPTIONS.keys()), {"label": "controlnet_mode", "default": 'ControlNet'}),
+                "controlnet": ("CONTROL_NET",),
+                "model_patch": ("MODEL_PATCH",),
+                "Controlnet_Pipe": ("Controlnet_Pipe",),
                 "custom_controlnet_image": ("IMAGE", {"label": "custom_controlnet_image"}),
             }
         }
 
-
-    RETURN_TYPES = ("Controlnet_Pipe", "STRING")  # Added STRING for debugging
-    RETURN_NAMES = ("Controlnet_Pipe", "INFO")  # Added STRING for debugging
+    RETURN_TYPES = ("Controlnet_Pipe", "STRING")
+    RETURN_NAMES = ("Controlnet_Pipe", "INFO")
     FUNCTION = "update_pipe"
     CATEGORY = "TBG/ETUR Tiled Upscaler and Refiner"
 
@@ -91,38 +89,36 @@ class TBG_ControlNetPipeline:
 
     def update_pipe(
             self,
-            controlnet=None,  # <- make it optional
+            controlnet=None,
             strength=0.5,
             start=0.0,
             end=0.5,
             canny_low_threshold=100,
             canny_high_threshold=150,
             preprocessor='None',
-            patch_for_Flux_Kontext='NONE',
+            controlnet_mode='NONE',
             custom_controlnet_image=None,
+            model_patch=None,
             Controlnet_Pipe=None
-    ):        # Ensure pipe is a list
+    ):
         if Controlnet_Pipe is None or not isinstance(Controlnet_Pipe, list):
             Controlnet_Pipe = []
 
-        # Append new ControlNet settings
         Controlnet_Pipe.append({
             "controlnet": controlnet,
-            "preprocessor": preprocessor,  # Now always required
+            "model_patch": model_patch,
+            "controlnet_mode": controlnet_mode,
+            "preprocessor": preprocessor,
             "strength": strength,
             "start": start,
             "end": end,
             "canny_low_threshold": canny_low_threshold,
             "canny_high_threshold": canny_high_threshold,
             "noise_image": custom_controlnet_image,
-            "patch_for_Flux_Kontext" : patch_for_Flux_Kontext,
         })
 
-        # Convert pipe to string for debugging
         pipe_str = str(Controlnet_Pipe)
-
         return Controlnet_Pipe, pipe_str
-
 class TBG_enrichment_pipe:
 
 
@@ -168,11 +164,11 @@ class TBG_enrichment_pipe:
                                                "round": 0.1}),
                 "upscale_segments_by": ("FLOAT", {"label": "upscale_by", "default": 1.0, "min": 0.5, "max": 4, "step": 0.1,
                                                   "round": 0.1}),
-                "PRO_Fusion_Complexity_min_Denoise": ("FLOAT", {"label": "inpaint_max", "default": 0.2, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
+                "PRO_Fusion_Complexity_min_Denoise": ("FLOAT", {"label": "Complexity Min Denoise", "default": 0.2, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
                                                                 "tooltip": "(crops Complexity denoise min) Sets the min denoise level mainly on low-complexity areas. If the minimum value is greater than the maximum, the map is inverted."}),
-                "PRO_Fusion_Complexity_max_Denoise": ("FLOAT", {"label": "inpaint_max", "default": 1, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
+                "PRO_Fusion_Complexity_max_Denoise": ("FLOAT", {"label": "Complexity Max Denoise", "default": 1, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
                                                                 "tooltip": "(crops Complexity denoise min) Sets the mx denoise level mainly on high complexity areas. If the minimum value is greater than the maximum, the map is inverted."}),
-                "PRO_Fusion_Complexity_Mask_Blur": ("FLOAT", {"label": "inpaint_max", "default": 0, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
+                "PRO_Fusion_Complexity_Mask_Blur": ("FLOAT", {"label": "Complexity Mask Blur", "default": 0, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
                                                               "tooltip": "apply blur and adjust the sensitivity of the Complexity Mask"}),
 
             },
@@ -310,7 +306,7 @@ class TBG_TilePrompter_v1():
                                                                                                        (None, None))
         input_prompts = PROMPTER.tiler_prompts
 
-        input_tiles = copy.deepcopy(OUTPUTS.orig_grid_images_all)
+        input_tiles = list(OUTPUTS.orig_grid_images_all or [])
 
 
 
@@ -342,7 +338,7 @@ class TBG_TilePrompter_v1():
         self._update_cache_if_needed(tbg.INFO.id, final_prompts, json_obj, base_prompts)
 
         # Save tiles and build results
-        results = self._save_all_tiles(input_tiles)
+        results = self._save_all_tiles(input_tiles, kwargs=kwargs)
 
         # Cache prompts for test
         Tile_Prompter_Cache.set(tbg.CACHE.prompt, tuple(base_prompts))
@@ -472,8 +468,19 @@ class TBG_TilePrompter_v1():
         except Exception as e:
             print("TilePrompter only-prompts merge failed:", e)
 
-    def _save_all_tiles(self, input_tiles):
+    def _tile_preview_enabled(self, kwargs):
+        explicit = kwargs.get("Enable_Tile_Preview", None)
+        if explicit is not None:
+            return bool(explicit)
+        env_enabled = str(os.getenv("TBG_TILEPROMPTER_PREVIEW", "0")).strip().lower() in {"1", "true", "yes", "on"}
+        is_dev = str(getattr(getattr(tbg, "API", None), "status", "")).lower() == "dev"
+        return env_enabled or is_dev
+
+    def _save_all_tiles(self, input_tiles, kwargs=None):
         """Save all tiles and return results list."""
+        kwargs = kwargs or {}
+        if not self._tile_preview_enabled(kwargs):
+            return []
         results = []
         filename_prefix = f"TBG_temp_tilePrompter_id_{tbg.INFO.id}"
 
@@ -575,9 +582,37 @@ class TBG_TilePrompter_v1():
         return x is not None and x != ""
 
 
+
+def _route_exists(method: str, path: str) -> bool:
+    try:
+        for route in PromptServer.instance.routes:
+            route_method = getattr(route, "method", "")
+            resource = getattr(route, "resource", None)
+            canonical = getattr(resource, "canonical", None)
+            if route_method == method and canonical == path:
+                return True
+    except Exception:
+        return False
+    return False
+
+
+def _safe_get(path: str):
+    def _decorator(fn):
+        if _route_exists("GET", path):
+            return fn
+        return PromptServer.instance.routes.get(path)(fn)
+    return _decorator
+
+
+def _safe_post(path: str):
+    def _decorator(fn):
+        if _route_exists("POST", path):
+            return fn
+        return PromptServer.instance.routes.post(path)(fn)
+    return _decorator
 # --- Routes (keep these once in the file; do not duplicate) ---
 
-@PromptServer.instance.routes.get("/TBG/get_tile_edits_json")
+@_safe_get("/TBG/get_tile_edits_json")
 async def get_tile_edits_json(request):
     node_id = request.query.get("node")
     if not node_id:
@@ -588,7 +623,7 @@ async def get_tile_edits_json(request):
     except Exception as e:
         return web.json_response({"tile_edits_json": None, "error": str(e)})
 
-@PromptServer.instance.routes.post("/TBG/set_tile_edits_json")
+@_safe_post("/TBG/set_tile_edits_json")
 async def set_tile_edits_json(request):
     try:
         payload = await request.json()
@@ -604,35 +639,35 @@ async def set_tile_edits_json(request):
     except Exception as e:
         return web.json_response({"ok": False, "error": str(e)})
 
-@PromptServer.instance.routes.get("/TBG/get_input_seeds")
+@_safe_get("/TBG/get_input_seeds")
 async def get_input_seeds(request):
     nodeId = request.query.get("node", None)
     cache_name = f'input_seeds_{nodeId}'
     seeds = Tile_Prompter_Cache.get(cache_name, [])
     return web.json_response({"seeds_in": seeds})
 
-@PromptServer.instance.routes.get("/TBG/get_input_cnet_strength")
+@_safe_get("/TBG/get_input_cnet_strength")
 async def get_input_cnet_strength(request):
     nodeId = request.query.get("node", None)
     cache_name = f'input_cnet_strength_{nodeId}'
     cnet = Tile_Prompter_Cache.get(cache_name, [])
     return web.json_response({"cnet_strength_in": cnet})
 
-@PromptServer.instance.routes.get("/TBG/get_input_prompts")
+@_safe_get("/TBG/get_input_prompts")
 async def get_input_prompts(request):
     nodeId = request.query.get("node", None)
     cache_name = f'input_prompts_{nodeId}'
     input_prompts = Tile_Prompter_Cache.get(cache_name, [])
     return web.json_response({"prompts_in": input_prompts})
 
-@PromptServer.instance.routes.get("/TBG/get_input_denoises")
+@_safe_get("/TBG/get_input_denoises")
 async def get_input_denoises(request):
     nodeId = request.query.get("node", None)
     cache_name = f'input_denoises_{nodeId}'
     input_denoises = Tile_Prompter_Cache.get(cache_name, [])
     return web.json_response({"denoises_in": input_denoises})
 
-@PromptServer.instance.routes.get("/TBG/set_prompt")
+@_safe_get("/TBG/set_prompt")
 async def set_prompt(request):
     prompt = request.query.get("prompt", None)
     index = int(request.query.get("index", -1))
@@ -647,7 +682,7 @@ async def set_prompt(request):
         Tile_Prompter_Cache.set(cache_name_edited, tuple(lst))
     return web.json_response(f"Tile {index} prompt has been updated :{prompt}")
 
-@PromptServer.instance.routes.get("/TBG/set_denoise")
+@_safe_get("/TBG/set_denoise")
 async def set_denoise(request):
     denoise = request.query.get("denoise", None)
     index = int(request.query.get("index", -1))
@@ -662,7 +697,7 @@ async def set_denoise(request):
         Tile_Prompter_Cache.set(cache_name_edited, tuple(lst))
     return web.json_response(f"Tile {index} denoise has been updated: {denoise}")
 
-@PromptServer.instance.routes.get("/TBG/set_seed")
+@_safe_get("/TBG/set_seed")
 async def set_seed(request):
     seed = request.query.get("seed", None)
     index = int(request.query.get("index", -1))
@@ -677,7 +712,7 @@ async def set_seed(request):
         Tile_Prompter_Cache.set(cache_name_edited, tuple(lst))
     return web.json_response(f"Tile {index} seed has been updated: {seed}")
 
-@PromptServer.instance.routes.get("/TBG/set_cnet_strength")
+@_safe_get("/TBG/set_cnet_strength")
 async def set_cnet_strength(request):
     cnet_strength = request.query.get("cnet_strength", None)
     index = int(request.query.get("index", -1))
@@ -692,7 +727,7 @@ async def set_cnet_strength(request):
         Tile_Prompter_Cache.set(cache_name_edited, tuple(lst))
     return web.json_response(f"Tile {index} cnet_strength has been updated: {cnet_strength}")
 
-@PromptServer.instance.routes.get("/TBG/tile_prompt")
+@_safe_get("/TBG/tile_prompt")
 async def tile_prompt(request):
     if "filename" not in request.rel_url.query:
         return web.Response(status=404)
@@ -712,4 +747,10 @@ async def tile_prompt(request):
     if not os.path.isfile(image_path):
         return web.Response(status=404)
     return web.json_response(f"here is the prompt \n{image_path}")
+
+
+
+
+
+
 

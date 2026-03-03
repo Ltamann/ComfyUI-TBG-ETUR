@@ -7,7 +7,6 @@ import numpy as np
 from PIL import Image
 from typing import Tuple, List
 from ....TBG.SERVERS.WORKER_server import WORKER
-from nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
 from comfy_extras.nodes_mask import ImageToMask
 
 if hasattr(ImageToMask, "execute"):
@@ -759,27 +758,15 @@ class MaskGrayValueScaler:
         return (result_mask,)
 
 
-NODE_CLASS_MAPPINGS["MaskGrayValueScaler"] = MaskGrayValueScaler
-NODE_CLASS_MAPPINGS["FluxKontextResolution"] = FluxKontextResolution
-NODE_CLASS_MAPPINGS["QwenEditResolution"] = QwenEditResolution
-NODE_CLASS_MAPPINGS["IncrementBatch"] = IncrementBatch
-NODE_CLASS_MAPPINGS["ImageComplexityMap"] = ImageComplexityMap
-NODE_CLASS_MAPPINGS["MaskMultiplyZeroWins"] = MaskMultiplyZeroWins
-NODE_CLASS_MAPPINGS["MaskMultiplyAdvanced"] = MaskMultiplyAdvanced
-NODE_CLASS_MAPPINGS["MaskUpdateInpaintFromConditioning"] = MaskUpdateInpaintFromConditioning
-NODE_CLASS_MAPPINGS["MaskConditionalPaint"] = MaskConditionalPaint
-NODE_CLASS_MAPPINGS["MaskToDenoiseInterpolator"] = MaskToDenoiseInterpolator
-
-
-NODE_DISPLAY_NAME_MAPPINGS["FluxKontextResolution"] = "Flux Kontext Resolution"
-NODE_DISPLAY_NAME_MAPPINGS["QwenEditResolution"] = "Qwen Edit Resolution"
-NODE_DISPLAY_NAME_MAPPINGS["IncrementBatch"] = "IncrementBatch"
-NODE_DISPLAY_NAME_MAPPINGS["ImageComplexityMap"] = "Image Complexity Map"
-NODE_DISPLAY_NAME_MAPPINGS["MaskMultiplyZeroWins"] = "Mask Multiply Zero Wins"
-NODE_DISPLAY_NAME_MAPPINGS["MaskMultiplyAdvanced"] = "MaskMultiplyAdvanced"
-NODE_DISPLAY_NAME_MAPPINGS["MaskUpdateInpaintFromConditioning"] = "Mask Hard Blend"
-NODE_DISPLAY_NAME_MAPPINGS["MaskConditionalPaint"] = "MaskConditionalPaint"
-NODE_DISPLAY_NAME_MAPPINGS["MaskToDenoiseInterpolator"] = "Complexity Mask to Denoise"
-NODE_DISPLAY_NAME_MAPPINGS["MaskGrayValueScaler"] = "Complexity Mask to Denoise Min-Max"
-NODE_DISPLAY_NAME_MAPPINGS["TBG_api_status_check"] = "TBG API-status"
-
+__all__ = [
+    "FluxKontextResolution",
+    "QwenEditResolution",
+    "IncrementBatch",
+    "ImageComplexityMap",
+    "MaskMultiplyZeroWins",
+    "MaskMultiplyAdvanced",
+    "MaskUpdateInpaintFromConditioning",
+    "MaskConditionalPaint",
+    "MaskToDenoiseInterpolator",
+    "MaskGrayValueScaler",
+]
