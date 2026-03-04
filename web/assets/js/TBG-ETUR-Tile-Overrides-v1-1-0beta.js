@@ -27,9 +27,9 @@
  *
  ******************************************************************************************/
 
-import { app } from "../../scripts/app.js";
-import { ComfyWidgets } from "../../scripts/widgets.js";   // eslint-disable-line no-unused-vars
-import { api } from "../../scripts/api.js";
+import { app } from "../../../scripts/app.js";
+import { ComfyWidgets } from "../../../scripts/widgets.js";   // eslint-disable-line no-unused-vars
+import { api } from "../../../scripts/api.js";
 
 /*──────────────────────────────────────────────────────────────────────────*/
 /* Backend connection status (unchanged; informational)                     */
@@ -1064,9 +1064,16 @@ const myExtension = {
     name: "ComfyUI.TBG.TilePrompter",
 
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
+        const nodeName = String(nodeData?.name ?? "");
+        const nodeDisplayName = String(nodeData?.display_name ?? "");
+        const nodeComfyClass = String(nodeType?.comfyClass ?? "");
+        const isTileOverridesNode =
+            nodeName === "TBG ETUR Tile Overrides" ||
+            nodeDisplayName === "TBG ETUR Tile Overrides" ||
+            nodeComfyClass === "TBG ETUR Tile Overrides" ||
+            nodeComfyClass === "TBG_TilePrompter_v1";
 
-
-        if (nodeData.name === "TBG ETUR Tile Overrides") {
+        if (isTileOverridesNode) {
             const onExecuted = nodeType.prototype.onExecuted;
             nodeType.prototype.onExecuted = function(message) {
 
