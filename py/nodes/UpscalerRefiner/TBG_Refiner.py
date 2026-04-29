@@ -501,7 +501,7 @@ class TBG_Refiner_v1():
                     tbg.PROMPTER.output_cnet_js = obj.get("cnet_strength") or []
                     tbg.PROMPTER.output_prompts = obj.get("prompts") or []
                 else:
-                    print(f"Skipped json inputs from Tile Overrides Node because {len(tbg.OUTPUTS.grid_images_all)} Tiles have not the same count than {len(obj.get("prompts"))} Prompts, using PIPE ")
+                    print(f"Skipped json inputs from Tile Overrides Node because {len(tbg.OUTPUTS.grid_images_all)} Tiles have not the same count than {len(obj.get('prompts'))} Prompts, using PIPE ")
             except Exception:
                 print(f"Skipped json inputs from Tile Overrides Node")
 
