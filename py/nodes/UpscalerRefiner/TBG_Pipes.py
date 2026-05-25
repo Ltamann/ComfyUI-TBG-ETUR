@@ -104,10 +104,13 @@ class TBG_ControlNetPipeline:
         if Controlnet_Pipe is None or not isinstance(Controlnet_Pipe, list):
             Controlnet_Pipe = []
 
+        # Keep the legacy key populated so older refiner paths keep working.
+        legacy_kontext_mode = "Chained" if controlnet_mode == "Reference_Image" else "NONE"
         Controlnet_Pipe.append({
             "controlnet": controlnet,
             "model_patch": model_patch,
             "controlnet_mode": controlnet_mode,
+            "mode": controlnet_mode,
             "preprocessor": preprocessor,
             "strength": strength,
             "start": start,
@@ -115,6 +118,7 @@ class TBG_ControlNetPipeline:
             "canny_low_threshold": canny_low_threshold,
             "canny_high_threshold": canny_high_threshold,
             "noise_image": custom_controlnet_image,
+            "patch_for_Flux_Kontext": legacy_kontext_mode,
         })
 
         pipe_str = str(Controlnet_Pipe)

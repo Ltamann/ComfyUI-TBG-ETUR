@@ -1,7 +1,10 @@
 import comfy.utils
+import copy
 import math
 import nodes
 import numpy as np
+import torch
+import torch.nn.functional as F
 
 
 from ..inc.sigmas import process_image_to_tiles
@@ -24,13 +27,17 @@ def normalize_controlnet_mode(control):
 
     mode = None
     if isinstance(control, dict):
-        mode = control.get("mode")
+        mode = control.get("controlnet_mode")
+        if mode is None:
+            mode = control.get("mode")
         if mode is None:
             mode = control.get("type")
         if mode is None:
             mode = control.get("patch_for_Flux_Kontext")
     else:
-        mode = getattr(control, "mode", None)
+        mode = getattr(control, "controlnet_mode", None)
+        if mode is None:
+            mode = getattr(control, "mode", None)
         if mode is None:
             mode = getattr(control, "type", None)
         if mode is None:
@@ -46,6 +53,27 @@ def normalize_controlnet_mode(control):
             return "ControlNet"
 
     return "ControlNet"
+
+
+def _control_value(control, key, default=None):
+    if isinstance(control, dict):
+        return control.get(key, default)
+    return getattr(control, key, default)
+
+
+def _resolve_kontext_patch_mode(control):
+    """
+    Resolve the legacy Flux Kontext patch mode without crashing on V3 pipe data.
+    Newer V3 workflows store `controlnet_mode` instead of
+    `patch_for_Flux_Kontext`. The Kontext path only understands the old
+    Stitched/Chained modes, so `Reference_Image` falls back to `Chained`.
+    """
+    legacy_mode = _control_value(control, "patch_for_Flux_Kontext")
+    if isinstance(legacy_mode, str) and legacy_mode:
+        return legacy_mode
+    if normalize_controlnet_mode(control) == "Reference_Image":
+        return "Chained"
+    return "NONE"
 
 
 def stitch(
@@ -210,6 +238,13 @@ elif hasattr(ReferenceLatent, "execute"):
     ReferenceLatent_execute = ReferenceLatent.execute
 
 
+def append_reference_latent(conditioning, latent):
+    try:
+        return ReferenceLatent_execute(conditioning, latent)[0]
+    except TypeError:
+        return ReferenceLatent_execute(0, conditioning, latent)[0]
+
+
 
 def apply_controlnets_from_pipe(self,SELF, cnetpipe, positive, negative, full_image, tile_image, vae, index):
     controlnet_node = nodes.ControlNetApplyAdvanced()
@@ -286,133 +321,104 @@ def get_canny_mask_inverted(image,canny_low_threshold=100,canny_high_threshold=1
     out = 1.0 - mask
     return out
 
-def get_Kontext_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
-    kontext_img_combined = tile_image
-    cnet_image = tile_image
-    originaladded = False
+def _get_reference_source_image(self, control, tile_image):
+    reference_image = tile_image
+    source_image = _control_value(control, "noise_image")
+    if source_image is None:
+        source_image = _control_value(control, "custom_controlnet_image")
+    if source_image is not None:
+        grid_images = process_image_to_tiles(self, source_image)
+        reference_image = grid_images[self.TEMP.latent_index]
+        if isinstance(reference_image, tuple):
+            reference_image = np.array(reference_image)
+    return reference_image
+
+
+def _build_reference_image_for_control(self, control, tile_image):
+    patch_for_flux_kontext = _resolve_kontext_patch_mode(control)
+    if patch_for_flux_kontext == "NONE":
+        return None, None
+
+    reference_image = _get_reference_source_image(self, control, tile_image)
+    preprocessor = _control_value(control, "preprocessor", "None")
+    canny_high_threshold = _control_value(control, "canny_high_threshold", 150)
+    canny_low_threshold = _control_value(control, "canny_low_threshold", 100)
+    strength = _control_value(control, "strength", 1.0) * self.KSAMPLER.cnet_multiply
+
+    if preprocessor == "DepthAnythingV2":
+        model = DepthAnythingV2Detector.from_pretrained(filename="depth_anything_v2_vitl.pth").to(model_management.get_torch_device())
+        reference_image = common_annotator_call(model, reference_image, resolution=1024, max_depth=1)
+        reference_image = reference_image * strength + 0.5 * (1 - strength)
+        del model
+    elif preprocessor in ("Canny Edge", "Canny"):
+        reference_image = common_annotator_call(CannyDetector(), reference_image, canny_low_threshold=canny_low_threshold, canny_high_threshold=canny_high_threshold, resolution=1024)
+        reference_image = reference_image * strength + 0.5 * (1 - strength)
+    elif preprocessor != "None":
+        # Unsupported preprocessors do not emit a reference image.
+        return patch_for_flux_kontext, None
+
+    return patch_for_flux_kontext, reference_image
+
+
+def _append_reference_images(self, positive, reference_images):
+    for reference_image in reference_images:
+        reference_latent = nodes.VAEEncode().encode(self.KSAMPLER.vae, reference_image)[0]
+        positive = append_reference_latent(positive, reference_latent)
+    return positive
+
+
+def _stitch_reference_images(reference_images):
+    if not reference_images:
+        return None
+
+    combined_image = reference_images[0]
+    for reference_image in reference_images[1:]:
+        combined_image = ImageStitch_execute(
+            0,
+            combined_image,
+            'right',
+            True,
+            0,
+            'white',
+            reference_image,
+        )[0]
+    return combined_image
+
+
+def _build_reference_conditioning(self, positive, cnetpipe, tile_image):
+    chained_reference_images = []
+    stitched_reference_images = []
+
     for control in cnetpipe:
+        patch_for_flux_kontext, reference_image = _build_reference_image_for_control(self, control, tile_image)
+        if reference_image is None:
+            continue
 
-        patch_for_Flux_Kontext = control["patch_for_Flux_Kontext"]
-        controlnet_model = control["controlnet"]
-        strength = control["strength"]
-        start = control["start"]
-        end = control["end"]
-        preprocessor = control["preprocessor"]
-        canny_high_threshold = control["canny_high_threshold"]
-        canny_low_threshold = control["canny_low_threshold"]
-        noise_image = control["noise_image"]
+        if patch_for_flux_kontext == "Chained":
+            chained_reference_images.append(reference_image)
+        elif patch_for_flux_kontext == "Stitched":
+            stitched_reference_images.append(reference_image)
 
-        if noise_image is not None:
-            grid_images = process_image_to_tiles(self, noise_image)
-            cnet_image = grid_images[self.TEMP.latent_index]
-            if isinstance(cnet_image, tuple):
-                cnet_image = np.array(cnet_image)
+    if chained_reference_images:
+        positive = _append_reference_images(self, positive, chained_reference_images)
 
-        strength = strength * self.KSAMPLER.cnet_multiply
-        # Preprocessor
+    stitched_reference_image = _stitch_reference_images(stitched_reference_images)
+    if stitched_reference_image is not None:
+        positive = _append_reference_images(self, positive, [stitched_reference_image])
 
-        if preprocessor == "DepthAnythingV2":
-            model = DepthAnythingV2Detector.from_pretrained(filename="depth_anything_v2_vitl.pth").to(model_management.get_torch_device())
-            cnet_image = common_annotator_call(model, cnet_image, resolution=1024, max_depth=1)
-            cnet_image = cnet_image * strength + 0.5 * (1 - strength)
+    if not chained_reference_images and stitched_reference_image is None:
+        positive = _append_reference_images(self, positive, [tile_image])
 
-            del model
-        if preprocessor == "Canny Edge":
-            cnet_image = common_annotator_call(CannyDetector(), cnet_image, canny_low_threshold=canny_low_threshold, canny_high_threshold=canny_high_threshold, resolution=1024)
-            cnet_image = cnet_image * strength + 0.5 * (1 - strength)
-        if patch_for_Flux_Kontext != "NONE" and preprocessor in ("DepthAnythingV2", "Canny Edge"):
-            if patch_for_Flux_Kontext == "Stitched":
-                # first stitch images is tile
-                kontext_img_combined = ImageStitch_execute(
-                    0,
-                    kontext_img_combined,
-                    'right',
-                    True,
-                    0,
-                    'white',
-                    cnet_image,
-                )[0]
-            if patch_for_Flux_Kontext == "Chained":
-                if not originaladded:
-                    originaladded == True
+    return positive
 
-                    kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, tile_image)[0]
-                    positive = ReferenceLatent_execute(0, positive, kontext_latent_image)[0]
 
-                cnet_image_latent = nodes.VAEEncode().encode(self.KSAMPLER.vae, cnet_image)[0]
-                positive = ReferenceLatent_execute(0, positive, cnet_image_latent)[0]
-
-    # add stitched to chained
-    kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, kontext_img_combined)[0]
-    positive = ReferenceLatent_execute(0, positive, kontext_latent_image)[0]
+def get_Kontext_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
+    positive = _build_reference_conditioning(self, positive, cnetpipe, tile_image)
     return positive
 
 
 def get_qwen_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):
-    kontext_img_combined = tile_image
-    cnet_image = tile_image
-    originaladded = False
-
-    print("Using Edit model as Cnet only canny and depth preprocessing supported, cnet_strength ignored")
-    for control in cnetpipe:
-
-        patch_for_Flux_Kontext = control["patch_for_Flux_Kontext"]
-        controlnet_model = control["controlnet"]
-        strength = control["strength"]
-        start = control["start"]
-        end = control["end"]
-        preprocessor = control["preprocessor"]
-        canny_high_threshold = control["canny_high_threshold"]
-        canny_low_threshold = control["canny_low_threshold"]
-        noise_image = control["noise_image"]
-
-        if noise_image is not None:
-            grid_images = process_image_to_tiles(self, noise_image)
-            cnet_image = grid_images[self.TEMP.latent_index]
-            if isinstance(cnet_image, tuple):
-                cnet_image = np.array(cnet_image)
-
-        strength = strength * self.KSAMPLER.cnet_multiply
-        # Preprocessor
-
-        if preprocessor == "DepthAnythingV2":
-            model = DepthAnythingV2Detector.from_pretrained(filename="depth_anything_v2_vitl.pth").to(model_management.get_torch_device())
-            cnet_image = common_annotator_call(model, cnet_image, resolution=1024, max_depth=1)
-            cnet_image = cnet_image * strength + 0.5 * (1 - strength)
-
-            del model
-        if preprocessor == "Canny Edge":
-            cnet_image = common_annotator_call(CannyDetector(), cnet_image, canny_low_threshold=canny_low_threshold, canny_high_threshold=canny_high_threshold, resolution=1024)
-            cnet_image = cnet_image * strength + 0.5 * (1 - strength)
-
-        if patch_for_Flux_Kontext != "NONE" and preprocessor in ("DepthAnythingV2", "Canny Edge"):
-            if patch_for_Flux_Kontext == "Stitched":
-                # first stitch images is tile original
-                originaladded = True
-                kontext_img_combined = ImageStitch_execute(
-                    0,
-                    kontext_img_combined,
-                    'right',
-                    True,
-                    0,
-                    'white',
-                    cnet_image,
-                )[0]
-            if patch_for_Flux_Kontext == "Chained":
-                if not originaladded:
-                    originaladded = True
-                    # add original
-                    kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, tile_image)[0]
-                    positive = ReferenceLatent_execute(0, positive, kontext_latent_image)[0]
-                # add Cnet
-                cnet_image_latent = nodes.VAEEncode().encode(self.KSAMPLER.vae, cnet_image)[0]
-                positive = ReferenceLatent_execute(0, positive, cnet_image_latent)[0]
-
-    if originaladded == False:
-        positive = ReferenceLatent_execute(0, positive, tile_image)[0]
-    # add stitched to chained
-    kontext_latent_image = nodes.VAEEncode().encode(self.KSAMPLER.vae, kontext_img_combined)[0]
-    positive = ReferenceLatent_execute(0, positive, kontext_latent_image)[0]
+    positive = _build_reference_conditioning(self, positive, cnetpipe, tile_image)
     return positive
 
 
@@ -509,18 +515,6 @@ def downscale_to_cnet_scale(cond1, cond2, interp_mode='bilinear'):
 
 
 #
-
-import torch
-import torch.nn.functional as F
-import copy
-
-import torch
-import torch.nn.functional as F
-import copy
-
-import torch
-import torch.nn.functional as F
-import copy
 
 
 def adapt_cnet_to_biggest_reference(cond, interp_mode='bilinear'):

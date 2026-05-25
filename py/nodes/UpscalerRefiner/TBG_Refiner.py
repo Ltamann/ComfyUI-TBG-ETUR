@@ -24,7 +24,7 @@ from ...utils.log import log
 from .inc.image import TBG_Image
 from .inc.sigmas import get_sigmas
 from .inc.sigmas import denoise_sigmas_tgb
-from .inc.cnet import get_Kontext_stiched_o_chained_cond
+from .inc.cnet import get_Kontext_stiched_o_chained_cond, get_qwen_stiched_o_chained_cond
 import comfy.model_management as mm
 from types import SimpleNamespace
 
@@ -94,6 +94,12 @@ if hasattr(ReferenceLatent, "execute"):
     ReferenceLatent_execute = ReferenceLatent.execute
 elif hasattr(ReferenceLatent, "append"):
     ReferenceLatent_execute = ReferenceLatent.append
+
+def append_reference_latent(conditioning, latent):
+    try:
+        return ReferenceLatent_execute(conditioning, latent)[0]
+    except TypeError:
+        return ReferenceLatent_execute(0, conditioning, latent)[0]
 
 from comfy_extras.nodes_differential_diffusion import DifferentialDiffusion
 
@@ -669,11 +675,11 @@ class TBG_Refiner_v1():
 
                 if tbg.KSAMPLER.Controlnet_Pipe:
                     # build from Cnet stitched and chaind referent latent combination
-                    positive = get_Kontext_stiched_o_chained_cond(cls, positive, tbg.KSAMPLER.Controlnet_Pipe, tile_to_process)
+                    positive = get_Kontext_stiched_o_chained_cond(tbg, positive, tbg.KSAMPLER.Controlnet_Pipe, tile_to_process)
                 else:
                     # only feed tile as referent latent
                     kontext_latent_image = nodes.VAEEncode().encode(tbg.KSAMPLER.vae, tile_to_process)[0]
-                    positive = ReferenceLatent_execute(positive, kontext_latent_image)[0]
+                    positive = append_reference_latent(positive, kontext_latent_image)
             else:
                 # FLUX standard conditioning (no Kontext)
 
@@ -692,11 +698,11 @@ class TBG_Refiner_v1():
                     pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
                 if tbg.KSAMPLER.Controlnet_Pipe:
                     # build from Cnet stitched and chaind referent latent combination
-                    positive = get_Kontext_stiched_o_chained_cond(cls, positive, tbg.KSAMPLER.Controlnet_Pipe, tile_to_process)
+                    positive = get_qwen_stiched_o_chained_cond(tbg, positive, tbg.KSAMPLER.Controlnet_Pipe, tile_to_process)
                 else:
                     # only feed tile as referent latent
                     kontext_latent_image = nodes.VAEEncode().encode(tbg.KSAMPLER.vae, tile_to_process)[0]
-                    positive = ReferenceLatent_execute(positive, kontext_latent_image)[0]
+                    positive = append_reference_latent(positive, kontext_latent_image)
             else:
 
                 positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
@@ -824,8 +830,12 @@ class TBG_Refiner_v1():
         storage = persistent_storage[tbg.storage_key]
         tbg.OUTPUTS.persistent_generated_tiles = storage["generated_tiles"]
 
-        output_image_new, output_image_only_tiles, output_image_noCC = WORKER.id(tiler_id).ETUR.refiner_init(tbg.PARAMS, tbg.SIZE)
-
+        worker_params = SimpleNamespace(**vars(tbg.PARAMS))
+        worker_params.Redux_Style_Model = None
+        worker_params.Redux_Clip_Vision = None
+        output_image_new, output_image_only_tiles, output_image_noCC = WORKER.id(tiler_id).ETUR.refiner_init(worker_params, tbg.SIZE)
+        # output_image_new, output_image_only_tiles, output_image_noCC = WORKER.id(tiler_id).ETUR.refiner_init(tbg.PARAMS, tbg.SIZE)
+        
         # Always update cache (needed for incremental processing)
         # tbg.OUTPUTS.generated_tiles has no infos at this point
         # storage = persistent_storage[tbg.storage_key]
