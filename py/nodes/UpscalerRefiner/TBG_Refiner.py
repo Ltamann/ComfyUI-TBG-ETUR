@@ -824,8 +824,12 @@ class TBG_Refiner_v1():
         storage = persistent_storage[tbg.storage_key]
         tbg.OUTPUTS.persistent_generated_tiles = storage["generated_tiles"]
 
-        output_image_new, output_image_only_tiles, output_image_noCC = WORKER.id(tiler_id).ETUR.refiner_init(tbg.PARAMS, tbg.SIZE)
-
+        worker_params = SimpleNamespace(**vars(tbg.PARAMS))
+        worker_params.Redux_Style_Model = None
+        worker_params.Redux_Clip_Vision = None
+        output_image_new, output_image_only_tiles, output_image_noCC = WORKER.id(tiler_id).ETUR.refiner_init(worker_params, tbg.SIZE)
+        # output_image_new, output_image_only_tiles, output_image_noCC = WORKER.id(tiler_id).ETUR.refiner_init(tbg.PARAMS, tbg.SIZE)
+        
         # Always update cache (needed for incremental processing)
         # tbg.OUTPUTS.generated_tiles has no infos at this point
         # storage = persistent_storage[tbg.storage_key]
