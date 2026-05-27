@@ -168,7 +168,7 @@ https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/vae/diffusion_p
 ## API_Access
 If you like to test the PRO feachers get early access by joining us at:
  - joining us at: https://www.patreon.com/TB_LAAR
- - get your API key from here:  https://api.tbgetur.es/login.php
+ - get your API key from here:  https://api.tbgetur.com/login.php
  - add environment variables using TBG_ETUR_API_KEY = your api key
     ![environment_var.png](img/environment_var.png)
    
