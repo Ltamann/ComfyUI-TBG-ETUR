@@ -1,9 +1,54 @@
 import { app } from "../../../scripts/app.js";
 import { ComfyWidgets } from "../../../scripts/widgets.js";
 import { api } from "../../../scripts/api.js";
+import {
+  attachDOMWidget,
+  getOutputValue,
+  isTBGNode,
+  requestNodeRedraw,
+  resolveTBGNodeClass,
+  safeApply,
+  setNodeMinHeight,
+} from "./TBG-ETUR-compat.js";
 
 
 const TBG_GGUF_INSTALL_POPUP_SEEN = new Set();
+
+const TBG_UPSCALER_NODE_NAMES = [
+  "TBG ETUR Upscaler and Tile Generator PRO",
+  "TBG ETUR Upscaler and Tile Generator CE",
+];
+
+function tbgLooksLikeUrl(value) {
+  const text = String(value ?? "").trim();
+  return /^(https?:)?\/\//i.test(text) || text.startsWith("/") || text.startsWith("about:") || text.startsWith("blob:");
+}
+
+function tbgEnsureFixedControlAfterGenerate(node) {
+  if (!Array.isArray(node?.widgets)) return;
+  const ctrlWidget = node.widgets.find((w) => w && w.name === "control_after_generate");
+  if (!ctrlWidget) return;
+  ctrlWidget.value = "fixed";
+  requestNodeRedraw(node);
+}
+
+function tbgUpdateInfoPanel(node, output) {
+  const panel = node?.__tbgPanel;
+  if (!panel?.label || !panel?.iframe) return;
+
+  const value = getOutputValue(node, output);
+  if (!value || value.length === 0) return;
+
+  const text = String(value[0] ?? "");
+  panel.label.textContent = text.substring(0, 50);
+
+  const preferredSrc = String(value[1] ?? "").trim();
+  const fallbackSrc = String(value[0] ?? "").trim();
+  const nextSrc = preferredSrc || (tbgLooksLikeUrl(fallbackSrc) ? fallbackSrc : "");
+  if (nextSrc && panel.iframe.src !== nextSrc) {
+    panel.iframe.src = nextSrc;
+  }
+}
 
 function tbgNormalizeExecutionError(event) {
   const detail = event?.detail || {};
@@ -67,209 +112,98 @@ app.registerExtension({
   },
 
   // ComfyUI 0.4.0 frontend still calls this, extra args are fine and ignored
-  beforeRegisterNodeDef(nodeType /*, nodeData, appInstance */) {
-    const cls = nodeType.comfyClass;
+  beforeRegisterNodeDef(nodeType, nodeData /*, appInstance */) {
+    const cls = resolveTBGNodeClass(nodeType, nodeData);
 
     // ------------------------------------------------------------------
     // Upscaler: show ui.value[0] (userinfo) as text on the node
     // ------------------------------------------------------------------
-    if (cls === "TBG ETUR Upscaler and Tile Generator PRO" ||
-    cls === "TBG ETUR Upscaler and Tile Generator CE"
-    ) {
-      const onDrawForeground = nodeType.prototype.onDrawForeground;
+    if (isTBGNode(nodeType, nodeData, TBG_UPSCALER_NODE_NAMES)) {
+      const onNodeCreated = nodeType.prototype.onNodeCreated;
+      const onExecuted = nodeType.prototype.onExecuted;
+      const onConfigure = nodeType.prototype.onConfigure;
 
+      nodeType.prototype.onNodeCreated = function () {
+        safeApply(onNodeCreated, this, arguments);
+        tbgEnsureFixedControlAfterGenerate(this);
 
-
-    // 2. Add DOM widget at bottom of node web panel
-const onNodeCreated = nodeType.prototype.onNodeCreated;
-nodeType.prototype.onNodeCreated = function () {
-    // Call any previous onNodeCreated logic
-    onNodeCreated?.apply?.(this, arguments);
-    // --- Force seed control_after_generate to "fixed" on node create,
-    // --- without hiding the selector in the UI.
-    if (this.widgets && Array.isArray(this.widgets)) {
-        // Find the control_after_generate widget created by ComfyUI
-        const ctrlWidget = this.widgets.find(
-            (w) => w && w.name === "control_after_generate"
-        );
-
-        if (ctrlWidget) {
-            ctrlWidget.value = "fixed"; // or "randomize", "increment", "decrement"
-            // Redraw node so UI shows the updated value
-            this.onResize?.(this.size);
+        if (this.__tbgPanelInitialized) {
+          tbgUpdateInfoPanel(this);
+          return;
         }
-    }
 
-    // Container for the web panel (inside the node)
-    const container = document.createElement("div");
-    // Important: relative, not fixed; height matches iframe + padding
-    container.style.cssText = [
-        "position: relative",
-        "padding: 0 4px 4px",
-        "width: 100%",
-        "height: 180px",            // fixed height to match iframe
-        "box-sizing: border-box",
-        "overflow: hidden"          // keep iframe visually inside node
-    ].join("; ");
+        const container = document.createElement("div");
+        container.style.cssText = [
+          "position: relative",
+          "padding: 0 4px 4px",
+          "width: 100%",
+          "min-height: 180px",
+          "box-sizing: border-box",
+          "overflow: hidden",
+        ].join("; ");
 
-    // Optional text label (top of iframe area)
-    const label = document.createElement("div");
-    label.style.cssText = [
-        "font-size: 11px",
-        "color: #ccc",
-        "margin-bottom: 2px",
-        "white-space: nowrap",
-        "overflow: hidden",
-        "text-overflow: ellipsis"
-    ].join("; ");
-    container.appendChild(label);
+        const label = document.createElement("div");
+        label.style.cssText = [
+          "font-size: 11px",
+          "color: #ccc",
+          "margin-bottom: 2px",
+          "white-space: nowrap",
+          "overflow: hidden",
+          "text-overflow: ellipsis",
+        ].join("; ");
+        container.appendChild(label);
 
+        const iframe = document.createElement("iframe");
+        iframe.style.cssText = [
+          "width: 100%",
+          "height: 160px",
+          "border: 0px solid #444",
+          "border-radius: 0px",
+          "background: rgb(53, 53, 53)",
+          "display: block",
+        ].join("; ");
+        iframe.tabIndex = -1;
+        iframe.sandbox = "allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation";
+        iframe.loading = "lazy";
+        iframe.src = cls === "TBG ETUR Upscaler and Tile Generator PRO"
+          ? "https://news.tbgetur.com/TBG_ETUR_News.html?type=PRO"
+          : "https://news.tbgetur.com/TBG_ETUR_News.html?type=CE";
+        container.appendChild(iframe);
 
+        const widget = attachDOMWidget(this, "TBG Web Panel", container, { serialize: false });
+        this.__tbgPanel = { container, label, iframe, widget };
+        this.__tbgPanelInitialized = true;
 
-    // DYNAMIC IFRAME src from v.value[1] (member/non-member) or v.value[0]
-   const iframe = document.createElement("iframe");
-    iframe.style.cssText = [
-        "width: 100%",
-        "height: 160px",   // 160 container - ~20 label/padding
-        "border: 0px solid #444",
-        "border-radius: 0px",
-        "background: rgb(53, 53, 53)",
-        "display: block"
-    ].join("; ");    iframe.tabIndex = -1;
-    iframe.sandbox = "allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation";
-    iframe.loading = "lazy"; // Perf
+        const refreshPanel = (output) => {
+          tbgUpdateInfoPanel(this, output);
+          requestNodeRedraw(this);
+        };
 
-    if (cls == "TBG ETUR Upscaler and Tile Generator PRO") {
-      iframe.src = 'https://news.tbgetur.com/TBG_ETUR_News.html?type=PRO';
-    } else {
-      iframe.src = 'https://news.tbgetur.com/TBG_ETUR_News.html?type=CE';
-    }
+        this.onExecuted = function (output) {
+          const r = safeApply(onExecuted, this, arguments);
+          refreshPanel(output);
+          return r;
+        };
 
+        this.onConfigure = function (info) {
+          const r = safeApply(onConfigure, this, arguments);
+          setTimeout(() => refreshPanel(info), 0);
+          return r;
+        };
 
+        setNodeMinHeight(this, 195);
+        setTimeout(() => refreshPanel(), 0);
 
-
-    container.appendChild(iframe);
-
-    // Show always + LIVE UPDATE FUNCTION: Refresh text/iframe on node output changes
-    let timeoutId;
-
-    // Show always + LIVE UPDATE FUNCTION: Refresh text/iframe on node output changes
-const updatePanel = () => {
-    try {
-        const v = app.nodeOutputs?.[this.id + ""];
-        if (!v?.value) return;
-
-        // Text from v.value[0] (credits info)
-        const text = String(v.value[0] ?? "");
-        console.log(`[TBG] Node ${this.id} Panel update - text: ${text}`);
-
-        // Sanitize: Use textContent for label to prevent XSS, truncate for UI Units Left
-        label.textContent = `${text.substring(0, 50)}`;
-
-        // Iframe src: v.value[1] URL or fallback v.value[0]
-        const src = v.value[1] || v.value[0] || "about:blank";
-        console.log(`[TBG] Node ${this.id} iframe.src: ${src}`);  // ← This will print now!
-
-        if (iframe.src !== src) {
-            iframe.src = src;
-        }
-    } catch (e) {
-        console.error("[TBG] Panel update error:", e);
-    }
-};
-
-// Initial update
-updatePanel();
-
-// Hook ComfyUI's native node output changes (works when Python returns ui values)
-const origOnExecuted = this.onExecuted;
-this.onExecuted = function (output) {
-    updatePanel();  // ← Runs every time node executes + outputs ui
-    if (origOnExecuted) origOnExecuted.call(this, output);
-};
-
-// Optional: Listen to graph changes too (for loaded workflows)
-//app.registerExtension({
-//    name: "TBG.NodeOutputWatcher",
-//    nodeCreated: (node) => {
-//        if (node.comfyClass?.includes("TBG")) {
-//            node.addEventListener("nodeExecuted", updatePanel);
-//        }
-//    }
-//});
-
-    // Initial update
-    updatePanel();
-
-    // Listen for node output changes (queue/prompt updates) with debounce
-    const observer = new MutationObserver(() => {
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = setTimeout(updatePanel, 500);
-    });
-
-    // Use a real DOM node as observer target
-    const observeTarget =
-        app?.canvas ||
-        document.querySelector("#graph-canvas") ||
-        document.body;
-
-    if (observeTarget instanceof Node) {
-        observer.observe(observeTarget, { childList: true, subtree: true });
-    } else {
-        console.warn("[TBG] No valid MutationObserver target; panel will only update on initial run.");
-    }
-
-    // Assemble & attach (iframe already in linkRow)
-    //this.addDOMWidget("TBG Web Panel", "div", container, { serialize: false });
-
-// === At the end of onNodeCreated, BEFORE any onRemoved override ===
-
-// Attach the DOM widget; we do NOT try to touch internal widget.options
-this.addDOMWidget("TBG Web Panel", "div", container, {
-    serialize: false
-});
-
-// Option 1: grow node height explicitly so the dom-widget area is tall enough
-const PANEL_EXTRA = 195; // extra vertical space you want to reserve for the iframe
-const currentWidth = this.size?.[0] ?? 250;
-const currentHeight = this.size?.[1] ?? 80;
-
-// Ensure the node is tall enough to visually contain the panel + existing controls
-const targetHeight = Math.max(currentHeight, PANEL_EXTRA);
-this.setSize([currentWidth, targetHeight]);
-
-// Option 2 (optional): add 3–4 empty widgets to push height via standard rows
-// This is your “4–5 empty widgets” idea, implemented safely.
-for (let i = 0; i < 1; i++) {
-    const w = this.addWidget("text", "", "", () => {}, {
-        serialize: false,
-    });
-    const TALL_H = 130;
-w.computeSize = function () {
-    // width is ignored for layout, only height matters here
-    return [this.parent?.size?.[0] ?? 200, TALL_H];
-};
-}
-// Make w widget taller than default
-
-// Request a canvas redraw so the new size takes effect
-this.setDirtyCanvas(true, true);
-
-
-    // Cleanup on node remove without clobbering other hooks
-    const prevOnRemoved = this.onRemoved;
-    this.onRemoved = function () {
-        try {
-            observer.disconnect();
-        } catch (e) {
-            console.error("[TBG] Observer disconnect error:", e);
-        }
-        if (typeof prevOnRemoved === "function") {
+        const prevOnRemoved = this.onRemoved;
+        this.onRemoved = function () {
+          this.__tbgPanel = null;
+          this.__tbgPanelInitialized = false;
+          if (typeof prevOnRemoved === "function") {
             return prevOnRemoved.apply(this, arguments);
-        }
-    };
-};
-}
+          }
+        };
+      };
+    }
 
 
 

@@ -191,6 +191,7 @@ def make_tiler_config(tbg, labs_upscaler_dict):
         "upscale_by":       tbg.PARAMS.upscale_by,
         "PRO_Tile_Mode":    tbg.PARAMS.Tile_Fusion_Mode,
         "composite_blur":   tbg.SIZE.composite_blur_margin,
+        "fusion_reference_margin": tbg.SIZE.Fusion_reference_margin,
         "fusion_margin":    tbg.SIZE.inpaint_blur_margin,
         "Segment_Mask_on":  has_seg_mask,
         "PRO_segs_count":   seg_count,
@@ -484,13 +485,14 @@ class TBG_Upscaler_v1():
             tbg.SIZE.fullH =tbg.SIZE.fullW * tbg.PARAMS.fragmentation
 
 
+        tbg.SIZE.Fusion_reference_margin = kwargs.get('Fusion Reference Margin', 0)
         tbg.SIZE.Fusion_margin = kwargs.get('Fusion Margin', 64)
         # auto fusion border calculation
         tbg.SIZE.inpaint_blur_margin = tbg.SIZE.Fusion_margin
         tbg.SIZE.shift = 0
         tbg.SIZE.composite_blur_margin = kwargs.get('Feather Mask', 16)
-        tbg.SIZE.inpaint_border_margin = int(( tbg.SIZE.Fusion_margin / 16) * 8)  # 1/2 Blur = 64
-        tbg.SIZE.shifttl  = tbg.SIZE.inpaint_blur_margin + int(tbg.SIZE.Fusion_margin / 4)  # 64 same as border to eliminate border on left bottom
+        tbg.SIZE.inpaint_border_margin = tbg.SIZE.Fusion_reference_margin
+        tbg.SIZE.shifttl = 0
         tbg.SIZE.inpaint_max = kwargs.get('Fusion Strength', 0.05)
 
     @classmethod

@@ -11,6 +11,7 @@ from ..inc.sigmas import process_image_to_tiles
 from ....vendor.comfyui_controlnet_aux.src.custom_controlnet_aux.canny.canny import CannyDetector
 from ....vendor.comfyui_controlnet_aux.src.custom_controlnet_aux.depth_anything_v2.da2tgb import DepthAnythingV2Detector
 from ....vendor.comfyui_controlnet_aux.utils import common_annotator_call
+from ....utils.log import log
 
 
 
@@ -74,6 +75,143 @@ def _resolve_kontext_patch_mode(control):
     if normalize_controlnet_mode(control) == "Reference_Image":
         return "Chained"
     return "NONE"
+
+
+def _match_reference_latent_shape(reference_latent, denoised):
+    """
+    Match the reference latent to the current denoised latent shape.
+
+    This mirrors the upstream Identity Guidance safeguards:
+    - align batch size
+    - resize spatial dimensions
+    - align channels by trimming/padding
+    """
+    ref = reference_latent.to(device=denoised.device, dtype=denoised.dtype)
+
+    if ref.shape[0] != denoised.shape[0]:
+        ref = ref[:1].expand(denoised.shape[0], -1, -1, -1)
+
+    if ref.shape[2:] != denoised.shape[2:]:
+        ref = F.interpolate(
+            ref,
+            size=denoised.shape[2:],
+            mode="bilinear",
+            align_corners=False,
+        )
+
+    if ref.shape[1] != denoised.shape[1]:
+        if ref.shape[1] > denoised.shape[1]:
+            ref = ref[:, :denoised.shape[1]]
+        else:
+            ref = F.pad(ref, (0, 0, 0, 0, 0, denoised.shape[1] - ref.shape[1]))
+
+    return ref
+
+
+def _sanitize_reference_window(start_percent, end_percent):
+    start = float(max(0.0, min(1.0, start_percent)))
+    end = float(max(0.0, min(1.0, end_percent)))
+    if start >= end:
+        return None
+    return start, end
+
+
+def _is_full_reference_conditioning(control):
+    """
+    Only build the normal ReferenceLatent conditioning path for the
+    "locked" case: full strength and full denoise window.
+
+    We keep weaker settings on the sampler-side correction path only so the
+    Strength slider behaves more like a true creativity slider.
+    """
+    if normalize_controlnet_mode(control) != "Reference_Image":
+        return False
+
+    strength = float(_control_value(control, "strength", 0.0))
+    start = float(_control_value(control, "start", 0.0))
+    end = float(_control_value(control, "end", 1.0))
+    return strength >= 0.999 and start <= 0.001 and end >= 0.999
+
+
+def _reference_dev_log(self, message):
+    api = getattr(self, "API", None)
+    if getattr(api, "status", None) == "Dev":
+        log(message, None, None, f"Node {getattr(getattr(self, 'INFO', None), 'id', '?')}")
+
+
+def _reference_window_weight(progress, start_percent, end_percent):
+    if progress < start_percent or progress > end_percent:
+        return 0.0
+
+    span = max(1e-6, end_percent - start_percent)
+    t = (progress - start_percent) / span
+
+    # Raised-sine envelope: avoids hard repeated pulls at the window edges,
+    # which can cause reference ghosting in high-denoise refinement.
+    return math.sin(math.pi * t)
+
+
+def _reference_schedule_progress(sigma, args):
+    model_options = args.get("model_options", {}) or {}
+    transformer_options = model_options.get("transformer_options", {}) or {}
+    sample_sigmas = transformer_options.get("sample_sigmas")
+
+    sigma_value = float(sigma.flatten()[0])
+
+    if isinstance(sample_sigmas, torch.Tensor) and sample_sigmas.numel() > 1:
+        schedule = sample_sigmas.flatten().to(device=sigma.device, dtype=sigma.dtype)
+        idx = int(torch.argmin(torch.abs(schedule - sigma.flatten()[0])).item())
+        progress = idx / max(1, schedule.numel() - 1)
+        return max(0.0, min(1.0, progress)), idx, int(schedule.numel())
+
+    progress = max(0.0, min(1.0, 1.0 - sigma_value))
+    return progress, None, None
+
+
+def _reference_post_cfg_fn(reference_latent, strength, start_percent, end_percent, debug_owner=None):
+    """
+    ControlNet-style scheduling for reference influence.
+
+    This is *not* a real ControlNet model. We add a small scheduled nudge
+    toward a stored reference latent after each sampling step.
+    """
+
+    window = _sanitize_reference_window(start_percent, end_percent)
+    if window is None or reference_latent is None or strength <= 0.0:
+        return None
+
+    start_percent, end_percent = window
+
+    def post_cfg_fn(args):
+        denoised = args["denoised"]
+        sigma = args["sigma"]
+
+        # Use the sampler's actual sigma schedule when available. This keeps
+        # Start/End closer to ControlNet-style step percentages.
+        progress, sigma_index, sigma_count = _reference_schedule_progress(sigma, args)
+        if progress < start_percent or progress > end_percent:
+            return denoised
+
+        ref_resized = _match_reference_latent_shape(reference_latent, denoised)
+        correction = ref_resized - denoised
+        out = denoised + correction * float(strength)
+
+        # Dev-only trace so we can see the hook is live and how strong the
+        # correction is on the current step.
+        _reference_dev_log(
+            self=debug_owner,
+            message=(
+                f"Reference Image active: progress={progress:.4f} "
+                f"window={start_percent:.2f}-{end_percent:.2f} "
+                f"strength={strength:.3f} "
+                f"sigma_index={sigma_index}/{sigma_count} "
+                f"mean_abs_delta={torch.mean(torch.abs(out - denoised)).item():.6f}"
+            ),
+        )
+
+        return out
+
+    return post_cfg_fn
 
 
 def stitch(
@@ -321,8 +459,8 @@ def get_canny_mask_inverted(image,canny_low_threshold=100,canny_high_threshold=1
     out = 1.0 - mask
     return out
 
-def _get_reference_source_image(self, control, tile_image):
-    reference_image = tile_image
+def _get_reference_source_image(self, control, tile_image, require_explicit=False):
+    reference_image = None if require_explicit else tile_image
     source_image = _control_value(control, "noise_image")
     if source_image is None:
         source_image = _control_value(control, "custom_controlnet_image")
@@ -390,6 +528,18 @@ def _build_reference_conditioning(self, positive, cnetpipe, tile_image):
     stitched_reference_images = []
 
     for control in cnetpipe:
+        if not _is_full_reference_conditioning(control):
+            _reference_dev_log(
+                self,
+                "Reference Image conditioning path skipped: using sampler-only correction because strength/window is not full."
+            )
+            # We intentionally skip the normal conditioning path for weaker
+            # settings. Those cases rely on the sampler-side correction only.
+            continue
+        _reference_dev_log(
+            self,
+            "Reference Image conditioning path enabled: full strength and full window."
+        )
         patch_for_flux_kontext, reference_image = _build_reference_image_for_control(self, control, tile_image)
         if reference_image is None:
             continue
@@ -406,10 +556,65 @@ def _build_reference_conditioning(self, positive, cnetpipe, tile_image):
     if stitched_reference_image is not None:
         positive = _append_reference_images(self, positive, [stitched_reference_image])
 
-    if not chained_reference_images and stitched_reference_image is None:
-        positive = _append_reference_images(self, positive, [tile_image])
-
     return positive
+
+
+def apply_reference_mode_hooks(self, model, cnetpipe, tile_image, vae):
+    """
+    Attach FLUX2Klein-style reference correction hooks to a cloned model.
+
+    The hook operates after CFG prediction in the sampling loop, which gives
+    the familiar ControlNet-like "Strength / Start % / End %" UX without
+    loading a real ControlNet conditioning model.
+    """
+    reference_controls = []
+
+    for control in cnetpipe or []:
+        if normalize_controlnet_mode(control) != "Reference_Image":
+            continue
+
+        # If no external image is provided, fall back to the current tile.
+        # That keeps the UX consistent with the existing Reference_Image path.
+        reference_image = _get_reference_source_image(self, control, tile_image, require_explicit=False)
+        if reference_image is None or vae is None:
+            continue
+
+        # Reuse the same ControlNet sliders the user already understands.
+        reference_strength = float(_control_value(control, "strength", 0.5))
+        reference_start_percent = float(_control_value(control, "start", 0.0))
+        reference_end_percent = float(_control_value(control, "end", 0.5))
+
+        window = _sanitize_reference_window(reference_start_percent, reference_end_percent)
+        if window is None or reference_strength <= 0.0:
+            continue
+
+        reference_latent = nodes.VAEEncode().encode(vae, reference_image)[0]["samples"]
+        reference_controls.append((reference_latent, reference_strength, window[0], window[1]))
+
+    if not reference_controls:
+        _reference_dev_log(self, "Reference Image inactive: no Reference_Image entries or strength/window disabled.")
+        return model
+
+    _reference_dev_log(
+        self,
+        f"Reference Image hook enabled: {len(reference_controls)} control(s) attached."
+    )
+
+    hooked_model = model.clone()
+    post_cfg_functions = hooked_model.model_options.setdefault("sampler_post_cfg_function", [])
+
+    for reference_latent, reference_strength, reference_start_percent, reference_end_percent in reference_controls:
+        post_cfg_fn = _reference_post_cfg_fn(
+            reference_latent=reference_latent,
+            strength=reference_strength,
+            start_percent=reference_start_percent,
+            end_percent=reference_end_percent,
+            debug_owner=self,
+        )
+        if post_cfg_fn is not None:
+            post_cfg_functions.append(post_cfg_fn)
+
+    return hooked_model
 
 
 def get_Kontext_stiched_o_chained_cond(self, positive, cnetpipe, tile_image):

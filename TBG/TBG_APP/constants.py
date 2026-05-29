@@ -71,6 +71,7 @@ class tbg:
         self.OUTPUTS = SimpleNamespace(
             upscaled_image=None,  # in tiler is this the Upscaled image corrected to 64 pixel  # not used in TBG APP
             denoise_mask_tiles=None,
+            ngtf_debug_masks=None,
             orig_grid_images_all=[],  # ref of original
             grid_images_all=[],  # ref of generated rest original
 
@@ -159,6 +160,8 @@ class tbg:
             Laplacian_Pyramid_Blending=None,
             color_match_method=None,
             color_match_str=None,
+            model_type=None,
+            Flux2_Tile_Color_Correction=True,
             tiles_to_process_active=None,
             tiles_to_process=None,
             Tile_Fusion_Mode=None,

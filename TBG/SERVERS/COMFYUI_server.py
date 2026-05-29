@@ -51,7 +51,7 @@ def main_rpc_server(port: int) -> None:
     """
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(("127.0.0.1", int(port)))
-    server.listen(5)
+    server.listen(64)
     #print(f"🔌 MAIN RPC: Listening on port {port}")
 
     while True:

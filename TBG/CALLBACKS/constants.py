@@ -179,6 +179,8 @@ class tbg:
             Laplacian_Pyramid_Blending=None,
             color_match_method=None,
             color_match_str=None,
+            model_type=None,
+            Flux2_Tile_Color_Correction=True,
             tiles_to_process_active=None,
             tiles_to_process=None,
             Tile_Fusion_Mode=None,
@@ -290,6 +292,7 @@ class tbg:
             fullH=1024,
             UpscaledInputImageH=0,
             UpscaledInputImageW=0,
+            Fusion_reference_margin=0,
             Fusion_margin=64,
         )
 

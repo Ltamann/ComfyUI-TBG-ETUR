@@ -1,8 +1,8 @@
 {
   "id": "9e3799e2-16c0-4853-8f0a-a4e45855ed51",
   "revision": 0,
-  "last_node_id": 782,
-  "last_link_id": 763,
+  "last_node_id": 787,
+  "last_link_id": 776,
   "nodes": [
     {
       "id": 510,
@@ -39,120 +39,6 @@
       }
     },
     {
-      "id": 745,
-      "type": "TBG ETUR Tile Overrides",
-      "pos": [
-        518.5193404476978,
-        -12.588385488016478
-      ],
-      "size": [
-        434.3565808105468,
-        2220
-      ],
-      "flags": {},
-      "order": 18,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 674
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            744
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Tile Overrides",
-        "Filter by Indexes": "",
-        "Prompt": "",
-        "Denoise": "unchanged",
-        "Seed": "",
-        "CNet Strength": "unchanged",
-        "Reset": false,
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
-        "tile_edits_json": "{\"prompts\":[\"The image shows a room with a white ceiling and a window, illuminated by a light fixture. The walls are visible in the background, and there is a building visible through the window.\",\"The image shows a room with a white wall and a light on the ceiling. The light is illuminating the room, casting a warm glow on the walls and ceiling.\",\"The image shows a room with a wall featuring a metal object on the right side and a light on the left side. The metal object appears to be a corrugated metal sheet, giving the room a rustic and homely feel.\",\"The image shows a room with a large window and a door in it. Through the window, we can see a building with pillars and a board with text on it. On the right side of the image, there is a wall.\",\"The image shows a wall with a quote written on it that reads a smile is a curve that everything straight. The quote is written in a bold, black font against a white background, creating a stark contrast. The wall is a light beige color, and the quote stands out against it, making it the focal point of the image.\",\"The image shows a close up of a wall with a metal object on it. On the left side of the wall, there is some text written, and at the bottom of the image there is a door with a handle.\",\"The image shows a living room with a white couch and a table in it. On the table there are glasses and a bottle, and in the background there is a wall and a glass door. The floor is covered with a carpet, giving the room a cozy and inviting atmosphere.\",\"The image shows a row of white chairs sitting next to each other in a room, with a wall in the background. The chairs have a curved backrest and armrests, and the floor is visible at the bottom of the image.\",\"The image shows a white toilet sitting next to a wall in a bathroom. The toilet seat is on the left side of the image and the wall is in the background.\",\"The image shows a close up of a wall in a room with a white background. The wall is painted in a neutral color, and the surface of the wall is smooth and glossy.\",\"The image shows a room with a cream-colored floor and a white wall. On the right side of the image, there is a cupboard, and at the top of the picture, there appears to be a pillar.\",\"The image shows a close up of a wall with a curved edge, and in the center of the image there is a watermark. The wall appears to be made of plywood, with a smooth, glossy finish. The curved edge of the wall is slightly raised, giving it a modern and stylish look.\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}",
-        "prompt_0": "The image shows a room with a white ceiling and a window, illuminated by a light fixture. The walls are visible in the background, and there is a building visible through the window.",
-        "denoise_0": "",
-        "seed_0": "",
-        "cnet_strength_0": "",
-        "prompt_1": "The image shows a room with a white wall and a light on the ceiling. The light is illuminating the room, casting a warm glow on the walls and ceiling.",
-        "denoise_1": "",
-        "seed_1": "",
-        "cnet_strength_1": "",
-        "prompt_2": "The image shows a room with a wall featuring a metal object on the right side and a light on the left side. The metal object appears to be a corrugated metal sheet, giving the room a rustic and homely feel.",
-        "denoise_2": "",
-        "seed_2": "",
-        "cnet_strength_2": "",
-        "prompt_3": "The image shows a room with a large window and a door in it. Through the window, we can see a building with pillars and a board with text on it. On the right side of the image, there is a wall.",
-        "denoise_3": "",
-        "seed_3": "",
-        "cnet_strength_3": "",
-        "prompt_4": "The image shows a wall with a quote written on it that reads a smile is a curve that everything straight. The quote is written in a bold, black font against a white background, creating a stark contrast. The wall is a light beige color, and the quote stands out against it, making it the focal point of the image.",
-        "denoise_4": "",
-        "seed_4": "",
-        "cnet_strength_4": "",
-        "prompt_5": "The image shows a close up of a wall with a metal object on it. On the left side of the wall, there is some text written, and at the bottom of the image there is a door with a handle.",
-        "denoise_5": "",
-        "seed_5": "",
-        "cnet_strength_5": "",
-        "prompt_6": "The image shows a living room with a white couch and a table in it. On the table there are glasses and a bottle, and in the background there is a wall and a glass door. The floor is covered with a carpet, giving the room a cozy and inviting atmosphere.",
-        "denoise_6": "",
-        "seed_6": "",
-        "cnet_strength_6": "",
-        "prompt_7": "The image shows a row of white chairs sitting next to each other in a room, with a wall in the background. The chairs have a curved backrest and armrests, and the floor is visible at the bottom of the image.",
-        "denoise_7": "",
-        "seed_7": "",
-        "cnet_strength_7": "",
-        "prompt_8": "The image shows a white toilet sitting next to a wall in a bathroom. The toilet seat is on the left side of the image and the wall is in the background.",
-        "denoise_8": "",
-        "seed_8": "",
-        "cnet_strength_8": "",
-        "prompt_9": "The image shows a close up of a wall in a room with a white background. The wall is painted in a neutral color, and the surface of the wall is smooth and glossy.",
-        "denoise_9": "",
-        "seed_9": "",
-        "cnet_strength_9": "",
-        "prompt_10": "The image shows a room with a cream-colored floor and a white wall. On the right side of the image, there is a cupboard, and at the top of the picture, there appears to be a pillar.",
-        "denoise_10": "",
-        "seed_10": "",
-        "cnet_strength_10": "",
-        "prompt_11": "The image shows a close up of a wall with a curved edge, and in the center of the image there is a watermark. The wall appears to be made of plywood, with a smooth, glossy finish. The curved edge of the wall is slightly raised, giving it a modern and stylish look.",
-        "denoise_11": "",
-        "seed_11": "",
-        "cnet_strength_11": ""
-      },
-      "widgets_values": [
-        true,
-        0,
-        "",
-        "",
-        "unchanged",
-        "",
-        "unchanged",
-        false,
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        ""
-      ]
-    },
-    {
       "id": 719,
       "type": "LoraLoaderModelOnly",
       "pos": [
@@ -178,8 +64,8 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            741,
-            750
+            750,
+            768
           ]
         }
       ],
@@ -220,16 +106,16 @@
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            742,
-            751
+            751,
+            769
           ]
         },
         {
           "name": "VAE",
           "type": "VAE",
           "links": [
-            743,
-            752
+            752,
+            770
           ]
         }
       ],
@@ -288,13 +174,13 @@
         917.4005033807985
       ],
       "flags": {},
-      "order": 23,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 747
+          "link": 774
         }
       ],
       "outputs": [],
@@ -346,13 +232,13 @@
         464
       ],
       "flags": {},
-      "order": 22,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 746
+          "link": 773
         },
         {
           "name": "Segment_Mask",
@@ -390,67 +276,6 @@
         0,
         "fixed",
         64,
-        "",
-        ""
-      ]
-    },
-    {
-      "id": 744,
-      "type": "TBG ETUR Upscaler and Tile Generator CE",
-      "pos": [
-        90.54473119275066,
-        -11.938810085335938
-      ],
-      "size": [
-        400,
-        464
-      ],
-      "flags": {},
-      "order": 15,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 673
-        },
-        {
-          "name": "Segment_Mask",
-          "shape": 7,
-          "type": "MASK",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            674
-          ]
-        },
-        {
-          "name": "Upscaled Image",
-          "type": "IMAGE",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE",
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
-      },
-      "widgets_values": [
-        1024,
-        "FAST/_nearest-exact",
-        2,
-        "microsoft/Florence-2-base",
-        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
-        0,
-        "fixed",
-        64,
-        "",
         ""
       ]
     },
@@ -458,8 +283,8 @@
       "id": 761,
       "type": "LoraLoaderModelOnly",
       "pos": [
-        -354.00193990648864,
-        1696.1619641126304
+        4032.891872011714,
+        178.77656657239368
       ],
       "size": [
         418,
@@ -498,8 +323,8 @@
       "id": 762,
       "type": "CheckpointLoaderSimple",
       "pos": [
-        -354.00193990648864,
-        1556.1619641126304
+        4032.891872011714,
+        38.77656657239379
       ],
       "size": [
         420,
@@ -545,8 +370,8 @@
       "id": 765,
       "type": "ControlNetLoader",
       "pos": [
-        -332.5195801242467,
-        2528.523638412435
+        4054.3742317939555,
+        1011.1382408721983
       ],
       "size": [
         360,
@@ -578,8 +403,8 @@
       "id": 774,
       "type": "MarkdownNote",
       "pos": [
-        102.21681088010945,
-        2397.8837153457143
+        4489.110622798311,
+        880.4983178054779
       ],
       "size": [
         390.39311485467124,
@@ -602,15 +427,15 @@
       "id": 775,
       "type": "PreviewImage",
       "pos": [
-        531.3296562846122,
-        1578.6334964099306
+        4918.223468202814,
+        61.24809886969388
       ],
       "size": [
         975.783045699859,
         913.7489341500695
       ],
       "flags": {},
-      "order": 16,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
@@ -629,139 +454,18 @@
       "widgets_values": []
     },
     {
-      "id": 776,
-      "type": "TBG ETUR Upscaler and Tile Generator CE",
-      "pos": [
-        1529.4162012865493,
-        1591.3738966925548
-      ],
-      "size": [
-        400,
-        464
-      ],
-      "flags": {},
-      "order": 17,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 737
-        },
-        {
-          "name": "Segment_Mask",
-          "shape": 7,
-          "type": "MASK",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            738
-          ]
-        },
-        {
-          "name": "Upscaled Image",
-          "type": "IMAGE",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE",
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
-      },
-      "widgets_values": [
-        1024,
-        "FAST/_bilinear",
-        2,
-        "microsoft/Florence-2-base",
-        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
-        0,
-        "fixed",
-        64,
-        "",
-        ""
-      ]
-    },
-    {
-      "id": 772,
-      "type": "TBG ETUR Upscaler and Tile Generator CE",
-      "pos": [
-        96.54279128626163,
-        1564.2231540272944
-      ],
-      "size": [
-        400,
-        464
-      ],
-      "flags": {},
-      "order": 14,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 734
-        },
-        {
-          "name": "Segment_Mask",
-          "shape": 7,
-          "type": "MASK",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": []
-        },
-        {
-          "name": "Upscaled Image",
-          "type": "IMAGE",
-          "links": [
-            735,
-            737
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE",
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
-      },
-      "widgets_values": [
-        1024,
-        "SuperResolution/Tiled-SeedVR2 Standard",
-        2,
-        "NONE",
-        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
-        0,
-        "fixed",
-        64,
-        "",
-        ""
-      ]
-    },
-    {
       "id": 766,
       "type": "PreviewImage",
       "pos": [
-        2932.6637982106745,
-        1582.6027178347617
+        7319.557610128875,
+        65.21732029452508
       ],
       "size": [
         827.5495583303616,
         927.1991950654824
       ],
       "flags": {},
-      "order": 24,
+      "order": 25,
       "mode": 0,
       "inputs": [
         {
@@ -778,108 +482,6 @@
         "Node name for S&R": "PreviewImage"
       },
       "widgets_values": []
-    },
-    {
-      "id": 760,
-      "type": "TBG ETUR Tile Overrides",
-      "pos": [
-        1961.10740679802,
-        1581.6273555611444
-      ],
-      "size": [
-        434.3565808105468,
-        1200.0000000000002
-      ],
-      "flags": {},
-      "order": 19,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 738
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            761
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Tile Overrides",
-        "Filter by Indexes": "",
-        "Prompt": "",
-        "Denoise": "unchanged",
-        "Seed": "",
-        "CNet Strength": "unchanged",
-        "Reset": false,
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
-        "tile_edits_json": "{\"prompts\":[],\"denoises\":[],\"seeds\":[],\"cnet_strength\":[]}",
-        "prompt_0": "The image shows a bedroom with wooden paneling on the walls and a bed with pillows, lamps, a telephone, and other objects on the table, and a window with wooden blinds in the background.",
-        "denoise_0": "",
-        "seed_0": "",
-        "cnet_strength_0": "",
-        "prompt_1": "The image shows a room with a chair and a ceiling fan in it. There are cushions on the chair, a table with various objects on it, curtains on the right side, and a window with wooden blinds. Through the window, we can see trees and the sky.",
-        "denoise_1": "",
-        "seed_1": "",
-        "cnet_strength_1": "",
-        "prompt_2": "The image shows a room with a chair sitting in front of a sliding glass door, a desk, curtains, and a ceiling fan. Through the glass doors, we can see trees and the sky, creating a peaceful atmosphere.",
-        "denoise_2": "",
-        "seed_2": "",
-        "cnet_strength_2": "",
-        "prompt_3": "The image shows a bedroom with a bed adorned with pillows and a blanket, two lamps on either side of the bed, a carpet on the floor, and a window in the background.",
-        "denoise_3": "",
-        "seed_3": "",
-        "cnet_strength_3": "",
-        "prompt_4": "The image shows a bedroom with a large bed with a white bed sheet and pillows, a carpet on the floor, a chair, a table with various objects on it, a window with a curtain, and a view of trees outside.",
-        "denoise_4": "",
-        "seed_4": "",
-        "cnet_strength_4": "",
-        "prompt_5": "The image shows a room with a chair and a table in it, a carpet on the floor, a cupboard, a door with a handle, curtains, and a glass door leading to a view of trees and plants outside.",
-        "denoise_5": "",
-        "seed_5": "",
-        "cnet_strength_5": "",
-        "prompt_6": "",
-        "denoise_6": "",
-        "seed_6": "",
-        "cnet_strength_6": "",
-        "prompt_7": "",
-        "denoise_7": "",
-        "seed_7": "",
-        "cnet_strength_7": "",
-        "prompt_8": "",
-        "denoise_8": "",
-        "seed_8": "",
-        "cnet_strength_8": "",
-        "prompt_9": "",
-        "denoise_9": "",
-        "seed_9": "",
-        "cnet_strength_9": "",
-        "prompt_10": "",
-        "denoise_10": "",
-        "seed_10": "",
-        "cnet_strength_10": "",
-        "prompt_11": "",
-        "denoise_11": "",
-        "seed_11": "",
-        "cnet_strength_11": ""
-      },
-      "widgets_values": [
-        true,
-        0,
-        "",
-        "",
-        "unchanged",
-        "",
-        "unchanged",
-        false
-      ]
     },
     {
       "id": 758,
@@ -951,7 +553,7 @@
           "name": "Controlnet_Pipe",
           "type": "Controlnet_Pipe",
           "links": [
-            745
+            772
           ]
         },
         {
@@ -1057,7 +659,7 @@
         952.4614553290883
       ],
       "flags": {},
-      "order": 25,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -1131,111 +733,7 @@
         "FLUX1",
         1,
         30,
-        562828281463911,
-        "randomize",
-        3.5,
-        "euler",
-        "simple",
-        true,
-        1024,
-        "",
-        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
-        0.27,
-        "none",
-        0,
-        false,
-        false,
-        ""
-      ]
-    },
-    {
-      "id": 778,
-      "type": "TBG ETUR Refiner CE",
-      "pos": [
-        980.908519651406,
-        -15.506645794735784
-      ],
-      "size": [
-        486.7178752679242,
-        929.076856076101
-      ],
-      "flags": {},
-      "order": 20,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "Model",
-          "name": "model",
-          "type": "MODEL",
-          "link": 741
-        },
-        {
-          "label": "Clip",
-          "name": "clip",
-          "type": "CLIP",
-          "link": 742
-        },
-        {
-          "label": "VAE",
-          "name": "vae",
-          "type": "VAE",
-          "link": 743
-        },
-        {
-          "label": "TBG Pipe",
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 744
-        },
-        {
-          "label": "TBG ControlNet Pipe",
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": 745
-        },
-        {
-          "label": "TBG enrichment Pipe",
-          "name": "Enrichment_Pipe",
-          "shape": 7,
-          "type": "Enrichment_Pipe",
-          "link": null
-        },
-        {
-          "label": "Redux_Style_Model",
-          "name": "Redux_Style_Model",
-          "shape": 7,
-          "type": "STYLE_MODEL",
-          "link": null
-        },
-        {
-          "label": "Redux_Clip_Vision",
-          "name": "Redux_Clip_Vision",
-          "shape": 7,
-          "type": "CLIP_VISION",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Refined",
-          "type": "IMAGE",
-          "links": [
-            746,
-            747
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Refiner CE"
-      },
-      "widgets_values": [
-        "FLUX1",
-        1,
-        30,
-        1051166507913440,
+        705441270271602,
         "randomize",
         3.5,
         "euler",
@@ -1256,8 +754,8 @@
       "id": 781,
       "type": "TBG ETUR Control Net Pipeline",
       "pos": [
-        96.40381403947063,
-        2081.3980952531238
+        4483.297625957673,
+        564.0126977128873
       ],
       "size": [
         340.359375,
@@ -1326,15 +824,15 @@
       "id": 782,
       "type": "TBG ETUR Refiner CE",
       "pos": [
-        2425.6768258937727,
-        1579.4257922861602
+        6812.570637811974,
+        62.04039474592355
       ],
       "size": [
         470.15373234182334,
         926.1537566380503
       ],
       "flags": {},
-      "order": 21,
+      "order": 23,
       "mode": 0,
       "inputs": [
         {
@@ -1408,7 +906,7 @@
         "FLUX1",
         1,
         30,
-        189366981812732,
+        266977170288119,
         "randomize",
         3.5,
         "euler",
@@ -1426,15 +924,15 @@
       ]
     },
     {
-      "id": 763,
+      "id": 783,
       "type": "LoadImage",
       "pos": [
-        -354.00193990648864,
-        1836.1619641126304
+        -360,
+        260
       ],
       "size": [
-        420,
-        460
+        282.798828125,
+        314
       ],
       "flags": {},
       "order": 7,
@@ -1445,7 +943,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            734
+            766
           ]
         },
         {
@@ -1456,24 +954,128 @@
       ],
       "properties": {
         "cnr_id": "comfy-core",
-        "ver": "0.3.47",
+        "ver": "0.21.1",
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "5ef0a5165852795.640eed1664a4b.jpg",
+        "Flyx2klein-denoise1-refimage-softmerge.png",
         "image"
       ]
     },
     {
-      "id": 717,
-      "type": "LoadImage",
+      "id": 786,
+      "type": "TBG ETUR Refiner CE",
       "pos": [
-        -360,
-        260
+        980.908519651406,
+        -15.506645794735784
       ],
       "size": [
-        420,
-        460
+        400,
+        870
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 768
+        },
+        {
+          "label": "Clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 769
+        },
+        {
+          "label": "VAE",
+          "name": "vae",
+          "type": "VAE",
+          "link": 770
+        },
+        {
+          "label": "TBG Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 776
+        },
+        {
+          "label": "TBG ControlNet Pipe",
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 772
+        },
+        {
+          "label": "TBG enrichment Pipe",
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": null
+        },
+        {
+          "label": "Redux_Style_Model",
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": null
+        },
+        {
+          "label": "Redux_Clip_Vision",
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Refined",
+          "type": "IMAGE",
+          "links": [
+            773,
+            774
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "1.1.17",
+        "Node name for S&R": "TBG ETUR Refiner CE"
+      },
+      "widgets_values": [
+        "FLUX1",
+        1,
+        30,
+        419856370808976,
+        "randomize",
+        3.5,
+        "euler",
+        "simple",
+        true,
+        1024,
+        "",
+        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        0.27,
+        "none",
+        0,
+        false,
+        false,
+        ""
+      ]
+    },
+    {
+      "id": 784,
+      "type": "LoadImage",
+      "pos": [
+        4032.891872011714,
+        318.7765665723937
+      ],
+      "size": [
+        282.798828125,
+        314
       ],
       "flags": {},
       "order": 8,
@@ -1484,7 +1086,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            673
+            765
           ]
         },
         {
@@ -1495,12 +1097,298 @@
       ],
       "properties": {
         "cnr_id": "comfy-core",
-        "ver": "0.3.47",
+        "ver": "0.21.1",
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "5ef0a5165852795.640eed1664a4b.jpg",
+        "Flyx2klein-denoise1-refimage-softmerge.png",
         "image"
+      ]
+    },
+    {
+      "id": 785,
+      "type": "TBG ETUR Upscaler and Tile Generator CE",
+      "pos": [
+        90.54473119275066,
+        -11.938810085335938
+      ],
+      "size": [
+        400,
+        330
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 766
+        },
+        {
+          "name": "Segment_Mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            775
+          ]
+        },
+        {
+          "name": "Upscaled Image",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "1.1.17",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE"
+      },
+      "widgets_values": [
+        1024,
+        "NONE",
+        2,
+        "NONE",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        0,
+        "fixed",
+        16,
+        ""
+      ]
+    },
+    {
+      "id": 776,
+      "type": "TBG ETUR Upscaler and Tile Generator CE",
+      "pos": [
+        5916.310013204751,
+        73.98849915231816
+      ],
+      "size": [
+        400,
+        464
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 737
+        },
+        {
+          "name": "Segment_Mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            738
+          ]
+        },
+        {
+          "name": "Upscaled Image",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
+      },
+      "widgets_values": [
+        1024,
+        "FAST/_bilinear",
+        2,
+        "NONE",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        0,
+        "fixed",
+        64,
+        ""
+      ]
+    },
+    {
+      "id": 772,
+      "type": "TBG ETUR Upscaler and Tile Generator CE",
+      "pos": [
+        4483.436603204464,
+        46.83775648705796
+      ],
+      "size": [
+        400,
+        464
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 765
+        },
+        {
+          "name": "Segment_Mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": []
+        },
+        {
+          "name": "Upscaled Image",
+          "type": "IMAGE",
+          "links": [
+            735,
+            737
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
+      },
+      "widgets_values": [
+        1024,
+        "SuperResolution/Tiled-SeedVR2 Standard",
+        2,
+        "NONE",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        0,
+        "fixed",
+        64,
+        ""
+      ]
+    },
+    {
+      "id": 787,
+      "type": "TBG ETUR Tile Overrides",
+      "pos": [
+        517.2139503947553,
+        207.50037743807118
+      ],
+      "size": [
+        428.5418750000001,
+        4430
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Tile Prompt Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 775
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            776
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "1.1.17",
+        "Node name for S&R": "TBG ETUR Tile Overrides",
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false,
+        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}"
+      },
+      "widgets_values": [
+        true,
+        0,
+        "",
+        "",
+        "unchanged",
+        "",
+        "unchanged",
+        false
+      ]
+    },
+    {
+      "id": 760,
+      "type": "TBG ETUR Tile Overrides",
+      "pos": [
+        6346.43475065269,
+        180.16059472219266
+      ],
+      "size": [
+        434.3565808105468,
+        13950.000000000062
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 738
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            761
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Tile Overrides",
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false,
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}"
+      },
+      "widgets_values": [
+        true,
+        0,
+        "",
+        "",
+        "unchanged",
+        "",
+        "unchanged",
+        false
       ]
     }
   ],
@@ -1514,36 +1402,12 @@
       "MODEL"
     ],
     [
-      673,
-      717,
-      0,
-      744,
-      0,
-      "IMAGE"
-    ],
-    [
-      674,
-      744,
-      0,
-      745,
-      0,
-      "TBG_Pipe"
-    ],
-    [
       718,
       762,
       0,
       761,
       0,
       "MODEL"
-    ],
-    [
-      734,
-      763,
-      0,
-      772,
-      0,
-      "IMAGE"
     ],
     [
       735,
@@ -1576,62 +1440,6 @@
       777,
       0,
       "CONTROL_NET"
-    ],
-    [
-      741,
-      719,
-      0,
-      778,
-      0,
-      "MODEL"
-    ],
-    [
-      742,
-      720,
-      1,
-      778,
-      1,
-      "CLIP"
-    ],
-    [
-      743,
-      720,
-      2,
-      778,
-      2,
-      "VAE"
-    ],
-    [
-      744,
-      745,
-      0,
-      778,
-      3,
-      "TBG_Pipe"
-    ],
-    [
-      745,
-      777,
-      0,
-      778,
-      4,
-      "Controlnet_Pipe"
-    ],
-    [
-      746,
-      778,
-      0,
-      748,
-      0,
-      "IMAGE"
-    ],
-    [
-      747,
-      778,
-      0,
-      751,
-      0,
-      "IMAGE"
     ],
     [
       748,
@@ -1744,6 +1552,86 @@
       766,
       0,
       "IMAGE"
+    ],
+    [
+      765,
+      784,
+      0,
+      772,
+      0,
+      "IMAGE"
+    ],
+    [
+      766,
+      783,
+      0,
+      785,
+      0,
+      "IMAGE"
+    ],
+    [
+      768,
+      719,
+      0,
+      786,
+      0,
+      "MODEL"
+    ],
+    [
+      769,
+      720,
+      1,
+      786,
+      1,
+      "CLIP"
+    ],
+    [
+      770,
+      720,
+      2,
+      786,
+      2,
+      "VAE"
+    ],
+    [
+      772,
+      777,
+      0,
+      786,
+      4,
+      "Controlnet_Pipe"
+    ],
+    [
+      773,
+      786,
+      0,
+      748,
+      0,
+      "IMAGE"
+    ],
+    [
+      774,
+      786,
+      0,
+      751,
+      0,
+      "IMAGE"
+    ],
+    [
+      775,
+      785,
+      0,
+      787,
+      0,
+      "TBG_Pipe"
+    ],
+    [
+      776,
+      787,
+      0,
+      786,
+      3,
+      "TBG_Pipe"
     ]
   ],
   "groups": [
@@ -1757,7 +1645,6 @@
         140
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -1770,7 +1657,6 @@
         140
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -1783,49 +1669,50 @@
         1347.1362728635863
       ],
       "color": "#3f789e",
-      "font_size": 24,
       "flags": {}
     },
     {
       "id": 39,
       "title": "TBG",
       "bounding": [
-        -374.00193990648864,
-        1476.1619641126304,
+        4012.891872011714,
+        -41.22343342760621,
         4143.015000956012,
         1347.1362728635863
       ],
       "color": "#3f789e",
-      "font_size": 24,
       "flags": {}
     },
     {
       "id": 40,
       "title": "Super Resolution WF",
       "bounding": [
-        -394.0019399064889,
-        1316.1619641126304,
+        4031.2703395682183,
+        -255.52765963000954,
         4140,
         140
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.35049389948139253,
+      "scale": 0.21762913579014861,
       "offset": [
-        1174.3337468274515,
-        269.85618395979486
+        1467.083138603426,
+        1689.4467919590443
       ]
     },
-    "frontendVersion": "1.39.19",
+    "frontendVersion": "1.43.18",
     "workflowRendererVersion": "LG",
     "ue_links": [],
-    "groupNodes": {}
+    "groupNodes": {},
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }

@@ -280,6 +280,7 @@ class TBGKSampler():
             self.full_sigmas = sigmas
             self.steps = len(sigmas)-1
         self.original_denoise_mask_fn = self.model.model_options.get("denoise_mask_function")
+        print(f"[TBG Differential Diffusion] sampler_hook_present={self.original_denoise_mask_fn is not None}")
         mask_wrapper = self.create_denoise_mask_wrapper(self.original_denoise_mask_fn)
         self.model.set_model_denoise_mask_function(mask_wrapper)
         is_split_pass = start_at_step > 0 or self._state is not None

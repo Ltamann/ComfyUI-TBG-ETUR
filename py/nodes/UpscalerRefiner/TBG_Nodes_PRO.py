@@ -244,7 +244,10 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_PRO():
                 #PRO_Tile_Fusion_Mode":
                 "Fusion Mode": (self.DIFFUSION_MODES, {"label": "PRO_Tile_Fusion_Mode", "default": "Neuro_Generative_Tile_Fusion"}),
                 #PRO_Tile_Fusion_margin
-                "Fusion Margin": ("INT",{"label": "PRO_Tile_Fusion_blur_margin","default": 64,"min": 0, "max": 128, "step": 8}),
+                "Fusion Reference Margin": ("INT",{"label": "PRO_Tile_Fusion_reference_margin","default": 0,"min": 0, "max": 256, "step": 8,
+                                                      "tooltip": "Reference border content kept around each NGTF tile and cropped out when stitching the image back together."}),
+                "Fusion Margin": ("INT",{"label": "Fusion Blur","default": 64,"min": 0, "max": 128, "step": 8,
+                                           "tooltip": "Fusion blur width used for NGTF tile blending."}),
                 #PRO_Fusion_Space_Denoise"
                 "Fusion Strength": ("FLOAT",
                                              {"label": "Fusion Strength", "default": 0.95, "min": 0,
@@ -535,6 +538,8 @@ class TBG_ETUR_Labs_Refiner():
                                          "tooltip": "LanPaint: Universal Inpainting Sampler with Think Mode"}),
                 "Differential_Diffusion": ("BOOLEAN", {"label": "Differential_Diffusion", "default": True,
                                          "tooltip": "Differential_Diffusion: ON OFF"}),
+                "Flux2_Tile_Color_Correction": ("BOOLEAN", {"label": "Flux2 Tile Color Correction", "default": True,
+                                         "tooltip": "Enable Flux2-specific per-tile tone correction. If this Labs node is not connected, the refiner keeps this enabled by default."}),
                 #"point_grid_image_stabilizer_experimental"
                 "Color & Structure Stabilizer": ("FLOAT", {"default": 0, "min": 0, "max": 1.0, "display": "slider",
                                                            "tooltip": "Uses a grid of anchor points to stabilize color and structure, reducing drift and preserving spatial coherence. Experimental feature."}),

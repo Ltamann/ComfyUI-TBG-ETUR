@@ -6,6 +6,7 @@ import nodes
 import numpy as np
 from comfy import model_management
 import torch
+import torch.nn.functional as F
 from .....TBG.SERVERS.WORKER_server import WORKER
 from comfy_extras.nodes_mask import ImageCompositeMasked
 if hasattr(ImageCompositeMasked, "execute"):
@@ -96,6 +97,186 @@ class TBG_Image():
         out = out.permute(0, 2, 3, 1).contiguous()
 
         return (out,)
+
+    @staticmethod
+    def _mask_to_bchw(mask, ref_tensor):
+        if mask is None:
+            return None
+
+        if isinstance(mask, np.ndarray):
+            mask = torch.from_numpy(mask)
+
+        mask = mask.to(device=ref_tensor.device, dtype=torch.float32)
+
+        if mask.ndim == 2:
+            mask = mask.unsqueeze(0).unsqueeze(0)
+        elif mask.ndim == 3:
+            if mask.shape[0] == ref_tensor.shape[0]:
+                mask = mask.unsqueeze(1)
+            else:
+                mask = mask.unsqueeze(0)
+        elif mask.ndim == 4 and mask.shape[-1] == 1:
+            mask = mask.permute(0, 3, 1, 2)
+
+        if mask.ndim != 4:
+            return None
+
+        if mask.shape[-2:] != ref_tensor.shape[-2:]:
+            mask = F.interpolate(mask, size=ref_tensor.shape[-2:], mode="bilinear", align_corners=False)
+
+        if mask.shape[0] != ref_tensor.shape[0]:
+            mask = mask.expand(ref_tensor.shape[0], -1, -1, -1)
+
+        return mask.clamp_(0.0, 1.0)
+
+    @staticmethod
+    def _masked_channel_stats(image_bchw, mask_bchw):
+        weight = mask_bchw.sum(dim=(-2, -1), keepdim=True).clamp_min(1e-6)
+        mean = (image_bchw * mask_bchw).sum(dim=(-2, -1), keepdim=True) / weight
+        var = (((image_bchw - mean) ** 2) * mask_bchw).sum(dim=(-2, -1), keepdim=True) / weight
+        std = var.clamp_min(1e-6).sqrt()
+        return mean, std
+
+    @classmethod
+    def _bchw_mask_to_bhw(cls, mask_bchw):
+        if mask_bchw is None:
+            return None
+        if mask_bchw.ndim == 4 and mask_bchw.shape[1] == 1:
+            return mask_bchw.squeeze(1)
+        return mask_bchw
+
+    @classmethod
+    def build_post_sampling_masks(cls, image_ref, border_correction_mask, denoise_mask=None, protect_threshold=(1.0 / 255.0)):
+        if not isinstance(image_ref, torch.Tensor):
+            return {}
+
+        ref_bchw = image_ref.to(torch.float32).permute(0, 3, 1, 2).contiguous()
+        border_mask = cls._mask_to_bchw(border_correction_mask, ref_bchw)
+        if border_mask is None:
+            border_mask = torch.ones(
+                (ref_bchw.shape[0], 1, ref_bchw.shape[-2], ref_bchw.shape[-1]),
+                device=ref_bchw.device,
+                dtype=ref_bchw.dtype,
+            )
+
+        # border_mask is the post-sampling protection map: white=center preserve, black=editable seam.
+        preserved_strip = border_mask.clamp(0.0, 1.0)
+
+        explicit_protected = torch.zeros_like(preserved_strip)
+        has_explicit_protection = False
+        if denoise_mask is not None:
+            denoise_mask_bchw = cls._mask_to_bchw(denoise_mask, ref_bchw)
+            if denoise_mask_bchw is not None:
+                explicit_protected = (denoise_mask_bchw <= float(protect_threshold)).to(ref_bchw.dtype)
+                has_explicit_protection = bool(explicit_protected.max().item() > 0.0)
+
+        hard_lock = torch.maximum(preserved_strip, explicit_protected)
+        trusted = hard_lock
+        editable = (1.0 - hard_lock).clamp_(0.0, 1.0)
+        # Final blend should keep the editable seam from the sampled tile, not re-impose the source strip.
+        final_blend = editable
+
+        return {
+            "border_blend": cls._bchw_mask_to_bhw(border_mask),
+            "preserved_strip": cls._bchw_mask_to_bhw(preserved_strip),
+            "explicit_protected": cls._bchw_mask_to_bhw(explicit_protected),
+            "hard_lock": cls._bchw_mask_to_bhw(hard_lock),
+            "trusted": cls._bchw_mask_to_bhw(trusted),
+            "editable": cls._bchw_mask_to_bhw(editable),
+            "final_blend": cls._bchw_mask_to_bhw(final_blend),
+            "has_explicit_protection": has_explicit_protection,
+        }
+
+    @classmethod
+    def stabilize_tile_low_frequency_from_reference(cls, image_ref, image_target, trusted_mask, apply_mask=None, strength=1.0):
+        if trusted_mask is None:
+            return (image_target,)
+
+        if not isinstance(image_ref, torch.Tensor) or not isinstance(image_target, torch.Tensor):
+            return (image_target,)
+
+        ref = image_ref.to(torch.float32).clone()
+        targ = image_target.to(torch.float32).clone()
+
+        ref_bchw = ref.permute(0, 3, 1, 2).contiguous()
+        targ_bchw = targ.permute(0, 3, 1, 2).contiguous()
+        trusted_mask_bchw = cls._mask_to_bchw(trusted_mask, ref_bchw)
+        if trusted_mask_bchw is None or trusted_mask_bchw.max().item() <= 1e-5:
+            return (image_target,)
+        apply_mask_bchw = cls._mask_to_bchw(apply_mask, ref_bchw) if apply_mask is not None else None
+
+        height, width = ref_bchw.shape[-2:]
+        pooled_h = max(8, min(64, height // 8))
+        pooled_w = max(8, min(64, width // 8))
+        low_ref = F.interpolate(
+            F.adaptive_avg_pool2d(ref_bchw, (pooled_h, pooled_w)),
+            size=(height, width),
+            mode="bilinear",
+            align_corners=False,
+        )
+        low_targ = F.interpolate(
+            F.adaptive_avg_pool2d(targ_bchw, (pooled_h, pooled_w)),
+            size=(height, width),
+            mode="bilinear",
+            align_corners=False,
+        )
+
+        ref_mean, ref_std = cls._masked_channel_stats(low_ref, trusted_mask_bchw)
+        targ_mean, targ_std = cls._masked_channel_stats(low_targ, trusted_mask_bchw)
+
+        gain = (ref_std / targ_std).clamp(0.85, 1.15)
+        bias = (ref_mean - (targ_mean * gain)).clamp(-0.15, 0.15)
+
+        low_targ_corrected = (low_targ * gain) + bias
+        high_targ = targ_bchw - low_targ
+        corrected_full = (high_targ + low_targ_corrected).clamp_(0.0, 1.0)
+
+        if apply_mask_bchw is not None:
+            corrected = targ_bchw + (corrected_full - targ_bchw) * apply_mask_bchw * float(strength)
+        else:
+            corrected = targ_bchw + (corrected_full - targ_bchw) * float(strength)
+
+        corrected = corrected.clamp_(0.0, 1.0)
+        corrected = corrected.permute(0, 2, 3, 1).contiguous()
+
+        return (corrected,)
+
+    @classmethod
+    def restore_from_reference_mask(cls, image_ref, image_target, protect_mask):
+        if protect_mask is None:
+            return (image_target,)
+
+        if not isinstance(image_ref, torch.Tensor) or not isinstance(image_target, torch.Tensor):
+            return (image_target,)
+
+        ref_bchw = image_ref.to(torch.float32).permute(0, 3, 1, 2).contiguous()
+        targ_bchw = image_target.to(torch.float32).permute(0, 3, 1, 2).contiguous()
+        protect_mask_bchw = cls._mask_to_bchw(protect_mask, ref_bchw)
+        if protect_mask_bchw is None or protect_mask_bchw.max().item() <= 1e-5:
+            return (image_target,)
+
+        restored = targ_bchw + (ref_bchw - targ_bchw) * protect_mask_bchw
+        restored = restored.clamp_(0.0, 1.0).permute(0, 2, 3, 1).contiguous()
+        return (restored,)
+
+    @classmethod
+    def masked_mean_abs_diff(cls, image_a, image_b, mask=None):
+        if not isinstance(image_a, torch.Tensor) or not isinstance(image_b, torch.Tensor):
+            return 0.0
+
+        a_bchw = image_a.to(torch.float32).permute(0, 3, 1, 2).contiguous()
+        b_bchw = image_b.to(torch.float32).permute(0, 3, 1, 2).contiguous()
+        diff = (a_bchw - b_bchw).abs().mean(dim=1, keepdim=True)
+
+        if mask is None:
+            return float(diff.mean().item())
+
+        mask_bchw = cls._mask_to_bchw(mask, a_bchw)
+        if mask_bchw is None:
+            return float(diff.mean().item())
+
+        weight = mask_bchw.sum().clamp_min(1e-6)
+        return float(((diff * mask_bchw).sum() / weight).item())
 
     # LOCAL HELPER
     @classmethod

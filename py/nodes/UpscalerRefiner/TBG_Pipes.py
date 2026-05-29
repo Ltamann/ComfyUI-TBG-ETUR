@@ -88,18 +88,18 @@ class TBG_ControlNetPipeline:
     DESCRIPTION = 'An tile space controlnet wrapper for TBG ETUR'
 
     def update_pipe(
-            self,
-            controlnet=None,
-            strength=0.5,
-            start=0.0,
-            end=0.5,
-            canny_low_threshold=100,
-            canny_high_threshold=150,
-            preprocessor='None',
-            controlnet_mode='NONE',
-            custom_controlnet_image=None,
-            model_patch=None,
-            Controlnet_Pipe=None
+        self,
+        controlnet=None,
+        strength=0.5,
+        start=0.0,
+        end=0.5,
+        canny_low_threshold=100,
+        canny_high_threshold=150,
+        preprocessor='None',
+        controlnet_mode='NONE',
+        custom_controlnet_image=None,
+        model_patch=None,
+        Controlnet_Pipe=None
     ):
         if Controlnet_Pipe is None or not isinstance(Controlnet_Pipe, list):
             Controlnet_Pipe = []
@@ -476,7 +476,10 @@ class TBG_TilePrompter_v1():
         explicit = kwargs.get("Enable_Tile_Preview", None)
         if explicit is not None:
             return bool(explicit)
-        env_enabled = str(os.getenv("TBG_TILEPROMPTER_PREVIEW", "0")).strip().lower() in {"1", "true", "yes", "on"}
+        preview_setting = str(os.getenv("TBG_TILEPROMPTER_PREVIEW", "1")).strip().lower()
+        if preview_setting in {"0", "false", "no", "off"}:
+            return False
+        env_enabled = preview_setting in {"1", "true", "yes", "on"}
         is_dev = str(getattr(getattr(tbg, "API", None), "status", "")).lower() == "dev"
         return env_enabled or is_dev
 

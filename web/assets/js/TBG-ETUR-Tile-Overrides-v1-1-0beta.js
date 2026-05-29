@@ -30,6 +30,11 @@
 import { app } from "../../../scripts/app.js";
 import { ComfyWidgets } from "../../../scripts/widgets.js";   // eslint-disable-line no-unused-vars
 import { api } from "../../../scripts/api.js";
+import {
+    getNodeWidgets,
+    isTBGNode,
+    requestNodeRedraw,
+} from "./TBG-ETUR-compat.js";
 
 /*──────────────────────────────────────────────────────────────────────────*/
 /* Backend connection status (unchanged; informational)                     */
@@ -98,6 +103,105 @@ function getInp(node) {
     return id ? window.TBG.TBGETUR.inputs[id] : { prompts: [], tiles: [], denoises: [], seeds: [], cnet_strength: [] };
 }
 
+const TBG_TILE_OVERRIDES_NODE_NAMES = [
+    "TBG ETUR Tile Overrides",
+    "TBG_TilePrompter_v1",
+];
+
+const TBG_TILE_ROW_WIDGET_TYPE = "tbg_tile_row";
+
+function isTileOverridesNodeClass(nodeType, nodeData) {
+    return isTBGNode(nodeType, nodeData, TBG_TILE_OVERRIDES_NODE_NAMES);
+}
+
+function getTileRowWidgetElement(widget) {
+    return widget?.element || widget?.inputEl || null;
+}
+
+function isLegacyTileRowWidget(widget) {
+    return widget?.type === "customtext" && /^tile_\d+$/i.test(widget?.name || "");
+}
+
+function isTBGTileRowWidget(widget) {
+    const element = getTileRowWidgetElement(widget);
+    if (!element?.querySelector) return false;
+    if (widget?.type !== TBG_TILE_ROW_WIDGET_TYPE && !isLegacyTileRowWidget(widget)) return false;
+    return !!element.querySelector('textarea[placeholder^="tile "]');
+}
+
+function getTileRowWidgetElements(node) {
+    return getNodeWidgets(node)
+        .filter(isTBGTileRowWidget)
+        .map(getTileRowWidgetElement)
+        .filter(Boolean);
+}
+
+function syncNodeWidgetsToTileState(node) {
+    const msg = getMsg(node);
+    const wrappers = getTileRowWidgetElements(node);
+
+    wrappers.forEach((wrapperEl) => {
+        const textarea = wrapperEl.querySelector('textarea[placeholder^="tile "]');
+        if (!textarea) return;
+        const idx = parseInt(textarea.placeholder.replace(/\D/g, ""), 10) - 1;
+        const denoiseInput = wrapperEl.querySelector('input[placeholder^="denoise "]');
+        const seedInput = wrapperEl.querySelector('input[placeholder^="seed "]');
+        const cnetInput = wrapperEl.querySelector('input[placeholder^="cnet_strength "]');
+
+        msg.prompts[idx] = textarea.value || "";
+        msg.denoises[idx] = denoiseInput?.value || "";
+        msg.seeds[idx] = seedInput?.value || "";
+        msg.cnet_strength[idx] = cnetInput?.value || "";
+
+        setNodePropertySafe(node, `prompt_${idx}`, (msg.prompts[idx] || "").trim());
+        setNodePropertySafe(node, `denoise_${idx}`, (msg.denoises[idx] || "").trim());
+        setNodePropertySafe(node, `seed_${idx}`, (msg.seeds[idx] || "").trim());
+        setNodePropertySafe(node, `cnet_strength_${idx}`, (msg.cnet_strength[idx] || "").trim());
+    });
+}
+
+function getTileListFromExecutionMessage(message) {
+    const candidates = [
+        message?.tiles,
+        message?.ui?.tiles,
+        message?.output?.tiles,
+        message?.value?.tiles,
+        message?.value?.[0]?.tiles,
+    ];
+    return candidates.find((tiles) => Array.isArray(tiles)) || [];
+}
+
+function getTileRowCount(msg) {
+    return Math.max(
+        Array.isArray(msg.tiles) ? msg.tiles.length : 0,
+        Array.isArray(msg.prompts) ? msg.prompts.length : 0,
+        Array.isArray(msg.denoises) ? msg.denoises.length : 0,
+        Array.isArray(msg.seeds) ? msg.seeds.length : 0,
+        Array.isArray(msg.cnet_strength) ? msg.cnet_strength.length : 0,
+    );
+}
+
+function hasTileImage(tile) {
+    return !!(tile && tile.filename && tile.type);
+}
+
+function hydrateTileOverrideNode(node) {
+    syncPropertiesToMessage(node);
+    const msg = getMsg(node);
+    if (!Array.isArray(msg.tiles)) msg.tiles = [];
+    return msg;
+}
+
+function refreshTileOverrideNode(node, { pack = false } = {}) {
+    hydrateTileOverrideNode(node);
+    if (!Array.isArray(node?.widgets)) return;
+    TBGUpscalerTileNodeWidget.refresh(node);
+    requestNodeRedraw(node);
+    if (pack) {
+        packEditsToJson(node);
+    }
+}
+
 /*──────────────────────────────────────────────────────────────────────────*/
 /* Property key builders + safe property access                             */
 /*──────────────────────────────────────────────────────────────────────────*/
@@ -124,6 +228,7 @@ function getNodeProperty(node, key, fallback = "") {
 }
 
 function imageDataToUrl(data) {
+  if (!hasTileImage(data)) return "";
   return api.apiURL(
     `/view?filename=${encodeURIComponent(data.filename)}&type=${data.type}&subfolder=${data.subfolder}${app.getPreviewFormatParam()}${app.getRandParam()}`
   );
@@ -229,13 +334,6 @@ function syncPropertiesToMessage(node) {
     msg.denoises = denoises;
     msg.seeds = seeds;
     msg.cnet_strength = cnet;
-
-    if (actualTileCount > 0 && (!Array.isArray(msg.tiles) || msg.tiles.length < actualTileCount)) {
-        const existingTiles = Array.isArray(msg.tiles) ? msg.tiles : [];
-        msg.tiles = Array.from({ length: actualTileCount }, (_, i) => {
-            return existingTiles[i] || { filename: "", type: "", subfolder: "" };
-        });
-    }
 }
 
 /*──────────────────────────────────────────────────────────────────────────*/
@@ -243,9 +341,7 @@ function syncPropertiesToMessage(node) {
 /*──────────────────────────────────────────────────────────────────────────*/
 
 function syncAllWrappersToProperties(node) {
-    const wrappers = (node.widgets || [])
-        .filter(w => w.type === "customtext" && w.inputEl)
-        .map(w => w.inputEl);
+    const wrappers = getTileRowWidgetElements(node);
 
     const msg = getMsg(node);
 
@@ -530,9 +626,6 @@ window.TBG.TBGWidgets = {
 
          denoiseInput.addEventListener('change', persistDenoise); // Immediate save on field exit
 
-        const img = document.createElement('img');
-        img.src = imageDataToUrl(tile);
-
         // Dark placeholder on missing/broken thumbnail
         const fallbackSvg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="140" height="140">
@@ -541,12 +634,15 @@ window.TBG.TBGWidgets = {
                 font-size="12" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" fill="#aaaaaa">[No Thumbnail]</text>
         </svg>
         `.trim();
+        const fallbackSrc = "data:image/svg+xml;utf8," + encodeURIComponent(fallbackSvg);
+        const img = document.createElement('img');
+        img.src = hasTileImage(tile) ? imageDataToUrl(tile) : fallbackSrc;
 
         img.onerror = () => {
           // Prevent infinite loop if fallback also triggers onerror
           if (img.dataset.tbgFallbackApplied === "1") return;
           img.dataset.tbgFallbackApplied = "1";
-          img.src = "data:image/svg+xml;utf8," + encodeURIComponent(fallbackSvg);
+          img.src = fallbackSrc;
         };
 
         const row_height = "140px";
@@ -585,6 +681,9 @@ window.TBG.TBGWidgets = {
 
         inputEl.style.display = "block";
         inputEl.style.width = "100%";
+        inputEl.style.height = "150px";
+        inputEl.style.setProperty("--comfy-widget-height", "150px");
+        inputEl.style.setProperty("--comfy-widget-min-height", "150px");
 
         const rightControls = document.createElement("div");
         rightControls.style.display = "flex";
@@ -634,10 +733,16 @@ window.TBG.TBGWidgets = {
 
         inputEl.appendChild(wrapper);
 
-        const widget = node.addDOMWidget(key, "customtext", inputEl, {
-            getValue() { return inputEl.value; },
-            setValue(v) { inputEl.value = v; },
+        const widget = node.addDOMWidget(key, TBG_TILE_ROW_WIDGET_TYPE, inputEl, {
+            hideOnZoom: false,
+            serialize: false,
+            getHeight() { return 150; },
+            getMinHeight() { return 150; },
+            getValue() { return ""; },
+            setValue() {},
         });
+        widget.serialize = false;
+        widget.element = inputEl;
         widget.inputEl = inputEl;
 
         //TBGUpscalerTileNodeWidget.setValue(node, widget.name, prompt);
@@ -719,13 +824,13 @@ class TBGUpscalerTileNodeWidget {
     static refresh(node) {
         const msg = getMsg(node);
 
-        // Remove legacy "tile N" text widgets and any previous customtext wrappers
+        // Remove legacy "tile N" text widgets and any previous TBG tile row wrappers.
         node.widgets = node.widgets.filter(widget => {
             if (widget.type === "text" && /^tile\s+\d+$/i.test(widget.name)) {
                 widget.onRemove?.();
                 return false;
             }
-            if (widget.type === "customtext") {
+            if (isTBGTileRowWidget(widget) || isLegacyTileRowWidget(widget)) {
                 try { widget.onRemove?.(); } catch (_) {}
                 return false;
             }
@@ -752,7 +857,7 @@ class TBGUpscalerTileNodeWidget {
 
         // Height calc
         try {
-            const tileCount = Array.isArray(msg.tiles) ? msg.tiles.length : 0;
+            const tileCount = getTileRowCount(msg);
             const H_ROW = 170, H_EXTRA = 180, H_MIN = 400, H_MAX = 20000;
             const total = H_EXTRA + tileCount * H_ROW;
             const height = Math.max(H_MIN, Math.min(H_MAX, total));
@@ -815,8 +920,8 @@ class TBGUpscalerTileNodeWidget {
                     const input_list = node.properties[this.INDEX.name] ?? this.INDEX.default;
 
                     node.widgets = node.widgets.filter((widget) => {
-                        if (widget.type === "customtext") {
-                            const textarea = widget.inputEl.querySelector('textarea[placeholder^="tile "]');
+                        if (isTBGTileRowWidget(widget)) {
+                            const textarea = getTileRowWidgetElement(widget).querySelector('textarea[placeholder^="tile "]');
                             if (textarea) {
                                 const dataId = textarea.getAttribute('placeholder');
                                 const indexValue = parseInt(dataId.replace('tile ', ''), 10);
@@ -863,8 +968,8 @@ class TBGUpscalerTileNodeWidget {
                         if (value === 'Use Global Denoise') value = '';
                         const input_list = node.properties[this.INDEX.name] ?? this.INDEX.default;
                         node.widgets = node.widgets.filter((widget) => {
-                            if (widget.type === "customtext") {
-                                const input = widget.inputEl.querySelector('input[placeholder^="denoise "]');
+                            if (isTBGTileRowWidget(widget)) {
+                                const input = getTileRowWidgetElement(widget).querySelector('input[placeholder^="denoise "]');
                                 if (input) {
                                     const dataId = input.getAttribute('placeholder');
                                     const indexValue = parseInt(dataId.replace('denoise ', ''), 10);
@@ -913,8 +1018,8 @@ class TBGUpscalerTileNodeWidget {
                         const input_list = node.properties[this.INDEX.name] ?? this.INDEX.default;
 
                         node.widgets = node.widgets.filter((widget) => {
-                            if (widget.type === "customtext") {
-                                const input = widget.inputEl.querySelector('input[placeholder^="cnet_strength "]');
+                            if (isTBGTileRowWidget(widget)) {
+                                const input = getTileRowWidgetElement(widget).querySelector('input[placeholder^="cnet_strength "]');
                                 if (input) {
                                     const dataId = input.getAttribute('placeholder');
                                     const indexValue = parseInt(dataId.replace('cnet_strength ', ''), 10);
@@ -961,8 +1066,8 @@ class TBGUpscalerTileNodeWidget {
                         .map((num) => Number(num) - 1);
 
                     node.widgets = node.widgets.filter((widget) => {
-                        if (widget.type === "customtext") {
-                            const seedInput = widget.inputEl.querySelector('input[placeholder^="seed "]');
+                        if (isTBGTileRowWidget(widget)) {
+                            const seedInput = getTileRowWidgetElement(widget).querySelector('input[placeholder^="seed "]');
                             if (seedInput) {
                                 const dataId = seedInput.getAttribute('placeholder');
                                 const indexValue = parseInt(dataId.replace('seed ', ''), 10);
@@ -1010,14 +1115,14 @@ class TBGUpscalerTileNodeWidget {
         const msg = getMsg(node);
 
         node.widgets = node.widgets.filter(widget => {
-            if (widget.type === "customtext") {
+            if (isTBGTileRowWidget(widget) || isLegacyTileRowWidget(widget)) {
                 try { widget.onRemove?.(); } catch (_) {}
                 return false;
             }
             return true;
         });
 
-        const count = Array.isArray(msg.tiles) ? msg.tiles.length : 0;
+        const count = getTileRowCount(msg);
 
         for (let i = 0; i < count; i++) {
             const promptVal = getNodeProperty(node, `prompt_${i}`, "");
@@ -1034,7 +1139,7 @@ class TBGUpscalerTileNodeWidget {
                 `tile_${i}`,
                 i,
                 promptVal,
-                msg.tiles[i],
+                msg.tiles[i] || null,
                 denoiseVal,
                 seedVal,
                 cnetVal,
@@ -1067,7 +1172,7 @@ const myExtension = {
         const nodeName = String(nodeData?.name ?? "");
         const nodeDisplayName = String(nodeData?.display_name ?? "");
         const nodeComfyClass = String(nodeType?.comfyClass ?? "");
-        const isTileOverridesNode =
+        const isTileOverridesNode = isTileOverridesNodeClass(nodeType, nodeData) ||
             nodeName === "TBG ETUR Tile Overrides" ||
             nodeDisplayName === "TBG ETUR Tile Overrides" ||
             nodeComfyClass === "TBG ETUR Tile Overrides" ||
@@ -1079,9 +1184,7 @@ const myExtension = {
 
               const r = onExecuted?.apply(this, arguments);
 
-                const wrappers = this.widgets
-                    .filter(w => w.type === "customtext" && w.inputEl)
-                    .map(w => w.inputEl);
+                const wrappers = getTileRowWidgetElements(this);
 
                 const prompts = [];
                 const denoises = [];
@@ -1132,7 +1235,7 @@ const myExtension = {
                 msg.denoises = denoises;
                 msg.seeds = seeds;
                 msg.cnet_strength = cnet;
-                msg.tiles = message.tiles || [];
+                msg.tiles = getTileListFromExecutionMessage(message);
 
 
 
@@ -1162,34 +1265,12 @@ const myExtension = {
                 return r;
               };
 
-
-
-            if (!window.TBG._loadGraphHooked) {
-              const origLoadGraphData = app.loadGraphData;
-              app.loadGraphData = async function(data, ...args) {
-                const r = await origLoadGraphData.apply(this, [data, ...args]);
-
-                for (const n of app.graph._nodes) {
-                  if (n.type === "TBG_TilePrompter_v1") {
-                    try {
-                      // Single sync â†’ single tiles fix â†’ single refresh â†’ single pack
-                      syncPropertiesToMessage(n);
-                      const m = getMsg(n);
-                      if (!Array.isArray(m.tiles)) m.tiles = [];
-                      TBGUpscalerTileNodeWidget.refresh(n);
-                      // Refresh on start reload
-                      console.log('[TBG] JSON loadGraphData n:',n)
-                      packEditsToJson(n);
-                      console.log("[TBG] Tile Promtper Initial sync done for node");
-                    } catch(e) {
-                      console.warn("[TBG] Tile Promtper Initial sync failed for node", n.id, e);
-                    }
-                  }
-                }
-                window.TBG._loadGraphHooked = true;
+            const onConfigure = nodeType.prototype.onConfigure;
+            nodeType.prototype.onConfigure = function(info) {
+                const r = onConfigure?.apply(this, arguments);
+                setTimeout(() => refreshTileOverrideNode(this), 0);
                 return r;
-              };
-            }
+            };
 
 
             if (!window.TBG._onNodeCreated) {
@@ -1198,12 +1279,12 @@ const myExtension = {
 
                     const r = onNodeCreated ? onNodeCreated.apply(this, arguments) : undefined;
 
-                    this.widgets = this.widgets.filter((widget) => {
+                    this.widgets = getNodeWidgets(this).filter((widget) => {
                         if (widget.type === "text" && widget.name?.startsWith?.("tile ")) {
                             widget.onRemove?.();
                             return false;
                         }
-                        if (widget.type === "customtext") {
+                        if (isTBGTileRowWidget(widget) || isLegacyTileRowWidget(widget)) {
                             try { widget.onRemove?.(); } catch (_) {}
                             return false;
                         }
@@ -1286,6 +1367,26 @@ const myExtension = {
 
                 return r;
             };
+    }},
+
+    async nodeCreated(node) {
+        const nodeType = String(node?.type ?? node?.constructor?.comfyClass ?? node?.title ?? "");
+        if (nodeType !== "TBG_TilePrompter_v1" && nodeType !== "TBG ETUR Tile Overrides") return;
+        setTimeout(() => refreshTileOverrideNode(node), 0);
+    },
+
+    async loadedGraphNode(node) {
+        const nodeType = String(node?.type ?? node?.constructor?.comfyClass ?? node?.title ?? "");
+        if (nodeType !== "TBG_TilePrompter_v1" && nodeType !== "TBG ETUR Tile Overrides") return;
+        setTimeout(() => refreshTileOverrideNode(node, { pack: true }), 0);
+    },
+
+    async afterConfigureGraph() {
+        if (!app?.graph?._nodes) return;
+        for (const node of app.graph._nodes) {
+            const nodeType = String(node?.type ?? node?.constructor?.comfyClass ?? node?.title ?? "");
+            if (nodeType !== "TBG_TilePrompter_v1" && nodeType !== "TBG ETUR Tile Overrides") continue;
+            setTimeout(() => refreshTileOverrideNode(node), 0);
         }
     },
 };

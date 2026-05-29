@@ -13,6 +13,7 @@ Requires the main process to:
 import os
 import socket
 import struct
+import time
 from typing import Any
 
 import cloudpickle
@@ -58,6 +59,7 @@ def _compress_structure(obj):
 class MainController:
     # Class-level cache for the port to avoid repeated env lookups
     _port_cache: int | None = None
+    _connect_retry_delays = (0.25, 0.5, 1.0, 2.0, 4.0)
 
     @classmethod
     def _get_port(cls) -> int:
@@ -101,9 +103,7 @@ class MainController:
 
         data = cloudpickle.dumps(payload)
 
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.settimeout(None)
-        client.connect(("127.0.0.1", port))
+        client = cls._connect_with_retry(port, class_name, method_name)
         try:
             client.sendall(struct.pack("!Q", len(data)))
             client.sendall(data)
@@ -129,6 +129,38 @@ class MainController:
             return result
         finally:
             client.close()
+
+    @classmethod
+    def _connect_with_retry(cls, port: int, class_name: str, method_name: str) -> socket.socket:
+        rpc_name = f"{class_name}.{method_name}"
+        last_error = None
+
+        for attempt, delay in enumerate((0.0,) + cls._connect_retry_delays, start=1):
+            if delay > 0:
+                time.sleep(delay)
+
+            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client.settimeout(None)
+            try:
+                client.connect(("127.0.0.1", int(port)))
+                if attempt > 1:
+                    print(f"[TBG_MAIN_RPC] Connected for {rpc_name} after retry {attempt - 1}")
+                return client
+            except OSError as e:
+                last_error = e
+                try:
+                    client.close()
+                except Exception:
+                    pass
+                if attempt <= len(cls._connect_retry_delays):
+                    print(
+                        f"[TBG_MAIN_RPC] Connect failed for {rpc_name} "
+                        f"(attempt {attempt}/{len(cls._connect_retry_delays) + 1}): {e}; retrying"
+                    )
+                    continue
+
+        print(f"[TBG_MAIN_RPC] Connect failed permanently for {rpc_name}: {last_error}")
+        raise last_error
 
     @classmethod
     def call_main_method(

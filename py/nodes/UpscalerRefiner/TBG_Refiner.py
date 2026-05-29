@@ -24,7 +24,7 @@ from ...utils.log import log
 from .inc.image import TBG_Image
 from .inc.sigmas import get_sigmas
 from .inc.sigmas import denoise_sigmas_tgb
-from .inc.cnet import get_Kontext_stiched_o_chained_cond, get_qwen_stiched_o_chained_cond
+from .inc.cnet import apply_reference_mode_hooks, get_Kontext_stiched_o_chained_cond, get_qwen_stiched_o_chained_cond
 import comfy.model_management as mm
 from types import SimpleNamespace
 
@@ -323,6 +323,7 @@ class TBG_Refiner_v1():
         if labs_refiner_dict is not None:
             # Optional
             tbg.PARAMS.Differential_Diffusion =  labs_refiner_dict.get('Differential_Diffusion', True)
+            tbg.PARAMS.Flux2_Tile_Color_Correction = labs_refiner_dict.get('Flux2_Tile_Color_Correction', True)
             tbg.KSAMPLER.custom_sigmas = labs_refiner_dict.get('Custom_Sigmas_!DENOISE=1', None)
             tbg.PARAMS.Alternative_Image = labs_refiner_dict.get('Resume_Tiled_Refinement_Image', None)
             # Requiered
@@ -345,6 +346,7 @@ class TBG_Refiner_v1():
 
             tbg.KSAMPLER.custom_sigmas = None
             tbg.PARAMS.Alternative_Image = None
+            tbg.PARAMS.Flux2_Tile_Color_Correction = True
             tbg.PARAMS.inpaint_conditioning = True
             tbg.PARAMS.point_grid_image_stabilizer_experimental = 0
             tbg.PARAMS.memorize = 'OFF'
@@ -401,6 +403,7 @@ class TBG_Refiner_v1():
         tbg.PARAMS.Laplacian_Pyramid_Blending =  kwargs.get('Enhanced_Laplacian_Blending', True)
         tbg.PARAMS.color_match_method = kwargs.get('Color_Match', 'none')
         tbg.PARAMS.color_match_str = kwargs.get('Color_Match_Str', 1)
+        tbg.PARAMS.model_type = kwargs.get('model_type', None)
         tbg.PARAMS.tiles_to_process_active = kwargs.get('Selected_Tiles_Only', False)
         tbg.PARAMS.Selected_Tiles_By_Numbers =  kwargs.get('Selected_Tiles_By_Numbers', '')
 
@@ -656,6 +659,16 @@ class TBG_Refiner_v1():
             filename_prefix = "TBG/compareTiles/"+ filename
             preview = nodes.PreviewImage()
             _ = preview.save_images(image, filename_prefix, None, None)['ui']['images']
+
+    @classmethod
+    def debug_image_to_folder(cls, image, filename):
+        if image is None:
+            return
+        try:
+            cls.image_to_folder(image, filename)
+        except Exception as e:
+            print(f"[TBG Debug] Skipping debug save '{filename}': {e}")
+
     @classmethod
     def conditioning(cls, image, index, tile_to_process):
         neg_low = None
@@ -676,10 +689,6 @@ class TBG_Refiner_v1():
                 if tbg.KSAMPLER.Controlnet_Pipe:
                     # build from Cnet stitched and chaind referent latent combination
                     positive = get_Kontext_stiched_o_chained_cond(tbg, positive, tbg.KSAMPLER.Controlnet_Pipe, tile_to_process)
-                else:
-                    # only feed tile as referent latent
-                    kontext_latent_image = nodes.VAEEncode().encode(tbg.KSAMPLER.vae, tile_to_process)[0]
-                    positive = append_reference_latent(positive, kontext_latent_image)
             else:
                 # FLUX standard conditioning (no Kontext)
 
@@ -699,10 +708,6 @@ class TBG_Refiner_v1():
                 if tbg.KSAMPLER.Controlnet_Pipe:
                     # build from Cnet stitched and chaind referent latent combination
                     positive = get_qwen_stiched_o_chained_cond(tbg, positive, tbg.KSAMPLER.Controlnet_Pipe, tile_to_process)
-                else:
-                    # only feed tile as referent latent
-                    kontext_latent_image = nodes.VAEEncode().encode(tbg.KSAMPLER.vae, tile_to_process)[0]
-                    positive = append_reference_latent(positive, kontext_latent_image)
             else:
 
                 positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
@@ -852,14 +857,14 @@ class TBG_Refiner_v1():
                 tbg = get_tbg(tiler_id)
                 with ((torch.inference_mode(True))):
                     if tbg.API.status == "Dev":
-                        cls.image_to_folder(tile_to_process, str(index) + "Tile before Sampling")
-                        cls.image_to_folder(MaskToImage_execute(inpaintmask)[0], str(index) + "Inpaint Mask before Sampling")
-                        cls.image_to_folder(MaskToImage_execute(Complexity_Mask)[0], str(index) + "Complexity_Mask before Sampling"  )
+                        cls.debug_image_to_folder(tile_to_process, str(index) + "Tile before Sampling")
+                        cls.debug_image_to_folder(MaskToImage_execute(inpaintmask)[0], str(index) + "Inpaint Mask before Sampling")
+                        cls.debug_image_to_folder(MaskToImage_execute(Complexity_Mask)[0], str(index) + "Complexity_Mask before Sampling"  )
 
 
                     if tbg.API.status == "Dev":
-                        cls.image_to_folder(tile_to_process,
-                                            str(index) + "tile_to_process-with-pre_Border_Correction_Mask")
+                        cls.debug_image_to_folder(tile_to_process,
+                                                  str(index) + "tile_to_process-post_tile_fusion_input")
 
 
 
@@ -910,7 +915,7 @@ class TBG_Refiner_v1():
                                 #tbg.SEGMENTS.segms and
                                 #len(tbg.SEGMENTS.segms[0]) and
                                 #len(tbg.OUTPUTS.orig_grid_images) - index > 0 and # only tiles
-                                tbg.PARAMS.Tile_Fusion_Mode in ("Neuro_Generative_Tile_Fusion", "Tile_Fusion") and
+                                tbg.PARAMS.Tile_Fusion_Mode in ("Neuro_Generative_Tile_Fusion", "NGTF_FLUX_Kontext", "Tile_Fusion") and
                                 tbg.API.status in ["Free", "Pro", "Premium", "Unlimited", "Dev"]
                             )
                             # OR second condition block Soft Merge only if mask are added
@@ -928,8 +933,33 @@ class TBG_Refiner_v1():
                             )
                     ):
 
+                        fusion_mode = getattr(tbg.PARAMS, "Tile_Fusion_Mode", None)
+                        if fusion_mode in ("Neuro_Generative_Tile_Fusion", "NGTF_FLUX_Kontext"):
+                            if not tbg.PARAMS.Differential_Diffusion and tbg.API.status == "Dev":
+                                print(
+                                    f"TBG[Node {tbg.INFO.id}] tile {index + 1}: "
+                                    f"forcing Differential Diffusion ON for {fusion_mode}"
+                                )
+                            tbg.PARAMS.Differential_Diffusion = True
+                        elif fusion_mode == "Soft Merge":
+                            if tbg.PARAMS.Differential_Diffusion and tbg.API.status == "Dev":
+                                print(
+                                    f"TBG[Node {tbg.INFO.id}] tile {index + 1}: "
+                                    "forcing Differential Diffusion OFF for Soft Merge"
+                                )
+                            tbg.PARAMS.Differential_Diffusion = False
+
                         if tbg.PARAMS.Differential_Diffusion:
+                            before_has_dd = "denoise_mask_function" in getattr(tbg.KSAMPLER.model, "model_options", {})
                             tbg.KSAMPLER.model = DifferentialDiffusion_execute(tbg.KSAMPLER.model)[0]
+                            after_has_dd = "denoise_mask_function" in getattr(tbg.KSAMPLER.model, "model_options", {})
+                            if tbg.API.status == "Dev":
+                                print(
+                                    f"TBG[Node {tbg.INFO.id}] tile {index + 1}: Differential Diffusion active "
+                                    f"before_hook={before_has_dd} after_hook={after_has_dd}"
+                                )
+                        elif tbg.API.status == "Dev":
+                            print(f"TBG[Node {tbg.INFO.id}] tile {index + 1}: Differential Diffusion disabled")
 
                         if  tbg.PARAMS.inpaint_conditioning :
                             InpaintModelConditioningNode = nodes.InpaintModelConditioning()
@@ -992,6 +1022,15 @@ class TBG_Refiner_v1():
 
                 
         #-Start sampling-------------------------------------------------------------------------------------------------------------------
+                    reference_model = tbg.KSAMPLER.model
+                    # Install the ControlNet-like reference pull only for the new reference_mode.
+                    tbg.KSAMPLER.model = apply_reference_mode_hooks(
+                        tbg,
+                        tbg.KSAMPLER.model,
+                        tbg.KSAMPLER.Controlnet_Pipe,
+                        tile_to_process,
+                        tbg.KSAMPLER.vae,
+                    )
                     #saveguard
                     if tbg.PARAMS.LanPaint:
                         TBG_DualModelSampler = TBG_DualModelSampler_lanpaint,
@@ -1073,6 +1112,8 @@ class TBG_Refiner_v1():
                     else: # if denoise 0
                         latent_output = latent_image
 
+                    tbg.KSAMPLER.model = reference_model
+
                     #-End sampling-------------------------------------------------------------------------------------------------------------------
                     
         # VAE decode
@@ -1101,7 +1142,7 @@ class TBG_Refiner_v1():
                             tile_processed = (TBG_Image.VAEDecodeFluxNormalized(vaedecoder, latent_output)[0].unsqueeze(0))[0]
 
                         if tbg.API.status == "Dev":
-                            cls.image_to_folder(tile_processed, str(index)+"_VAE_decode_after_sampling")
+                            cls.debug_image_to_folder(tile_processed, str(index)+"_VAE_decode_after_sampling")
 
 
                         if tbg.PARAMS.inner_Upscale_type == 'finer details' and innerloop_scale_factor not in (0,1):
@@ -1118,28 +1159,72 @@ class TBG_Refiner_v1():
                     
                     
                     
-                        if tbg.PARAMS.Tile_Fusion_Mode in ("Neuro_Generative_Tile_Fusion", "Tile_Fusion") and not tbg.PARAMS.Fast_1_Tile_Preview:
-                            # check if this s inpaint mask is tested but the middel is to different also it has bottom and right
-                            # we try to generate a map only top left
-
-
-                            # This step is very important - because the sampler is not maintaining colors so the fusion crop has a color seam - with this blend this is solved.
-                            tile_processed = ImageCompositeMasked_execute(tile_to_process, tile_processed, x=0, y=0, resize_source=False, mask=border_correction_mask)[0]
+                        if tbg.PARAMS.Tile_Fusion_Mode in ("Neuro_Generative_Tile_Fusion", "NGTF_FLUX_Kontext", "Tile_Fusion") and not tbg.PARAMS.Fast_1_Tile_Preview:
+                            # Old 1.06-style repair: keep the decoded tile, then only re-impose a narrow
+                            # border-preservation mask so the seam color can settle without extra stages.
+                            tile_sampled = tile_processed
+                            tile_processed = ImageCompositeMasked_execute(
+                                tile_to_process,
+                                tile_sampled,
+                                x=0,
+                                y=0,
+                                resize_source=False,
+                                mask=border_correction_mask,
+                            )[0]
                         else:
                             tile_processed = tile_processed # if soft merge or tbg.PARAMS.Fast_1_Tile_Preview
                         
                         if tbg.API.status == "Dev":
+                            if tbg.PARAMS.Tile_Fusion_Mode in ("Neuro_Generative_Tile_Fusion", "NGTF_FLUX_Kontext", "Tile_Fusion") and not tbg.PARAMS.Fast_1_Tile_Preview:
+                                border_keep_mask = border_correction_mask
+                                border_edit_mask = (1.0 - border_correction_mask).clamp(0.0, 1.0)
+                                sampled_keep = TBG_Image.masked_mean_abs_diff(tile_to_process, tile_sampled, border_keep_mask)
+                                sampled_edit = TBG_Image.masked_mean_abs_diff(tile_to_process, tile_sampled, border_edit_mask)
+                                final_keep = TBG_Image.masked_mean_abs_diff(tile_to_process, tile_processed, border_keep_mask)
+                                final_edit = TBG_Image.masked_mean_abs_diff(tile_to_process, tile_processed, border_edit_mask)
+                                log(
+                                    f"tile {index + 1}: sampled_keep={sampled_keep:.6f} "
+                                    f"sampled_edit={sampled_edit:.6f} "
+                                    f"final_keep={final_keep:.6f} "
+                                    f"final_edit={final_edit:.6f}",
+                                    None,
+                                    None,
+                                    f"Node {tbg.INFO.id}",
+                                )
+                                cls.debug_image_to_folder(tile_sampled, str(index) + "_tile_sampled_before_post_correction")
+                                cls.debug_image_to_folder(MaskToImage_execute(border_keep_mask)[0], str(index) + "_Border_Keep_Mask")
+                                cls.debug_image_to_folder(MaskToImage_execute(border_edit_mask)[0], str(index) + "_Border_Edit_Mask")
 
-                            cls.image_to_folder(tile_processed,
-                                                str(index) + "tile_processed")
+                                ngtf_debug_masks = getattr(tbg.OUTPUTS, "ngtf_debug_masks", None) or {}
+                                if index in (6, 7, 8) and index in ngtf_debug_masks:
+                                    seam_masks = ngtf_debug_masks[index]
+                                    cls.debug_image_to_folder(
+                                        MaskToImage_execute(seam_masks["incoming_copy"])[0],
+                                        str(index) + "_Incoming_Copy_Edit_Mask",
+                                    )
+                                    cls.debug_image_to_folder(
+                                        MaskToImage_execute(seam_masks["incoming_blend"])[0],
+                                        str(index) + "_Incoming_Blend_Edit_Mask",
+                                    )
+                                    cls.debug_image_to_folder(
+                                        MaskToImage_execute(seam_masks["outgoing_prepare"])[0],
+                                        str(index) + "_Outgoing_Prepare_Edit_Mask",
+                                    )
+                                    cls.debug_image_to_folder(
+                                        MaskToImage_execute(seam_masks["post_fix"])[0],
+                                        str(index) + "_Post_Fix_Edit_Mask",
+                                    )
 
-                            cls.image_to_folder(MaskToImage_execute(border_correction_mask)[0], str(index) + "_Masked_Border_Correction_Mask")
+                            cls.debug_image_to_folder(tile_processed,
+                                                      str(index) + "tile_processed")
+
+                            cls.debug_image_to_folder(MaskToImage_execute(border_correction_mask)[0], str(index) + "_Masked_Border_Correction_Mask")
 
                     #tile_processed = tile_to_process
                     # Save Tile to Temp
                     if tbg.PARAMS.Preview_Tiles_in_Temp_Folder:
                         if tbg.API.status == "Dev":
-                            cls.image_to_folder(tile_processed, str(index) + "_Masked_Border_Correction")
+                            cls.debug_image_to_folder(tile_processed, str(index) + "_Masked_Border_Correction")
                         else:
                             cls.image_to_folder(tile_processed, str(index) + "_CT")
 
@@ -1350,7 +1435,7 @@ class TBG_Refiner_v1():
 
             # For Neuro_Generative_Tile_Fusion, each tile influences the next ones:
             # if tile k changed, we must re-sample ALL tiles from k to the end.
-            if mode == "Neuro_Generative_Tile_Fusion":
+            if mode in ("Neuro_Generative_Tile_Fusion", "NGTF_FLUX_Kontext"):
                 try:
                     # Prefer the true tile count from grid_images_all
                     total_tiles = len(getattr(tbg.OUTPUTS, "grid_images_all", []))
