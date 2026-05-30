@@ -29,6 +29,7 @@ import nodes
 import hashlib
 import json
 from functools import wraps
+from types import SimpleNamespace
 from PIL import Image
 from comfy_extras import nodes_upscale_model
 from ...utils.log import log
@@ -254,6 +255,7 @@ class TBG_Upscaler_v1():
         # INIT upscale_by could be changes in upscale
         tbg.PARAMS.upscale_model_name = kwargs.get('upscale_model', "NONE")
         tbg.PARAMS.upscale_by = kwargs.get('upscale_by', 1)
+        cls.clear_stale_refiner_params()
         if tbg.PARAMS.upscale_model_name == "NONE":
             tbg.PARAMS.upscale_by = 1
 
@@ -578,12 +580,55 @@ class TBG_Upscaler_v1():
         return upscaled_image
 
     @classmethod
+    def clear_stale_refiner_params(cls):
+        for name in (
+            "denoise_mask",
+            "Redux_Style_Model",
+            "Redux_Clip_Vision",
+            "upscale_model",
+            "upscale_model_inpainting",
+        ):
+            if hasattr(tbg.PARAMS, name):
+                setattr(tbg.PARAMS, name, None)
+
+    @classmethod
+    def _worker_cpu_value(cls, value):
+        if torch.is_tensor(value):
+            return value.detach().to("cpu", copy=True).contiguous()
+        if isinstance(value, SimpleNamespace):
+            return SimpleNamespace(**{name: cls._worker_cpu_value(item) for name, item in vars(value).items()})
+        if isinstance(value, dict):
+            return {key: cls._worker_cpu_value(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [cls._worker_cpu_value(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(cls._worker_cpu_value(item) for item in value)
+        return value
+
+    @classmethod
+    def _worker_tiler_init_args(cls):
+        params = copy.copy(tbg.PARAMS)
+        size = copy.copy(tbg.SIZE)
+        cls.clear_stale_refiner_params()
+        for name in (
+            "denoise_mask",
+            "Redux_Style_Model",
+            "Redux_Clip_Vision",
+            "upscale_model",
+            "upscale_model_inpainting",
+        ):
+            if hasattr(params, name):
+                setattr(params, name, None)
+        return cls._worker_cpu_value(params), cls._worker_cpu_value(size)
+
+    @classmethod
     #@tiler_cache_comfy_method(maxsize=1)
     def tiler(cls, full_upscaled_image, iteration):
 
         tbg.OUTPUTS.upscaled_image = full_upscaled_image
         def get_tiler_init():
-            PARAMS, SIZE = WORKER.id(tiler_id).ETUR.tiler_init(tbg.PARAMS, tbg.SIZE)
+            worker_params, worker_size = cls._worker_tiler_init_args()
+            PARAMS, SIZE = WORKER.id(tiler_id).ETUR.tiler_init(worker_params, worker_size)
             return PARAMS, SIZE
         tbg.PARAMS, tbg.SIZE = get_tiler_init()
 
