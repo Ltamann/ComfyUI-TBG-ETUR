@@ -1,8 +1,8 @@
 {
   "id": "78e117ed-0d9a-411f-880a-200fe0e75ce9",
   "revision": 0,
-  "last_node_id": 59,
-  "last_link_id": 84,
+  "last_node_id": 61,
+  "last_link_id": 90,
   "nodes": [
     {
       "id": 1,
@@ -521,47 +521,6 @@
       ]
     },
     {
-      "id": 29,
-      "type": "SetUnionControlNetType",
-      "pos": [
-        1623.50505172252,
-        3009.9287222336443
-      ],
-      "size": [
-        335.9449157714844,
-        58
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 27,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "control_net",
-          "type": "CONTROL_NET",
-          "link": 23
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONTROL_NET",
-          "type": "CONTROL_NET",
-          "links": [
-            65
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "SetUnionControlNetType"
-      },
-      "widgets_values": [
-        "canny/lineart/anime_lineart/mlsd"
-      ]
-    },
-    {
       "id": 30,
       "type": "ControlNetLoader",
       "pos": [
@@ -814,7 +773,7 @@
         {
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
-          "link": 36
+          "link": 90
         }
       ],
       "outputs": [
@@ -837,7 +796,7 @@
         "CNet Strength": "unchanged",
         "Reset": false,
         "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
-        "tile_edits_json": "{\"prompts\":[],\"denoises\":[],\"seeds\":[],\"cnet_strength\":[]}",
+        "tile_edits_json": "{\"prompts\":[\"The image shows a woman looking at her cell phone while standing in front of a white wall. She is wearing a white shirt and blue jeans, and her hair is pulled back in a ponytail. The wall behind her is plain white, and the cell phone is held in her hand.\",\"The image shows a woman with long black hair standing in front of a wall. Her face is in the foreground, and the wall is visible in the background.\",\"The image shows a woman with long black hair standing in front of a cream-colored wall. Her face is visible, and she appears to be looking off into the distance.\",\"The image shows a close up of a window with a beige awning, which is a replacement shade for a porch. Through the glass window, we can see trees outside, providing a view of the outside.\",\"The image shows a woman with long black hair and brown eyes looking at the camera in the foreground, while in the background there is a wall, a door, and a plant.\",\"The image shows a woman with long black hair and brown eyes, her face in the foreground, and a wall in the background.\",\"The image shows a woman with long black hair and earrings standing in front of a building with trees on the right side and a ceiling at the top.\",\"The image shows a woman standing in front of a house with trees in the background. She is wearing a white shirt and blue jeans, and her hair is pulled back in a ponytail. The house is a two-story structure with a red roof and white walls. The trees are lush and green, and the sky is a bright blue.\",\"The image shows a woman sitting at a table with a man and a woman in the background. On the table there are cups, saucers, and other objects. The background is slightly blurred, giving the image a dreamy feel.\",\"The image shows a woman wearing a white t-shirt and earrings, with her lips slightly parted.\",\"The image shows a woman wearing a white dress and a pair of earrings with a shell on it. In the background, there is another woman wearing goggles, and on the right side of the image there are flower pots. The background is slightly blurred, giving the image a dreamy feel.\",\"The image shows a woman walking down a sidewalk next to potted plants, with a tree in the background. The image is slightly blurred, giving it a dreamy quality.\",\"The image shows a woman sitting at a table with a white table cloth draped over her shoulders. On the table in front of her are various objects, and in the background there is another person.\",\"The image shows a woman wearing a white t-shirt against a black background. Her face is visible, with her eyes looking directly at the viewer. Her hair is pulled back in a neat bun, and her lips are slightly parted. She has a slight smile on her lips, and her hands are clasped in front of her.\",\"The image shows a man in a white tank top standing next to a woman in a blue shirt, both of them standing in front of a table with a mobile phone on it. In the background, there is a plant in a pot, adding a touch of greenery to the scene.\",\"The image shows a man sitting at a table with a potted plant in front of him. On the table there is a mobile phone, and the background is slightly blurred.\",\"The image shows a close up of a person wearing a white linen shirt. The shirt is made of a lightweight, breathable fabric and has a classic collar, long sleeves, and a button-down front. The fabric has a subtle sheen, giving it a luxurious look.\",\"The image shows a close up of a white fabric on a table. The fabric has a delicate texture and a subtle sheen, giving it a luxurious look. The white color of the fabric stands out against the neutral background, making it the focal point of the image.\",\"The image shows a person sitting in a chair with their legs crossed, wearing a white shirt and footwear. The background is slightly blurred, giving the image a dreamy feel.\",\"The image shows a man sitting on a bus with his legs crossed, wearing a white t-shirt and blue pants. He is sitting on the seat of the bus, with a road visible at the bottom of the image.\",\"The image shows a woman in a white shirt with her arm outstretched, standing in front of a wall. Her hand is visible, and she has a determined expression on her face. The wall behind her is plain and unadorned, with no other objects in the frame.\",\"The image shows a person sitting at a table with a cup of coffee in front of them. The person's leg is visible, and there is a cloth in the background.\",\"The image shows a person sitting at a table with a cup of coffee in front of them. Their hands are clasped together, and there is a chair in the background.\",\"The image shows a person sitting at a table with their hands clasped together, holding a cup of coffee. On the table there is a mobile phone and a bowl of food.\",\"The image shows a woman's arm with a tattoo on it, resting on a wooden surface.\",\"The image shows a person sitting at a table with a cup of coffee in front of them. The cup is filled with a steaming hot beverage, likely coffee, and the person's arm is visible in the background.\",\"The image shows a person sitting at a table with a cup of coffee in front of them. The cup is filled with a steaming hot beverage, likely coffee, and the person's hand is resting on the edge of the cup.\",\"The image shows a person sitting at a table with a cup of coffee and a mobile phone in front of them. The person's hand is visible, and the coffee cup is filled with a steaming hot beverage.\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}",
         "prompt_0": "The image shows a woman looking at her cell phone while standing in front of a white wall. She is wearing a white shirt and blue jeans, and her hair is pulled back in a ponytail. The wall behind her is plain white, and the cell phone is held in her hand.",
         "prompt_1": "The image shows a woman with long black hair standing in front of a wall. Her face is in the foreground, and the wall is visible in the background.",
         "prompt_2": "The image shows a woman with long black hair standing in front of a cream-colored wall. Her face is visible, and she appears to be looking off into the distance.",
@@ -1731,7 +1690,7 @@
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 29
+          "link": 85
         },
         {
           "name": "Segment_Mask",
@@ -1764,7 +1723,7 @@
           "links": [
             28,
             40,
-            53
+            87
           ]
         }
       ],
@@ -1806,7 +1765,7 @@
       ],
       "size": [
         698.4978711547847,
-        332.183319793701
+        334
       ],
       "flags": {},
       "order": 39,
@@ -1861,6 +1820,7 @@
         0,
         false,
         "gpupyramid",
+        2048,
         2048
       ]
     },
@@ -1923,50 +1883,6 @@
         0.2,
         1,
         0
-      ]
-    },
-    {
-      "id": 38,
-      "type": "LoadImage",
-      "pos": [
-        -465.87870460294204,
-        928.4236418891841
-      ],
-      "size": [
-        737.9934692382812,
-        766.1026611328125
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 20,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            29
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": [
-            34
-          ]
-        }
-      ],
-      "title": "TBG masked attention",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "2.png",
-        "image"
       ]
     },
     {
@@ -2134,7 +2050,7 @@
         140
       ],
       "flags": {},
-      "order": 21,
+      "order": 20,
       "mode": 2,
       "inputs": [],
       "outputs": [],
@@ -2145,88 +2061,6 @@
       ],
       "color": "#432",
       "bgcolor": "#653"
-    },
-    {
-      "id": 45,
-      "type": "TBG ETUR Upscaler and Tile Generator PRO",
-      "pos": [
-        2746.120967256009,
-        808.9525281851745
-      ],
-      "size": [
-        682.828258167614,
-        744
-      ],
-      "flags": {},
-      "order": 37,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 53
-        },
-        {
-          "name": "Segment_Mask",
-          "shape": 7,
-          "type": "MASK",
-          "link": 34
-        },
-        {
-          "name": "PRO_segs",
-          "shape": 7,
-          "type": "SEGS",
-          "link": null
-        },
-        {
-          "name": "labs_upscaler",
-          "shape": 7,
-          "type": "labs_upscaler",
-          "link": 84
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            36
-          ]
-        },
-        {
-          "name": "Upscaled Image",
-          "type": "IMAGE",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO",
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
-      },
-      "widgets_values": [
-        "NONE",
-        1,
-        1024,
-        1024,
-        "FAST/_bilinear",
-        2,
-        "OpenAI-Compatible (Labs Server)",
-        "None (FP16)",
-        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
-        false,
-        "",
-        0,
-        "fixed",
-        "Neuro_Generative_Tile_Fusion",
-        64,
-        0.95,
-        16,
-        "",
-        "",
-        ""
-      ]
     },
     {
       "id": 59,
@@ -2240,7 +2074,7 @@
         183.923
       ],
       "flags": {},
-      "order": 22,
+      "order": 21,
       "mode": 2,
       "inputs": [],
       "outputs": [],
@@ -2264,7 +2098,7 @@
         246
       ],
       "flags": {},
-      "order": 23,
+      "order": 22,
       "mode": 4,
       "inputs": [
         {
@@ -2285,7 +2119,7 @@
           "name": "output_1",
           "type": "labs_upscaler",
           "links": [
-            84
+            89
           ]
         }
       ],
@@ -2304,6 +2138,171 @@
         0,
         0,
         16
+      ]
+    },
+    {
+      "id": 60,
+      "type": "LoadImage",
+      "pos": [
+        -465.87870460294204,
+        928.4236418891841
+      ],
+      "size": [
+        282.798828125,
+        314
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            85
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            88
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.22.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ]
+    },
+    {
+      "id": 29,
+      "type": "SetUnionControlNetType",
+      "pos": [
+        1623.50505172252,
+        3009.9287222336443
+      ],
+      "size": [
+        335.9449157714844,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            65
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "SetUnionControlNetType"
+      },
+      "widgets_values": [
+        "canny/lineart/anime_lineart/mlsd"
+      ]
+    },
+    {
+      "id": 61,
+      "type": "TBG ETUR Upscaler and Tile Generator PRO",
+      "pos": [
+        2746.120967256009,
+        808.9525281851745
+      ],
+      "size": [
+        678.6919432092695,
+        752.0274230701068
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 87
+        },
+        {
+          "name": "Segment_Mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 88
+        },
+        {
+          "name": "PRO_segs",
+          "shape": 7,
+          "type": "SEGS",
+          "link": null
+        },
+        {
+          "label": "TBG ETUR Labs",
+          "name": "labs_upscaler",
+          "shape": 7,
+          "type": "labs_upscaler",
+          "link": 89
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            90
+          ]
+        },
+        {
+          "name": "Upscaled Image",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO"
+      },
+      "widgets_values": [
+        "NONE",
+        1,
+        1024,
+        1024,
+        "NONE",
+        2,
+        "NONE",
+        "None (FP16)",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        false,
+        "",
+        0,
+        "fixed",
+        "Neuro_Generative_Tile_Fusion",
+        0,
+        64,
+        0.95,
+        16,
+        "",
+        ""
       ]
     }
   ],
@@ -2365,14 +2364,6 @@
       "IMAGE"
     ],
     [
-      29,
-      38,
-      0,
-      37,
-      0,
-      "IMAGE"
-    ],
-    [
       30,
       40,
       0,
@@ -2403,22 +2394,6 @@
       43,
       1,
       "CLIP"
-    ],
-    [
-      34,
-      38,
-      1,
-      45,
-      1,
-      "MASK"
-    ],
-    [
-      36,
-      45,
-      0,
-      46,
-      0,
-      "TBG_Pipe"
     ],
     [
       37,
@@ -2467,14 +2442,6 @@
       49,
       3,
       "CONDITIONING"
-    ],
-    [
-      53,
-      37,
-      1,
-      45,
-      0,
-      "IMAGE"
     ],
     [
       58,
@@ -2621,12 +2588,44 @@
       "IMAGE"
     ],
     [
-      84,
+      85,
+      60,
+      0,
+      37,
+      0,
+      "IMAGE"
+    ],
+    [
+      87,
+      37,
+      1,
+      61,
+      0,
+      "IMAGE"
+    ],
+    [
+      88,
+      60,
+      1,
+      61,
+      1,
+      "MASK"
+    ],
+    [
+      89,
       58,
       0,
-      45,
+      61,
       3,
       "labs_upscaler"
+    ],
+    [
+      90,
+      61,
+      0,
+      46,
+      0,
+      "TBG_Pipe"
     ]
   ],
   "groups": [
@@ -2640,7 +2639,6 @@
         240
       ],
       "color": "#3f789e",
-      "font_size": 24,
       "flags": {}
     },
     {
@@ -2653,7 +2651,6 @@
         500
       ],
       "color": "#b58b2a",
-      "font_size": 24,
       "flags": {}
     },
     {
@@ -2666,7 +2663,6 @@
         500
       ],
       "color": "#b58b2a",
-      "font_size": 24,
       "flags": {}
     },
     {
@@ -2679,7 +2675,6 @@
         500
       ],
       "color": "#b58b2a",
-      "font_size": 24,
       "flags": {}
     },
     {
@@ -2692,7 +2687,6 @@
         140
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -2705,7 +2699,6 @@
         1480
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -2718,7 +2711,6 @@
         1989.8159298273622
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -2731,7 +2723,6 @@
         140
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -2744,7 +2735,6 @@
         2998.1487873175092
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -2757,7 +2747,6 @@
         2100
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -2770,7 +2759,6 @@
         127.14528513047685
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -2783,7 +2771,6 @@
         980
       ],
       "color": "#8AA",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -2796,7 +2783,6 @@
         640
       ],
       "color": "#3f789e",
-      "font_size": 24,
       "flags": {}
     },
     {
@@ -2809,7 +2795,6 @@
         520
       ],
       "color": "#8A8",
-      "font_size": 24,
       "flags": {}
     },
     {
@@ -2822,7 +2807,6 @@
         2440
       ],
       "color": "#8AA",
-      "font_size": 24,
       "flags": {}
     },
     {
@@ -2835,7 +2819,6 @@
         340
       ],
       "color": "#3f789e",
-      "font_size": 24,
       "flags": {}
     },
     {
@@ -2848,7 +2831,6 @@
         340
       ],
       "color": "#3f789e",
-      "font_size": 24,
       "flags": {}
     },
     {
@@ -2861,7 +2843,6 @@
         144.5821487314322
       ],
       "color": "#b58b2a",
-      "font_size": 100,
       "flags": {}
     },
     {
@@ -2874,21 +2855,20 @@
         140.92393628648517
       ],
       "color": "#b58b2a",
-      "font_size": 100,
       "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.6830134553650714,
+      "scale": 0.6633317417209902,
       "offset": [
-        -1288.8215524787397,
-        -719.5489438906238
+        -1670.2354623076571,
+        -793.7075085495986
       ]
     },
     "workflowRendererVersion": "LG",
-    "frontendVersion": "1.39.19"
+    "frontendVersion": "1.43.18"
   },
   "version": 0.4
 }
