@@ -1,7 +1,7 @@
-# ComfyUI-TBG-ETUR: 100MP Enhanced Tiled Upscaler & Refiner FLUX Pro. Enhance Your Images with TBG's Upscaler
-**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.2.9**  member beta release
+# TBG ETUR Version 1.2 dropped - What's New?
+**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.2.9**
 
-  ![TBG_ETUR_v1-1-0.png.png](img/TBG_ETUR_v1-1-0.png)
+  ![TBG ETUR 1.2 Patreon image](img/TBG_ETUR_1.2.9_Patreon.png)
 **Keep in mind this is still a beta version, and we're updating and fine-tuning it daily. So do the same**
 
 Tutorials of old version and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@TBG_AI)). 
@@ -13,7 +13,7 @@ and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)).
 
 Last version v1.2.9, released on **June 13, 2026 at 20:25 CEST (UTC+2)**.
 
-This is a major upgrade over the public 1.1.18 branch. The focus is on NVIDIA PixelDiT / PiD support, stronger Flux 2 handling, better tile overrides, batch processing, improved color and geometry stabilization, new helper nodes, frontend improvements, and a long list of stability fixes.
+This is a major feature update over the public 1.1.18 version. We're breaking free from ETUR and turning the best knowledge into lightweight, standalone nodes. Check out all the new takeaway nodes we've added!
 
 ### Highlights
 
