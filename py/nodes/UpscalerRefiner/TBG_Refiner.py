@@ -1131,6 +1131,13 @@ class TBG_Refiner_v1():
         )
 
     @classmethod
+    def _pid_vae_decode_active(cls):
+        return (
+            getattr(tbg.KSAMPLER, "pid_vae_decode", False)
+            and getattr(tbg.KSAMPLER, "vae_encode_type", None) == "Nvidia PiD 4x"
+        )
+
+    @classmethod
     def _flux2_pid_use_flux1_baseline(cls):
         """Keep Flux2 PiD on the proven Flux1 segment path until Flux2-specific tuning is tested."""
         return bool(getattr(tbg.PARAMS, "Flux2_PiD_Use_Flux1_Baseline", True))
@@ -1138,13 +1145,18 @@ class TBG_Refiner_v1():
     @classmethod
     def _pid_color_match_active(cls):
         method = getattr(tbg.PARAMS, "color_match_method", None)
+        try:
+            strength = float(getattr(tbg.PARAMS, "color_match_str", 1.0) or 1.0)
+        except Exception:
+            strength = 1.0
+        model_type = str(getattr(tbg.KSAMPLER, "model_type", None) or "").upper()
+        if model_type == "FLUX2" and cls._flux2_pid_use_flux1_baseline():
+            return False
         return (
-            getattr(tbg.KSAMPLER, "pid_vae_decode", False)
-            and getattr(tbg.KSAMPLER, "vae_encode_type", None) == "Nvidia PiD 4x"
-            and getattr(tbg.KSAMPLER, "model_type", None) == "FLUX2"
-            and not cls._flux2_pid_use_flux1_baseline()
+            cls._pid_vae_decode_active()
             and method is not None
             and str(method).lower() != "none"
+            and strength > 0.0
         )
 
     @classmethod
@@ -1404,14 +1416,17 @@ class TBG_Refiner_v1():
 
     @classmethod
     def _flux2_pid_post_tone_active(cls):
+        return cls._pid_post_decode_color_active()
+
+    @classmethod
+    def _pid_post_decode_color_active(cls):
         method = getattr(tbg.PARAMS, "color_match_method", None)
         try:
             strength = float(getattr(tbg.PARAMS, "color_match_str", 1.0) or 1.0)
         except Exception:
             strength = 1.0
         normal_active = (
-            cls._flux2_pid_active()
-            and bool(getattr(tbg.PARAMS, "Flux2_Tile_Color_Correction", True))
+            cls._pid_vae_decode_active()
             and method is not None
             and str(method).lower() != "none"
             and strength > 0.0
@@ -1419,10 +1434,10 @@ class TBG_Refiner_v1():
         return cls._cm_debug_stage_enabled("05_Flux2_PID_PostTone_ColorMatch", normal_active)
 
     @classmethod
-    def _apply_flux2_pid_post_tone(cls, reference, target, index, seam_mask=None, label="pid_post_tone", apply_global=True):
-        if not cls._flux2_pid_post_tone_active():
+    def _apply_pid_post_decode_color_stabilizer(cls, reference, target, index, seam_mask=None, label="pid_post_tone", apply_global=True):
+        if not cls._pid_post_decode_color_active():
             if getattr(tbg.API, "status", None) == "Dev":
-                print(f"TBG[Node {tbg.INFO.id}] Flux2 PiD post-tone {label} skipped: inactive")
+                print(f"TBG[Node {tbg.INFO.id}] PiD post-decode color {label} skipped: inactive")
             return target
         if reference is None or target is None or not torch.is_tensor(reference) or not torch.is_tensor(target):
             return target
@@ -1452,12 +1467,12 @@ class TBG_Refiner_v1():
                     cls.debug_image_to_folder(before, str(index) + "_Flux2_PID_PostTone_before_" + label)
                     cls.debug_image_to_folder(corrected, str(index) + "_Flux2_PID_PostTone_after_" + label)
                     print(
-                        f"TBG[Node {tbg.INFO.id}] Flux2 PiD post-tone {label} applied "
+                        f"TBG[Node {tbg.INFO.id}] PiD post-decode color {label} applied "
                         f"method=tile_aware_low_frequency strength={strength:.3f} "
                         f"mean_abs_delta={delta:.8f}"
                     )
                 except Exception as exc:
-                    print(f"TBG[Node {tbg.INFO.id}] Flux2 PiD tile-aware post-tone {label} debug failed: {exc}")
+                    print(f"TBG[Node {tbg.INFO.id}] PiD tile-aware post-decode color {label} debug failed: {exc}")
             return corrected.to(device=target.device, dtype=target.dtype).clamp(0.0, 1.0)
         if apply_global:
             corrected, global_metrics = cls._global_rgb_luma_match(
@@ -1499,14 +1514,25 @@ class TBG_Refiner_v1():
                 cls.debug_image_to_folder(corrected, str(index) + "_Flux2_PID_PostTone_after_" + label)
                 cls._log_global_rgb_luma_metrics(f"post_tone_{label}_tile_{index + 1}", global_metrics)
                 print(
-                    f"TBG[Node {tbg.INFO.id}] Flux2 PiD post-tone {label} applied "
+                    f"TBG[Node {tbg.INFO.id}] PiD post-decode color {label} applied "
                     f"method={'global_rgb_luma+seam_low_frequency' if apply_global else 'seam_low_frequency'} "
                     f"strength={strength:.3f} seam_mean={seam_mean:.6f} "
                     f"mean_abs_delta={delta:.8f}"
                 )
             except Exception as exc:
-                print(f"TBG[Node {tbg.INFO.id}] Flux2 PiD post-tone {label} debug failed: {exc}")
+                print(f"TBG[Node {tbg.INFO.id}] PiD post-decode color {label} debug failed: {exc}")
         return corrected
+
+    @classmethod
+    def _apply_flux2_pid_post_tone(cls, reference, target, index, seam_mask=None, label="pid_post_tone", apply_global=True):
+        return cls._apply_pid_post_decode_color_stabilizer(
+            reference,
+            target,
+            index,
+            seam_mask=seam_mask,
+            label=label,
+            apply_global=apply_global,
+        )
 
     @staticmethod
     def _box_blur_bchw(value, kernel):
@@ -6340,6 +6366,7 @@ class TBG_Refiner_v1():
                         if getattr(tbg.KSAMPLER, "pid_vae_decode", False):
                             if tbg.debug:
                                 log(f"tile {index + 1}/{len(tbg.OUTPUTS.grid_images_all)}", None, None, f"Node {tbg.INFO.id} - PIDVAE4xDecode")
+                            pid_vae_active = cls._pid_vae_decode_active()
                             flux2_pid_active = cls._flux2_pid_active()
                             pid_color_match_active = cls._cm_debug_stage_enabled(
                                 "04_Flux2_PID_AfterPiDVAE_ColorMatch",
@@ -6798,7 +6825,7 @@ class TBG_Refiner_v1():
                                             tile_processed_4x,
                                             str(index) + "_Flux2_PID_color_corrected_from_normal_vae_4x",
                                         )
-                            if not segment_pid_active and flux2_pid_active:
+                            if not segment_pid_active and pid_vae_active:
                                 pid_tile_aware_method = cls.is_tbg_tile_aware(getattr(tbg.PARAMS, "color_match_method", None))
                                 pid_post_reference = tile_to_process
                                 if pid_color_match_active and not pid_tile_aware_method:
@@ -6834,7 +6861,7 @@ class TBG_Refiner_v1():
                                                 str(index) + "_Flux2_PID_global_rgb_luma_after_decode_4x",
                                             )
                                 pid_seam_mask_4x = (1.0 - border_correction_mask).clamp(0.0, 1.0)
-                                tile_processed_4x = cls._apply_flux2_pid_post_tone(
+                                tile_processed_4x = cls._apply_pid_post_decode_color_stabilizer(
                                     pid_post_reference,
                                     tile_processed_4x,
                                     index,

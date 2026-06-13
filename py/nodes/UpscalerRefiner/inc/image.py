@@ -515,6 +515,9 @@ class TBG_Image():
 
     @staticmethod
     def _masked_channel_stats(image_bchw, mask_bchw):
+        if mask_bchw.device != image_bchw.device or mask_bchw.dtype != image_bchw.dtype:
+            mask_bchw = mask_bchw.to(device=image_bchw.device, dtype=image_bchw.dtype)
+
         weight = mask_bchw.sum(dim=(-2, -1), keepdim=True).clamp_min(1e-6)
         mean = (image_bchw * mask_bchw).sum(dim=(-2, -1), keepdim=True) / weight
         var = (((image_bchw - mean) ** 2) * mask_bchw).sum(dim=(-2, -1), keepdim=True) / weight
@@ -579,8 +582,9 @@ class TBG_Image():
         if not isinstance(image_ref, torch.Tensor) or not isinstance(image_target, torch.Tensor):
             return (image_target,)
 
-        ref = image_ref.to(torch.float32).clone()
-        targ = image_target.to(torch.float32).clone()
+        work_device = image_target.device
+        ref = image_ref.to(device=work_device, dtype=torch.float32).clone()
+        targ = image_target.to(device=work_device, dtype=torch.float32).clone()
 
         ref_bchw = ref.permute(0, 3, 1, 2).contiguous()
         targ_bchw = targ.permute(0, 3, 1, 2).contiguous()
@@ -633,8 +637,9 @@ class TBG_Image():
         if not isinstance(image_ref, torch.Tensor) or not isinstance(image_target, torch.Tensor):
             return (image_target,)
 
-        ref_bchw = image_ref.to(torch.float32).permute(0, 3, 1, 2).contiguous()
-        targ_bchw = image_target.to(torch.float32).permute(0, 3, 1, 2).contiguous()
+        work_device = image_target.device
+        ref_bchw = image_ref.to(device=work_device, dtype=torch.float32).permute(0, 3, 1, 2).contiguous()
+        targ_bchw = image_target.to(device=work_device, dtype=torch.float32).permute(0, 3, 1, 2).contiguous()
         protect_mask_bchw = cls._mask_to_bchw(protect_mask, ref_bchw)
         if protect_mask_bchw is None or protect_mask_bchw.max().item() <= 1e-5:
             return (image_target,)
