@@ -1,13 +1,27 @@
 # TBG_APP side
+import os
 from types import SimpleNamespace
 import numpy as np
 from multiprocessing import shared_memory
 import torch
 from contextvars import ContextVar
 from threading import Lock
-from comfy import model_management
 
-device = model_management.get_torch_device()
+
+def _resolve_bridge_device():
+    device_name = os.environ.get("TBG_TORCH_DEVICE", "").strip()
+    if device_name:
+        try:
+            return torch.device(device_name)
+        except Exception as exc:
+            print(f"[TBG_APP] Invalid TBG_TORCH_DEVICE={device_name!r}, using fallback: {exc}")
+    if torch.cuda.is_available():
+        return torch.device("cuda:0")
+    return torch.device("cpu")
+
+
+device = _resolve_bridge_device()
+print(f"[TBG_APP] Bridge torch device: {device}")
 
 
 
@@ -87,6 +101,14 @@ class tbg:
             output_denoises=None,
             output_seeds_js=None,
             output_cnet_js=None,
+            output_cfg_js=None,
+            output_model_js=None,
+            output_cnetpipe_js=None,
+            output_color_match_js=None,
+            model_overrides=None,
+            model_override_key=None,
+            cnetpipe_overrides=None,
+            cnetpipe_override_key=None,
             tiles_to_process=None,
             cache_key=None,
             Prompt_Selected_Tiles_Only=None,
@@ -103,6 +125,10 @@ class tbg:
         self.API = SimpleNamespace(
             token=None,
             status="Guest",
+            real_status="Guest",
+            dev_debug_mode="dev debug on",
+            dev_debug_enabled=False,
+            dev_free_user_test=False,
             info=None,
             activate_pro=False,
             creditsleft=0,
@@ -160,6 +186,7 @@ class tbg:
             Laplacian_Pyramid_Blending=None,
             color_match_method=None,
             color_match_str=None,
+            rgb_luma_nonstructural=False,
             model_type=None,
             Flux2_Tile_Color_Correction=True,
             tiles_to_process_active=None,
@@ -284,7 +311,9 @@ class tbg:
             orig_segment_tiles=[],  # must be a list
             segms_scale=None,
             segms_cropped_masks=[],  # also lists if you share them
+            segment_binary_masks=[],
             segms_crop_regions=[],
+            segment_sampling_transforms=[],
             segms_new=None,
             Segment_Mask=None,
             inpainting_mask=[],
@@ -371,6 +400,8 @@ def attach_shared_arrays_to_tbg(T, shared_meta):
         ("SEGMENTS", [
             "segms_crop_regions",
             "segms_cropped_masks",
+            "segment_binary_masks",
+            "segment_sampling_transforms",
             "segment_tiles",
             "orig_segment_tiles",
         ]),
@@ -404,6 +435,30 @@ def attach_shared_arrays_to_tbg(T, shared_meta):
 
         except Exception as e:
             print(f"[TBG_WORKER] attach_shared_arrays_to_tbg path={path} failed: {e}")
+
+def attach_plain_meta_to_tbg(T, plain_meta):
+    if not isinstance(plain_meta, dict):
+        return
+
+    for path, value in plain_meta.items():
+        try:
+            parts = [p for p in str(path).split(".") if p]
+            if not parts:
+                continue
+
+            cur = T
+            for part in parts[:-1]:
+                cur = getattr(cur, part)
+
+            setattr(cur, parts[-1], value)
+
+            if path == "SEGMENTS.segment_sampling_transforms":
+                try:
+                    print(f"[TBG_WORKER] attached segment_sampling_transforms len={len(value) if value is not None else 0}")
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"[TBG_WORKER] attach_plain_meta_to_tbg path={path} failed: {e}")
 
 def _prepare_for_path(T, path: str, cleared_targets: set):
     """

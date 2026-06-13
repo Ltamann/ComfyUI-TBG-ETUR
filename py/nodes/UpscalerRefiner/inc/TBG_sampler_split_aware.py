@@ -30,6 +30,37 @@ from comfy.samplers import KSamplerX0Inpaint
 import latent_preview
 import math
 import comfy.utils
+from . import flux2_differential
+
+def _conditioning_ref_latent_count(conditioning):
+    count = 0
+    if not isinstance(conditioning, (list, tuple)):
+        return count
+    for entry in conditioning:
+        if not isinstance(entry, (list, tuple)) or len(entry) < 2:
+            continue
+        meta = entry[1]
+        if isinstance(meta, dict):
+            refs = meta.get("reference_latents")
+            if isinstance(refs, (list, tuple)):
+                count += len(refs)
+    return count
+
+
+def _debug_sampler_conditioning(label, positive, negative):
+    pos_entries = len(positive) if isinstance(positive, (list, tuple)) else 0
+    neg_entries = len(negative) if isinstance(negative, (list, tuple)) else 0
+    pos_refs = _conditioning_ref_latent_count(positive)
+    neg_refs = _conditioning_ref_latent_count(negative)
+    if pos_refs == 0 and neg_refs == 0:
+        return
+    print(
+        f"[TBG Sampler Conditioning] sampler={label} "
+        f"pos_entries={pos_entries} neg_entries={neg_entries} "
+        f"pos_reference_latents={pos_refs} "
+        f"neg_reference_latents={neg_refs}"
+    )
+
 
 class TBGKSampler():
     @classmethod
@@ -175,7 +206,14 @@ class TBGKSampler():
                 to = model_options["transformer_options"]
                 if "sample_sigmas" in to:
                     self_x0.sigmas = to["sample_sigmas"]
-            if inpaint_start <= self.total_step_count <= inpaint_end and denoise_mask is not None:
+            flux2_active, x, denoise_mask, flux2_post_mask = flux2_differential.begin_step(
+                self, self_x0, x, sigma, denoise_mask, model_options
+            )
+            if (
+                not flux2_active
+                and inpaint_start <= self.total_step_count <= inpaint_end
+                and denoise_mask is not None
+            ):
                 if "denoise_mask_function" in model_options:
                     denoise_mask = self._apply_denoise_mask(model_options, sigma, denoise_mask, self_x0.inner_model)
                 latent_mask, denoise_mask  = _apply_inpaint_blending_where( denoise_mask, sigma, better_inpainting)
@@ -185,7 +223,9 @@ class TBGKSampler():
             if sharpener != 0 and self.total_step_count < self.steps - 3:
                 x_anterior = x
             out = model_call(self_x0, x, sigma, model_options, seed, *args, **kwargs)
-            if denoise_mask is not None and inpaint_start <= self.total_step_count <= inpaint_end:
+            if flux2_active:
+                out = flux2_differential.finish_step(self, self_x0, out, flux2_post_mask)
+            elif denoise_mask is not None and inpaint_start <= self.total_step_count <= inpaint_end:
                 latent_mask, denoise_mask  = _apply_inpaint_blending_where(denoise_mask, sigma, better_inpainting)
 
                 out = out * denoise_mask + self_x0.latent_image * latent_mask
@@ -199,7 +239,14 @@ class TBGKSampler():
         def first_pass_call(self_x0, x, sigma, denoise_mask,
                             model_options={}, seed=None, *args, **kwargs):
 
-            if inpaint_start <= self.total_step_count <= inpaint_end and denoise_mask is not None:
+            flux2_active, x, denoise_mask, flux2_post_mask = flux2_differential.begin_step(
+                self, self_x0, x, sigma, denoise_mask, model_options
+            )
+            if (
+                not flux2_active
+                and inpaint_start <= self.total_step_count <= inpaint_end
+                and denoise_mask is not None
+            ):
                 denoise_mask = self._apply_denoise_mask(model_options, sigma, denoise_mask, self_x0.inner_model)
                 latent_mask, denoise_mask = _apply_inpaint_blending_where(denoise_mask, sigma, better_inpainting)
                 x = x * denoise_mask + self_x0.inner_model.inner_model.scale_latent_inpaint(
@@ -208,7 +255,9 @@ class TBGKSampler():
             if sharpener != 0 and self.total_step_count < self.steps - 3:
                 x_anterior = x
             out = model_call(self_x0, x, sigma, model_options, seed,*args, **kwargs)
-            if denoise_mask is not None and inpaint_start <= self.total_step_count <= inpaint_end:
+            if flux2_active:
+                out = flux2_differential.finish_step(self, self_x0, out, flux2_post_mask)
+            elif denoise_mask is not None and inpaint_start <= self.total_step_count <= inpaint_end:
                 latent_mask, denoise_mask = _apply_inpaint_blending_where(denoise_mask, sigma, better_inpainting)
                 out = out * denoise_mask + self_x0.latent_image * latent_mask
             if sharpener != 0 and self.total_step_count < self.steps - 3:
@@ -230,11 +279,7 @@ class TBGKSampler():
 
     @classmethod
     def _call_model_function(self, self_x0, x, sigma, model_options, seed, *args, **kwargs):
-        if "model_function_wrapper" in model_options:
-            model_func = model_options["model_function_wrapper"]
-        else:
-            model_func = self_x0.inner_model
-        return model_func(x, sigma, model_options=model_options, seed=seed, *args, **kwargs)
+        return self_x0.inner_model(x, sigma, model_options=model_options, seed=seed, *args, **kwargs)
 
     @classmethod
     def _update_state(self, self_x0, out, x, denoise_mask, model_options, seed):
@@ -280,6 +325,18 @@ class TBGKSampler():
             self.full_sigmas = sigmas
             self.steps = len(sigmas)-1
         self.original_denoise_mask_fn = self.model.model_options.get("denoise_mask_function")
+        self._flux2_diff_config = flux2_differential.latent_config(latent_image)
+        self._flux2_diff_state = {}
+        if self._flux2_diff_config is not None:
+            print(
+                "[TBG Flux2 Differential] normal sampler active "
+                f"denoise={float(denoise):.4f} "
+                f"full_sigma_count={len(self.full_sigmas)} "
+                f"first_full_sigma={float(self.full_sigmas[0]):.6f} "
+                f"correction_start_sigma={self._flux2_diff_config.get('correction_start_sigma')} "
+                f"latent_noise_mask_absent={'noise_mask' not in latent_image}"
+            )
+        sample_denoise = denoise
         print(f"[TBG Differential Diffusion] sampler_hook_present={self.original_denoise_mask_fn is not None}")
         mask_wrapper = self.create_denoise_mask_wrapper(self.original_denoise_mask_fn)
         self.model.set_model_denoise_mask_function(mask_wrapper)
@@ -291,30 +348,47 @@ class TBGKSampler():
         KSamplerX0Inpaint.__call__ = inpaint_patch
 
         try:
-            samples = comfy.sample.sample(
-                self.model,
-                noise=noise,
-                steps=self.steps,
-                cfg=cfg,
-                sampler_name=sampler_name,
-                scheduler=self.scheduler,
-                positive=positive,
-                negative=negative,
-                latent_image=latent_image["samples"],
-                denoise=denoise,
-                disable_noise=disable_noise,
-                start_step=start_at_step,
-                last_step=end_at_step,
-                force_full_denoise=force_full_denoise,
-                noise_mask=noise_mask,
-                callback=callback,
-                disable_pbar=disable_pbar,
-                seed=seed,
-            )
+            if self._flux2_diff_config is not None and hasattr(sampler_name, "sample"):
+                print("[TBG Flux2 Differential] normal sampler using SAMPLER object path")
+                samples = comfy.sample.sample_custom(
+                    self.model,
+                    noise=noise,
+                    cfg=cfg,
+                    sampler=sampler_name,
+                    sigmas=self.full_sigmas,
+                    positive=positive,
+                    negative=negative,
+                    latent_image=latent_image["samples"],
+                    noise_mask=noise_mask,
+                    callback=callback,
+                    disable_pbar=disable_pbar,
+                    seed=seed,
+                )
+            else:
+                samples = comfy.sample.sample(
+                    self.model,
+                    noise=noise,
+                    steps=self.steps,
+                    cfg=cfg,
+                    sampler_name=sampler_name,
+                    scheduler=self.scheduler,
+                    positive=positive,
+                    negative=negative,
+                    latent_image=latent_image["samples"],
+                    denoise=sample_denoise,
+                    disable_noise=disable_noise,
+                    start_step=start_at_step,
+                    last_step=end_at_step,
+                    force_full_denoise=force_full_denoise,
+                    noise_mask=noise_mask,
+                    callback=callback,
+                    disable_pbar=disable_pbar,
+                    seed=seed,
+                )
 
             out_latent = samples.to(comfy.model_management.intermediate_device())
             result = {"samples": out_latent}
-            if "noise_mask" in latent_image:
+            if self._flux2_diff_config is None and "noise_mask" in latent_image:
                 result["noise_mask"] = latent_image["noise_mask"]
             return result, self._state
 
@@ -328,6 +402,7 @@ class TBGKSampler():
         self.step_count = 0
         self.total_step_count = 0
         self._x0output = {}
+        flux2_differential.reset_state(self)
         self._state = None  # Clear the state dictionary
         # Force garbage collection if needed
         import gc
@@ -377,13 +452,14 @@ class TBG_KSamplerAdvancedSplitAware_Copy:
                sampler_state=None):
         better_inpainting = False
         device = model.load_device
+        _debug_sampler_conditioning("normal_split_aware", positive, negative)
 
         if end_at_step > steps:
             end_at_step = steps
 
         force_full_denoise = return_with_leftover_noise == False
         disable_noise = add_noise == False
-        noise_mask = latent_image.get("noise_mask")
+        noise_mask = flux2_differential.latent_mask(latent_image)
 
         latent_samples = latent_image.get("samples", None).to(device).clone()
         latent_samples = comfy.sample.fix_empty_latent_channels(model, latent_samples)
@@ -509,6 +585,7 @@ class TBG_DualModelSampler_COPY:
     def _run_custom(self,inpaint_end, better_inpainting, smoother_sharper,detail_enhancer,start_step,end_step,sigmas_full, model, add_noise, noise_seed, cfg,
                     positive, negative, sampler_name, scheduler, sigmas, latent_image, label, sampler_state=None):
         device = model.load_device
+        _debug_sampler_conditioning(f"normal_dual_{label}", positive, negative)
         if not add_noise:
             force_full_denoise = False
             disable_noise = True
@@ -516,7 +593,7 @@ class TBG_DualModelSampler_COPY:
             force_full_denoise = False
             disable_noise = False
 
-        noise_mask = latent_image.get("noise_mask")
+        noise_mask = flux2_differential.latent_mask(latent_image)
 
 
         latent_samples = latent_image.get("samples", None).to(device).clone()

@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 import cloudpickle  # pip install cloudpickle
+from comfy import model_management
 from .COMFYUI_server import main_rpc_server
 from ..CALLBACKS.constants import get_tbg
 
@@ -337,6 +338,18 @@ class TBG_Controller:
             env["TBG_WORKER_PORT"] = str(cls._worker_port)
             env["TBG_MAIN_PORT"] = str(cls._main_rpc_port)
             env["TBGETUR_WORKER"] = "1"
+            try:
+                env["TBG_TORCH_DEVICE"] = str(model_management.get_torch_device())
+            except Exception as device_env_err:
+                try:
+                    import torch
+                    env["TBG_TORCH_DEVICE"] = "cuda:0" if torch.cuda.is_available() else "cpu"
+                except Exception:
+                    env["TBG_TORCH_DEVICE"] = "cpu"
+                print(
+                    f"[TBG_MAIN][Device] Could not read ComfyUI torch device, "
+                    f"using {env['TBG_TORCH_DEVICE']}: {device_env_err}"
+                )
 
             # ComfyUI root: .../ComfyUI (two levels above custom_nodes/ComfyUI-TBG-ETUR)
             comfy_root = os.path.dirname(os.path.dirname(plugin_root))  # /workspace/ComfyUI
@@ -657,6 +670,26 @@ class TBG_Controller:
             return {}
 
     @classmethod
+    def _build_plain_meta(cls, tiler_id) -> dict:
+        if tiler_id is None:
+            return {}
+
+        try:
+            TBG = get_tbg(tiler_id)
+            transforms = getattr(TBG.SEGMENTS, "segment_sampling_transforms", None)
+            plain_meta = {}
+            if transforms is not None:
+                plain_meta["SEGMENTS.segment_sampling_transforms"] = transforms
+                try:
+                    print(f"[TBG_MAIN] plain_meta segment_sampling_transforms len={len(transforms)}")
+                except Exception:
+                    pass
+            return plain_meta
+        except Exception as e:
+            print(f"[TBG_MAIN] build_plain_meta failed for tiler {tiler_id}: {e}")
+            return {}
+
+    @classmethod
     def call_worker_method(
             cls,
             tiler_id,
@@ -696,6 +729,8 @@ class TBG_Controller:
             # Full (original behavior)
             shared_meta = cls._build_full_shared_meta(tiler_id)
 
+        plain_meta = cls._build_plain_meta(tiler_id)
+
         # === ORIGINAL payload + RPC (unchanged) ===
         payload = {
             "tiler_id": tiler_id,
@@ -704,6 +739,7 @@ class TBG_Controller:
             "args": args,
             "kwargs": kwargs,  # flag popped!
             "shared_meta": shared_meta,
+            "plain_meta": plain_meta,
         }
 
         # === YOUR ORIGINAL preflight + socket (unchanged) ===

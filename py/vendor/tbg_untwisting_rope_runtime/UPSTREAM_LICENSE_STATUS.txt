@@ -1,0 +1,22 @@
+Upstream license status
+=======================
+
+Source:
+BigStationW/ComfyUi-Untwisting-RoPE
+https://github.com/BigStationW/ComfyUi-Untwisting-RoPE
+
+Vendored subset:
+- __init__.py
+- runtime.py, adapted from upstream __init__.py
+- rf_inversion.py
+- sdpa_fix.py
+- verbose_prints.py
+- models/*.py
+
+Important:
+The upstream pyproject.toml declares `license = {file = "LICENSE"}`, but the
+local upstream checkout used for this vendor import does not contain a LICENSE
+file. The GitHub raw LICENSE URL also returned 404 when checked on 2026-06-10.
+
+Do not publish this vendored runtime as licensed third-party code until the
+upstream project adds a license file or the author grants explicit permission.

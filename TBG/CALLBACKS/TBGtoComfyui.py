@@ -1,5 +1,3 @@
-from py.vendor.ComfyUI_Janus_Pro.nodes.model_loader import JanusModelLoader
-from py.vendor.ComfyUI_Janus_Pro.nodes.image_understanding import JanusImageUnderstanding
 from py.vendor.ComfyUI_Unload_Models_main.py.unload_one_model import UnloadOneModelNode
 from py.vendor.ComfyUI_QwenVL.AILab_QwenVL import QwenVLBase
 from py.vendor.ComfyUI_QwenVL.nodes import Qwen2VL_TBG
@@ -17,8 +15,6 @@ class LLM:
         if not tbg.LLM.model == "NONE":
             if "Sky" in tbg.LLM.model.lower():
                 qwen = Qwen2VL_TBG()
-            if "janus" in tbg.LLM.model.lower():
-                janus = JanusModelLoader()
             if "Qwen" in tbg.LLM.model.lower():
                 QwenVL = QwenVLBase()
             if "florence" in tbg.LLM.model.lower():

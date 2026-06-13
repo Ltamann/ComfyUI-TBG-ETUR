@@ -33,6 +33,7 @@ except ImportError:  # 5.x
 from transformers import AutoProcessor, AutoTokenizer, BitsAndBytesConfig
 
 import folder_paths
+from .response_cleanup import strip_thinking
 
 NODE_DIR = Path(__file__).parent
 CONFIG_PATH = NODE_DIR / "config.json"
@@ -337,7 +338,7 @@ class QwenVLBase:
             torch.cuda.synchronize()
         input_len = model_inputs["input_ids"].shape[-1]
         text = self.tokenizer.decode(outputs[0, input_len:], skip_special_tokens=True)
-        return text.strip()
+        return strip_thinking(text, "[QwenVL]")
 
     def run(
         self,
@@ -387,5 +388,3 @@ class QwenVLBase:
         finally:
             if not keep_model_loaded:
                 self.clear()
-
-

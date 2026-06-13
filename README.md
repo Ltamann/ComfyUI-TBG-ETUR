@@ -391,8 +391,8 @@ We've patched several bugs in the Neuro Generative Fusion and Tile Fusion system
 Color Glitch Compensation
 Color artifacts caused by latent encode/decode are now handled much better. A new feature compensates for these VAE latent color glitches. It was generating faint lines along the tile joints when using high denoise settings.
 
-LLM Switching: Janus 1B and Janus 7B Now Supported
-You can now choose your preferred LLM directly from the node interface. Currently supported: Janus 1B and Janus/B — with more coming soon.
+VLM Switching
+You can choose supported VLM backends directly from the node interface, including Qwen, Florence, GGUF, and OpenAI-compatible server options.
 
 Other Fixes and Tweaks
 Many small bugs and glitches reported by the community have been addressed — thank you for your feedback! This includes improvements to node stability, UI tweaks, and general robustness across the board.

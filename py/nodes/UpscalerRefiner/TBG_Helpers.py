@@ -1,4 +1,4 @@
-
+import json
 from math import gcd
 import cv2
 import torch
@@ -8,6 +8,8 @@ from PIL import Image
 from typing import Tuple, List
 from ....TBG.SERVERS.WORKER_server import WORKER
 from comfy_extras.nodes_mask import ImageToMask
+from .inc.image import TBG_Image
+from .inc.sift_drift import DRIFT_CORRECTION_MODES, apply_sift_drift_correction
 
 if hasattr(ImageToMask, "execute"):
     # execute is a @classmethod; no instance needed
@@ -33,6 +35,127 @@ def pil_to_tensor(image):
     #if len(image.shape) == 3:  # If the image is grayscale, add a channel dimension
     #    image = image.unsqueeze(-1)
     return image
+
+
+class AISourcePatternCleanup:
+    CATEGORY = "TBG/ETUR Image"
+    DESCRIPTION = (
+        "Attenuates OpenAI/ChatGPT source micro-grid patterns before a direct "
+        "1:1 image is used as an ETUR source or Flux2 reference. This is a "
+        "pre-processing node, not a final blur/sharpen pass."
+    )
+    FUNCTION = "cleanup"
+    RETURN_TYPES = ("IMAGE", "IMAGE")
+    RETURN_NAMES = ("image", "difference_image")
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE", {
+                    "label": "Image",
+                    "tooltip": "Direct 1:1 OpenAI/ChatGPT source image to clean before using it as an ETUR source/reference. This targets the measured embedded high-frequency micro-grid/checker pattern; it is not intended for already-upscaled, resampled, or final generated output images.",
+                }),
+                "high_freq_reduce": ("FLOAT", {
+                    "display": "slider",
+                    "label": "Micro Grid Reduce",
+                    "default": 0.25,
+                    "min": 0.0,
+                    "max": 1.0,
+                    "step": 0.05,
+                    "round": 0.01,
+                    "tooltip": "How much detected source micro-grid pattern to reduce. Start at 0.20-0.35 for direct OpenAI images; high values can remove real pores/freckles or create flat skin.",
+                }),
+                "low_freq_radius": ("FLOAT", {
+                    "label": "Pattern Notch Width",
+                    "default": 128.0,
+                    "min": 1.0,
+                    "max": 256.0,
+                    "step": 1.0,
+                    "round": 0.01,
+                    "tooltip": "Width of the measured source-grid frequency detector. Existing workflows can keep 128; the actual correction is tightly capped to avoid dark spots and pixelation.",
+                }),
+                "Generate_Difference_Image": ("BOOLEAN", {
+                    "label": "Generate Difference Image",
+                    "default": False,
+                    "tooltip": "When enabled, the second output shows only the exaggerated micro-grid difference map with a Photoshop-style curve: 0->0, 1->253, 255->255.",
+                }),
+            }
+        }
+
+    def cleanup(
+        self,
+        image,
+        high_freq_reduce=0.35,
+        low_freq_radius=128.0,
+        Generate_Difference_Image=False,
+    ):
+        cleanup_result = TBG_Image.ai_source_pattern_cleanup(
+            image,
+            reduce=high_freq_reduce,
+            radius=low_freq_radius,
+            return_debug=bool(Generate_Difference_Image),
+        )
+        if not bool(Generate_Difference_Image):
+            cleaned = cleanup_result
+            difference = image
+        else:
+            cleaned, pattern_preview, _metrics = cleanup_result
+            preview = pattern_preview.to(dtype=torch.float32)
+            height = int(preview.shape[1])
+            width = int(preview.shape[2])
+            edge_px = max(8, min(64, int(round(min(height, width) * 0.035))))
+            y = torch.arange(height, device=preview.device, dtype=preview.dtype)
+            x = torch.arange(width, device=preview.device, dtype=preview.dtype)
+            y_dist = torch.minimum(y, (height - 1) - y)
+            x_dist = torch.minimum(x, (width - 1) - x)
+            y_ramp = (y_dist / float(edge_px)).clamp(0.0, 1.0)
+            x_ramp = (x_dist / float(edge_px)).clamp(0.0, 1.0)
+            edge_falloff = (y_ramp[:, None] * x_ramp[None, :]).pow(0.5)
+            preview = preview * edge_falloff.unsqueeze(0).unsqueeze(-1)
+
+            curve_in = 1.0 / 255.0
+            curve_out = 253.0 / 255.0
+            low_curve = preview.clamp(0.0, curve_in) / curve_in * curve_out
+            high_curve = curve_out + (preview - curve_in).clamp_min(0.0) / (1.0 - curve_in) * (1.0 - curve_out)
+            difference = torch.where(preview <= curve_in, low_curve, high_curve).clamp(0.0, 1.0)
+        return (cleaned, difference)
+
+
+class TBG_ETUR_SIFT_Drift_Correction:
+    CATEGORY = "TBG/ETUR Image"
+    DESCRIPTION = "Standalone SIFT+ drift correction using the same implementation as the ETUR refiner switch."
+    FUNCTION = "fn"
+    RETURN_TYPES = ("IMAGE", "STRING")
+    RETURN_NAMES = ("image", "info")
+    OUTPUT_IS_LIST = (False, False)
+    OUTPUT_NODE = False
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE", {
+                    "label": "Image",
+                    "tooltip": "Image to correct. This must match the reference size.",
+                }),
+                "reference": ("IMAGE", {
+                    "label": "Reference Image",
+                    "tooltip": "Reference image used to detect and correct small SIFT+ affine drift.",
+                }),
+                "Geometry_Drift_Correction": ("BOOLEAN", {
+                    "label": "Geometry Drift Correction",
+                    "default": True,
+                    "label_on": "On",
+                    "label_off": "Off",
+                    "tooltip": "Off disables it. On uses the strongest x4 drift-correction path.",
+                }),
+            }
+        }
+
+    def fn(self, image, reference, Geometry_Drift_Correction=True):
+        corrected, info = apply_sift_drift_correction(reference, image, mode=Geometry_Drift_Correction)
+        return (corrected, json.dumps(info, sort_keys=True))
 
 # Preferred resolutions for Flux Kontext (from your list)
 KONTEXT_RESOLUTIONS: List[Tuple[int, int]] = [

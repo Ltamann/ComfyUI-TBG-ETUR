@@ -60,6 +60,7 @@ class MainController:
     # Class-level cache for the port to avoid repeated env lookups
     _port_cache: int | None = None
     _connect_retry_delays = (0.25, 0.5, 1.0, 2.0, 4.0)
+    _connect_timeout = 5.0
 
     @classmethod
     def _get_port(cls) -> int:
@@ -140,9 +141,10 @@ class MainController:
                 time.sleep(delay)
 
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client.settimeout(None)
+            client.settimeout(cls._connect_timeout)
             try:
                 client.connect(("127.0.0.1", int(port)))
+                client.settimeout(None)
                 if attempt > 1:
                     print(f"[TBG_MAIN_RPC] Connected for {rpc_name} after retry {attempt - 1}")
                 return client
@@ -188,9 +190,7 @@ class MainController:
 
         data = cloudpickle.dumps(safe_payload)
 
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.settimeout(None)
-        client.connect(("127.0.0.1", port))
+        client = cls._connect_with_retry(port, class_name, method_name)
         try:
             client.sendall(struct.pack("!Q", len(data)))
             client.sendall(data)

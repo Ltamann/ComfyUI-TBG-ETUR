@@ -13,6 +13,7 @@ import numpy as np
 import folder_paths
 import subprocess
 import uuid
+from .response_cleanup import strip_thinking
 
 
 def tensor_to_pil(image_tensor, batch_index=0) -> Image:
@@ -170,6 +171,7 @@ class Qwen2VL_TBG:
                     clean_up_tokenization_spaces=False,
                     temperature=temperature,
                 )
+                result = [strip_thinking(text, "[QwenVL]") for text in result]
             except Exception as e:
                 return (f"Error during model inference: {str(e)}",)
 
@@ -186,5 +188,4 @@ class Qwen2VL_TBG:
                 os.remove(processed_video_path)
 
             return result
-
 

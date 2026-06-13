@@ -1,0 +1,8 @@
+This folder contains a minimal vendored runtime subset of:
+
+BigStationW/ComfyUi-Untwisting-RoPE
+https://github.com/BigStationW/ComfyUi-Untwisting-RoPE
+
+It is included for ETUR internal runtime use only. ETUR does not expose the
+upstream ComfyUI native NODE_CLASS_MAPPINGS from this vendored package, so it
+does not conflict with a separately installed upstream custom node.

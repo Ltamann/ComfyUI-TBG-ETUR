@@ -39,6 +39,7 @@ from TBG.TBG_APP.constants import (
     set_current_tiler_id,
     get_tbg,
     attach_shared_arrays_to_tbg,
+    attach_plain_meta_to_tbg,
 )
 from TBG.SERVERS.COMFYUI_proxy import MainController
 
@@ -168,6 +169,7 @@ def worker_main(port: int) -> None:
 
             tiler_id = payload.get("tiler_id", None)
             shared_meta = payload.get("shared_meta", None)
+            plain_meta = payload.get("plain_meta", None)
             set_current_tiler_id(tiler_id)
 
             #print(f"[TBG_WORKER] incoming shared_meta keys: {list(shared_meta.keys()) if isinstance(shared_meta, dict) else shared_meta}")
@@ -177,8 +179,9 @@ def worker_main(port: int) -> None:
                 try:
                     T = get_tbg(tiler_id)
                     attach_shared_arrays_to_tbg(T, shared_meta)
+                    attach_plain_meta_to_tbg(T, plain_meta)
                 except Exception as e:
-                    print(f"[TBG_WORKER] attach_shared_arrays_to_tbg failed for tiler {tiler_id}: {e}")
+                    print(f"[TBG_WORKER] attach worker metadata failed for tiler {tiler_id}: {e}")
 
             class_name = payload["class_name"]
             method_name = payload["method_name"]

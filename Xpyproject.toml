@@ -20,12 +20,12 @@ license = {file = "LICENSE"}
 #     "Environment :: GPU :: Apple Metal",    # Apple Metal support
 # ]
 
-dependencies = ["# For Janus", "git+https://github.com/deepseek-ai/Janus.git", "# For TBG", "opencv-python", "matplotlib", "piexif", "ollama", "color-matcher", "grog", "opencv-contrib-python", "color-matcher", "# For Qwen 2.5 VL:", "hf_xet", "pillow", "qwen-vl-utils", "bitsandbytes", "optimum", "# Correction for Nunchacu", "huggingface_hub>=0.34", "transformers==4.56.2", "diffusers>=0.35.0", "accelerate>=1.10"]
+dependencies = ["# For TBG", "opencv-python", "matplotlib", "piexif", "ollama", "color-matcher", "grog", "opencv-contrib-python", "color-matcher", "# For Qwen 2.5 VL:", "hf_xet", "pillow", "qwen-vl-utils", "bitsandbytes", "optimum", "# For vendored RF UntwistingRoPE runtime", "tqdm", "# Correction for Nunchacu", "huggingface_hub>=0.34", "transformers==4.56.2", "diffusers>=0.35.0", "accelerate>=1.10"]
 
 [project.urls]
 Repository = "https://github.com/Ltamann/ComfyUI-TBG-ETUR"
 #  Used by Comfy Registry https://registry.comfy.org
-Documentation = "https://github.com/Ltamann/ComfyUI-TBG-ETUR/wiki"
+Documentation = "https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433"
 "Bug Tracker" = "https://github.com/Ltamann/ComfyUI-TBG-ETUR/issues"
 
 [tool.comfy]
@@ -34,4 +34,3 @@ DisplayName = "ComfyUI-TBG-ETUR"
 Icon = ""
 includes = [] 
 # "requires-comfyui" = ">=1.0.0"  # ComfyUI version compatibility
-

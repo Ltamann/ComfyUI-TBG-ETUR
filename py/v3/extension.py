@@ -9,6 +9,7 @@ from typing_extensions import override
 from comfy_api.v0_0_2 import ComfyExtension, io, ui
 
 from ..nodes.UpscalerRefiner.TBG_Helpers import (
+    AISourcePatternCleanup,
     FluxKontextResolution,
     ImageComplexityMap,
     IncrementBatch,
@@ -19,22 +20,31 @@ from ..nodes.UpscalerRefiner.TBG_Helpers import (
     MaskToDenoiseInterpolator,
     MaskUpdateInpaintFromConditioning,
     QwenEditResolution,
+    TBG_ETUR_SIFT_Drift_Correction,
 )
 from ..nodes.UpscalerRefiner.TBG_Nodes_CE import (
     TBG_ETUR_Refiner_CE,
     TBG_ETUR_Upscaler_and_Tile_Generator_CE,
 )
 from ..nodes.UpscalerRefiner.TBG_Nodes_PRO import (
+    TBG_ETUR_ColorCorrection,
+    TBG_ETUR_ColorMatch_Debug,
     TBG_ETUR_Labs_Refiner,
     TBG_ETUR_Labs_Upscaler,
     TBG_ETUR_Refiner_PRO,
     TBG_ETUR_Upscaler_and_Tile_Generator_PRO,
+    TBG_Model_Agnostic_Color_Anchor,
+    TBG_Model_Agnostic_Latent_Anchor,
 )
 from ..nodes.UpscalerRefiner.TBG_Pipes import (
     TBG_ControlNetPipeline,
+    TBG_RF_UntwistingRoPE_Pipe,
     TBG_TilePrompter_v1,
     TBG_enrichment_pipe,
 )
+from ..nodes.UpscalerRefiner.TBG_PID_Upscale import TBG_ETUR_Download_PID_Model, TBG_ETUR_PID_Tile_Upscale_Rebuild
+from ..nodes.UpscalerRefiner.TBG_Flux2_Sampler import TBGFlux2Sampler
+from ..nodes.UpscalerRefiner.inc.pid_sde_sampler_registry import TBG_PiD_Creative_SDE_Sampler
 
 
 _BUILTIN_TYPES = {
@@ -244,9 +254,18 @@ def _build_v3_wrapper(legacy_cls: type, node_id: str, display_name: str):
         key_map[unique] = original
         inputs.append(node_input)
 
+    optional_first = ()
+    if legacy_cls is TBG_ETUR_PID_Tile_Upscale_Rebuild:
+        optional_first = ("image",)
+
+    for name in optional_first:
+        if name in optional:
+            _add_input(name, optional[name], True)
     for name, spec in required.items():
         _add_input(name, spec, False)
     for name, spec in optional.items():
+        if name in optional_first:
+            continue
         _add_input(name, spec, True)
 
     hidden_items = []
@@ -326,12 +345,23 @@ _NODE_DEFS = [
     (TBG_ETUR_Labs_Upscaler, "TBG ETUR Labs Upscaler", "TBG ETUR Labs Upscaler"),
     (TBG_ETUR_Refiner_PRO, "TBG ETUR Refiner PRO", "TBG ETUR Refiner PRO"),
     (TBG_ControlNetPipeline, "TBG ETUR Control Net Pipeline", "TBG ETUR ControlNet Pipeline"),
+    (TBG_RF_UntwistingRoPE_Pipe, "TBG ETUR RF UntwistingRoPE Pipe", "TBG ETUR RF UntwistingRoPE Pipe"),
     (TBG_TilePrompter_v1, "TBG ETUR Tile Overrides", "TBG ETUR Tile Overrides"),
     (TBG_enrichment_pipe, "TBG ETUR enrichment pipe", "TBG ETUR Enrichment Pipe"),
     (TBG_ETUR_Upscaler_and_Tile_Generator_PRO, "TBG ETUR Upscaler and Tile Generator PRO", "TBG ETUR Upscaler and Tile Generator PRO"),
     (TBG_ETUR_Refiner_CE, "TBG ETUR Refiner CE", "TBG ETUR Refiner CE"),
     (TBG_ETUR_Upscaler_and_Tile_Generator_CE, "TBG ETUR Upscaler and Tile Generator CE", "TBG ETUR Upscaler and Tile Generator CE"),
+    (TBG_ETUR_ColorCorrection, "TBG Color Correction", "TBG Color Correction"),
+    (TBG_Model_Agnostic_Color_Anchor, "TBG Model Agnostic Color Anchor", "TBG Model Agnostic Color Anchor"),
+    (TBG_Model_Agnostic_Latent_Anchor, "TBG Model Agnostic Latent Anchor", "TBG Model Agnostic Latent Anchor"),
+    (TBG_ETUR_ColorMatch_Debug, "TBG ETUR ColorMatch Debug Gates", "TBG ETUR ColorMatch Debug Gates"),
     (TBG_ETUR_Labs_Refiner, "TBG ETUR Labs for Refiner", "TBG ETUR Labs for Refiner"),
+    (TBG_ETUR_Download_PID_Model, "TBG ETUR Download PiD Model", "TBG ETUR Download PiD Model"),
+    (TBG_ETUR_PID_Tile_Upscale_Rebuild, "TBG ETUR PID Tile Upscale Rebuild", "TBG ETUR tiled Nvidia PID Image Upscale"),
+    (TBG_PiD_Creative_SDE_Sampler, "TBG PiD Creative SDE Sampler", "TBG PiD Creative SDE Sampler"),
+    (TBG_ETUR_SIFT_Drift_Correction, "TBG SIFT+ Drift Correction", "TBG SIFT+ Drift Correction"),
+    (TBGFlux2Sampler, "TBGFlux2Sampler", "TBG Flux2 Differential Diffusion Inpainting"),
+    (AISourcePatternCleanup, "AISourcePatternCleanup", "AI Source Pattern Cleanup"),
     (QwenEditResolution, "QwenEditResolution", "Qwen Edit Resolution"),
     (FluxKontextResolution, "FluxKontextResolution", "Flux Kontext Resolution"),
     (IncrementBatch, "IncrementBatch", "IncrementBatch"),

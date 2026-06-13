@@ -91,14 +91,27 @@ def inject_noise( samples, noise_std):
 
 def process_image_to_tiles(self, input_image): # for controllnet preprocessing with exterior file only
         # upscale cnet preprocessor iamge to image size
-        resized_image = nodes.ImageScale().upscale(input_image, self.PARAMS.upscale_method, round(self.OUTPUTS.upscaled_image.shape[2]), round(self.OUTPUTS.upscaled_image.shape[1]), False)[0]
+        upscale_method = getattr(self.PARAMS, "upscale_method", None)
+        if upscale_method is None:
+            upscale_method = getattr(self.PARAMS, "upscaler_method", None)
+        if upscale_method is None:
+            upscale_method = "lanczos"
+        resized_image = nodes.ImageScale().upscale(input_image, upscale_method, round(self.OUTPUTS.upscaled_image.shape[2]), round(self.OUTPUTS.upscaled_image.shape[1]), False)[0]
 
 
         from .image import TBG_Image
 
-        # Get tiled grid specifications
-        grid_specs = TBG_Image().gridspecs_get_tiled_grid_specs(self, resized_image.shape[1],resized_image.shape[2])
-        #grid_specs = TBG_Image().gridspecs_get_tiled_grid_specs(resized_image, self.SIZE.actual_inner_tile_sizeH, self.SIZE.actual_inner_tile_sizeW, self.PARAMS.rows_qty, self.PARAMS.cols_qty, self.SIZE.feather_mask_margin, self.SIZE.shift)[0]
+        # Reuse the active ETUR grid specs. During worker-driven refiner
+        # sampling, asking the worker to calculate specs again can deadlock.
+        grid_specs = getattr(self.PARAMS, "grid_specs", None)
+        if not grid_specs:
+            tile_count = len(getattr(self.OUTPUTS, "grid_images_all", []) or [])
+            print(
+                f"[TBG Reference_Image] missing PARAMS.grid_specs; "
+                f"using full resized reference for {tile_count or 1} tile(s)"
+            )
+            return [resized_image for _ in range(tile_count or 1)]
+
         # Generate grid images (tiles)
         grid_images = TBG_Image().gridspecs_get_grid_images(resized_image, grid_specs)
         return grid_images

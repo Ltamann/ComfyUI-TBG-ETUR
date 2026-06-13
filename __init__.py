@@ -26,7 +26,12 @@ if node_root not in sys.path:
 import folder_paths
 
 from .py.api import tbg_gguf_install_routes  # noqa: F401
+from .py.nodes.UpscalerRefiner.inc.flux2_sampler_registry import register_tbg_flux2_sampler
+from .py.nodes.UpscalerRefiner.inc.pid_sde_sampler_registry import register_tbg_pid_sde_samplers
 from .py.utils.version import VERSION
+
+register_tbg_pid_sde_samplers()
+register_tbg_flux2_sampler()
 
 # Pinned v3 API guard
 try:

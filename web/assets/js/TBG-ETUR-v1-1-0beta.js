@@ -2,7 +2,6 @@ import { app } from "../../../scripts/app.js";
 import { ComfyWidgets } from "../../../scripts/widgets.js";
 import { api } from "../../../scripts/api.js";
 import {
-  attachDOMWidget,
   getOutputValue,
   isTBGNode,
   requestNodeRedraw,
@@ -22,6 +21,129 @@ const TBG_UPSCALER_NODE_NAMES = [
 function tbgLooksLikeUrl(value) {
   const text = String(value ?? "").trim();
   return /^(https?:)?\/\//i.test(text) || text.startsWith("/") || text.startsWith("about:") || text.startsWith("blob:");
+}
+
+function tbgIsLegacyNodeMode() {
+  try {
+    return app?.ui?.settings?.getSettingValue?.("Comfy.VueNodes.Enabled") !== true;
+  } catch (_) {
+    return true;
+  }
+}
+
+function tbgPanelWidgetType() {
+  return tbgIsLegacyNodeMode() ? "customtext" : "div";
+}
+
+function tbgGetCanvasElement() {
+  return app?.canvas?.canvas || document.querySelector("canvas");
+}
+
+function tbgCloneCanvasEvent(event) {
+  const common = {
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    view: window,
+    detail: event.detail || 0,
+    screenX: event.screenX || 0,
+    screenY: event.screenY || 0,
+    clientX: event.clientX || 0,
+    clientY: event.clientY || 0,
+    ctrlKey: !!event.ctrlKey,
+    shiftKey: !!event.shiftKey,
+    altKey: !!event.altKey,
+    metaKey: !!event.metaKey,
+    button: event.button || 0,
+    buttons: event.buttons || 0,
+  };
+
+  if (event instanceof WheelEvent) {
+    return new WheelEvent(event.type, {
+      ...common,
+      deltaX: event.deltaX,
+      deltaY: event.deltaY,
+      deltaZ: event.deltaZ,
+      deltaMode: event.deltaMode,
+    });
+  }
+
+  if (window.PointerEvent && event instanceof PointerEvent) {
+    return new PointerEvent(event.type, {
+      ...common,
+      pointerId: event.pointerId,
+      width: event.width,
+      height: event.height,
+      pressure: event.pressure,
+      tangentialPressure: event.tangentialPressure,
+      tiltX: event.tiltX,
+      tiltY: event.tiltY,
+      twist: event.twist,
+      pointerType: event.pointerType,
+      isPrimary: event.isPrimary,
+    });
+  }
+
+  return new MouseEvent(event.type, common);
+}
+
+function tbgForwardEventToCanvas(event) {
+  const canvas = tbgGetCanvasElement();
+  if (!canvas) return false;
+  event.preventDefault();
+  event.stopPropagation();
+  canvas.dispatchEvent(tbgCloneCanvasEvent(event));
+  return true;
+}
+
+function tbgAttachCanvasEventForwarding(rootEl) {
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  rootEl.style.touchAction = "none";
+
+  rootEl.addEventListener("wheel", (event) => {
+    tbgForwardEventToCanvas(event);
+  }, { passive: false, signal });
+
+  rootEl.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, { signal });
+
+  rootEl.addEventListener("pointerdown", (event) => {
+    if (event.button === 1 || event.button === 2) {
+      tbgForwardEventToCanvas(event);
+    }
+  }, { capture: true, signal });
+
+  rootEl.addEventListener("pointermove", (event) => {
+    if ((event.buttons & 4) === 4 || (event.buttons & 2) === 2) {
+      tbgForwardEventToCanvas(event);
+    }
+  }, { signal });
+
+  rootEl.addEventListener("pointerup", (event) => {
+    if (event.button === 1 || event.button === 2) {
+      tbgForwardEventToCanvas(event);
+    }
+  }, { capture: true, signal });
+
+  rootEl.addEventListener("auxclick", (event) => {
+    if (event.button === 1) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }, { signal });
+
+  return controller;
+}
+
+function tbgFitLegacyDomWidgetNode(node, minHeight) {
+  if (!tbgIsLegacyNodeMode()) return;
+  const computed = typeof node?.computeSize === "function" ? node.computeSize() : null;
+  const computedHeight = Array.isArray(computed) ? computed[1] : 0;
+  setNodeMinHeight(node, Math.max(minHeight, computedHeight || 0));
 }
 
 function tbgEnsureFixedControlAfterGenerate(node) {
@@ -127,8 +249,12 @@ app.registerExtension({
         safeApply(onNodeCreated, this, arguments);
         tbgEnsureFixedControlAfterGenerate(this);
 
+        const panelWidgetHeight = 190;
+        const panelNodeMinHeight = 230;
+
         if (this.__tbgPanelInitialized) {
           tbgUpdateInfoPanel(this);
+          tbgFitLegacyDomWidgetNode(this, panelNodeMinHeight);
           return;
         }
 
@@ -137,6 +263,8 @@ app.registerExtension({
           "position: relative",
           "padding: 0 4px 4px",
           "width: 100%",
+          "min-width: 0",
+          "height: 190px",
           "min-height: 180px",
           "box-sizing: border-box",
           "overflow: hidden",
@@ -161,21 +289,39 @@ app.registerExtension({
           "border-radius: 0px",
           "background: rgb(53, 53, 53)",
           "display: block",
+          "pointer-events: auto",
         ].join("; ");
         iframe.tabIndex = -1;
         iframe.sandbox = "allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation";
         iframe.loading = "lazy";
+        iframe.scrolling = "auto";
         iframe.src = cls === "TBG ETUR Upscaler and Tile Generator PRO"
           ? "https://news.tbgetur.com/TBG_ETUR_News.html?type=PRO"
           : "https://news.tbgetur.com/TBG_ETUR_News.html?type=CE";
         container.appendChild(iframe);
 
-        const widget = attachDOMWidget(this, "TBG Web Panel", container, { serialize: false });
-        this.__tbgPanel = { container, label, iframe, widget };
+        const eventController = tbgAttachCanvasEventForwarding(container);
+        const widget = this.addDOMWidget("TBG Web Panel", tbgPanelWidgetType(), container, {
+          serialize: false,
+          getHeight() { return panelWidgetHeight; },
+          getMinHeight() { return panelWidgetHeight; },
+          getValue() { return ""; },
+          setValue() {},
+        });
+        const prevWidgetOnRemove = widget?.onRemove;
+        if (widget) {
+          widget.onRemove = function () {
+            try { eventController.abort(); } catch (_) {}
+            return prevWidgetOnRemove?.apply(this, arguments);
+          };
+        }
+
+        this.__tbgPanel = { container, label, iframe, widget, eventController };
         this.__tbgPanelInitialized = true;
 
         const refreshPanel = (output) => {
           tbgUpdateInfoPanel(this, output);
+          tbgFitLegacyDomWidgetNode(this, panelNodeMinHeight);
           requestNodeRedraw(this);
         };
 
@@ -191,11 +337,12 @@ app.registerExtension({
           return r;
         };
 
-        setNodeMinHeight(this, 195);
+        tbgFitLegacyDomWidgetNode(this, panelNodeMinHeight);
         setTimeout(() => refreshPanel(), 0);
 
         const prevOnRemoved = this.onRemoved;
         this.onRemoved = function () {
+          try { this.__tbgPanel?.eventController?.abort(); } catch (_) {}
           this.__tbgPanel = null;
           this.__tbgPanelInitialized = false;
           if (typeof prevOnRemoved === "function") {
@@ -267,6 +414,9 @@ app.registerExtension({
         container.style.gap = "4px";
         container.style.padding = "4px";
         container.style.marginBottom = "8px";
+        container.style.minWidth = "0";
+        container.style.maxWidth = "100%";
+        container.style.overflow = "hidden";
 
         // Label
         const label = document.createElement("div");
@@ -280,18 +430,27 @@ app.registerExtension({
         row.style.display = "flex";
         row.style.alignItems = "center";
         row.style.gap = "4px";
+        row.style.minWidth = "0";
+        row.style.maxWidth = "100%";
+        row.style.overflow = "hidden";
 
         // Seed field
         const seedField = document.createElement("input");
         seedField.type = "text";
         seedField.readOnly = true;
-        seedField.style.flex = "1";
+        seedField.style.flex = "1 1 auto";
+        seedField.style.minWidth = "0";
+        seedField.style.width = "0";
+        seedField.style.boxSizing = "border-box";
         seedField.style.background = "#444";
         seedField.style.color = "#eee";
         seedField.style.border = "1px solid #666";
         seedField.style.borderRadius = "999px";
         seedField.style.padding = "4px 8px";
         seedField.style.fontSize = "12px";
+        seedField.style.overflow = "hidden";
+        seedField.style.textOverflow = "ellipsis";
+        seedField.style.whiteSpace = "nowrap";
 
         // Copy button
         const copyBtn = document.createElement("button");
@@ -303,6 +462,8 @@ app.registerExtension({
         copyBtn.style.padding = "4px 10px";
         copyBtn.style.cursor = "pointer";
         copyBtn.style.fontSize = "12px";
+        copyBtn.style.flex = "0 0 auto";
+        copyBtn.style.whiteSpace = "nowrap";
         copyBtn.onmouseenter = () => (copyBtn.style.background = "#666");
         copyBtn.onmouseleave = () => (copyBtn.style.background = "#555");
         copyBtn.onclick = () => {

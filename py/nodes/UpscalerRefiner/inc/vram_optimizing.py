@@ -42,6 +42,9 @@ class VRAMOptimizer:
         )
         #self.encode_all_text_prompts()
         self.grid_prompts = self.PROMPTER.output_prompts
+        self.ignore_general_prompts = list(
+            getattr(self.PROMPTER, "output_ignore_general_prompt_js", []) or []
+        )
 
         #self.orig_grid_images = self.OUTPUTS.orig_grid_images_all
         self.orig_grid_images = self.OUTPUTS.orig_grid_images_all
@@ -176,7 +179,7 @@ class VRAMOptimizer:
     def _get_tile_fingerprint(self, tile_index):
         if tile_index >= len(self.grid_prompts):
             return None
-        combined_prompt = f"{self.general_prompt} {self.grid_prompts[tile_index]}"
+        combined_prompt = self._tile_prompt(tile_index)
         prompt_hash = hash(str(combined_prompt))
         redux_hash = self._get_redux_hash() if self.redux_enabled else None
         cnet_hash = self._get_cnet_pipe_hash() if getattr(self.KSAMPLER, "Controlnet_Pipe", None) else None
@@ -186,6 +189,26 @@ class VRAMOptimizer:
             f"t{tile_index}_p{prompt_hash}_img{image_hash}_c{cnet_hash}_r{redux_hash}"
             f"_s{self.redux_strength}_ts{ts}"
         )
+
+    def _ignore_general_prompt_for_tile(self, tile_idx):
+        try:
+            if tile_idx < len(self.ignore_general_prompts):
+                return bool(self.ignore_general_prompts[tile_idx])
+        except Exception:
+            pass
+        return False
+
+    def _tile_prompt(self, tile_idx, general_prompt=None):
+        tile_prompt = ""
+        try:
+            if tile_idx < len(self.grid_prompts):
+                tile_prompt = self.grid_prompts[tile_idx] or ""
+        except Exception:
+            tile_prompt = ""
+        if self._ignore_general_prompt_for_tile(tile_idx):
+            return str(tile_prompt).strip()
+        general = self.general_prompt if general_prompt is None else general_prompt
+        return " ".join(str(part).strip() for part in (general, tile_prompt) if str(part or "").strip())
 
     # ------------------------------------------------------------ tile access
 
@@ -231,7 +254,7 @@ class VRAMOptimizer:
             if self.PARAMS.tiles_to_process and tile_idx not in self.PARAMS.tiles_to_process:
                 continue
 
-            combined_prompt = f"{self.general_prompt} {self.grid_prompts[tile_idx]}"
+            combined_prompt = self._tile_prompt(tile_idx)
             ph = hash(str(combined_prompt))
 
 
@@ -268,7 +291,7 @@ class VRAMOptimizer:
         for tile_idx in range(total_tiles):
             if self.PARAMS.tiles_to_process and tile_idx not in self.PARAMS.tiles_to_process:
                 continue
-            combined_prompt = f"{self.DUALMODELGeneral_Prompt} {self.grid_prompts[tile_idx]}"
+            combined_prompt = self._tile_prompt(tile_idx, self.DUALMODELGeneral_Prompt)
 
             ph = hash(str(combined_prompt))
             log(

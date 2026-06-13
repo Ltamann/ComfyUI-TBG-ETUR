@@ -4,6 +4,8 @@ import cv2
 import copy
 import nodes
 import numpy as np
+import PIL.Image
+import PIL.ImageFilter
 from comfy import model_management
 import torch
 import torch.nn.functional as F
@@ -29,12 +31,235 @@ elif hasattr(MaskToImage, "composite"):
         node = MaskToImage()  # or cache a global instance if you prefer
         return node.composite(mask)
 
-from ....vendor.ComfyUI_KJNodes.nodes.image_nodes import ColorMatch
+from ....vendor.ComfyUI_KJNodes.nodes.image_nodes import ColorMatch, ETURColorMatchV2
 from ....vendor.seedvr2_videoupscaler.src.utils.color_fix  import wavelet_adaptive_color_correction,adaptive_instance_normalization,lab_color_transfer,hsv_saturation_histogram_match,wavelet_reconstruction
 from .....TBG.SERVERS.COMFYUI_server import register_main_class
 
 @register_main_class
 class TBG_Image():
+    @staticmethod
+    def _normalize_colormatch_image(image, name):
+        if not isinstance(image, torch.Tensor):
+            raise TypeError(f"ColorMatch {name} must be a torch.Tensor, got {type(image)}")
+        if image.ndim == 3:
+            image = image.unsqueeze(0)
+        if image.ndim != 4:
+            raise ValueError(f"ColorMatch {name} expected [B,H,W,C], got {tuple(image.shape)}")
+        if image.shape[-1] not in (1, 3, 4) and image.shape[1] in (1, 3, 4):
+            image = image.permute(0, 2, 3, 1).contiguous()
+        if image.shape[-1] not in (1, 3, 4):
+            raise ValueError(f"ColorMatch {name} expected channel-last image, got {tuple(image.shape)}")
+        return image
+
+    @classmethod
+    def _normalize_colormatch_batches(cls, image_ref, image_target):
+        ref = cls._normalize_colormatch_image(image_ref, "reference")
+        targ = cls._normalize_colormatch_image(image_target, "target")
+        ref_batch = int(ref.shape[0])
+        targ_batch = int(targ.shape[0])
+        if ref_batch > 1 and ref_batch != targ_batch:
+            print(
+                f"[TBG ColorMatch] reference batch {ref_batch} does not match target batch {targ_batch}; "
+                "using the first reference image."
+            )
+            ref = ref[:1]
+        return ref, targ
+
+    @classmethod
+    def ai_source_pattern_cleanup(
+        cls,
+        image,
+        reduce=0.35,
+        radius=128.0,
+        return_debug=False,
+    ):
+        """
+        Attenuate narrow periodic source/reference patterns before VAE/reference
+        encoding. This targets FFT peak energy so real high-frequency image
+        detail is preserved better than a broad blur/low-pass pass.
+        """
+        if not isinstance(image, torch.Tensor):
+            raise TypeError(f"AI Source Pattern Cleanup expects torch.Tensor, got {type(image)}")
+
+        source = cls._normalize_colormatch_image(image, "ai_source").clamp(0.0, 1.0)
+        amount = max(0.0, min(1.0, float(reduce)))
+        user_radius = max(1.0, min(256.0, float(radius)))
+        if amount <= 0.0:
+            if return_debug:
+                zero = torch.zeros_like(source)
+                return source, zero, {"high_freq_before": 0.0, "high_freq_after": 0.0}
+            return source
+
+        target_device = source.device
+        target_dtype = source.dtype
+        work = source.to(dtype=torch.float32)
+
+        rgb = work[..., :3] if work.shape[-1] >= 3 else work.expand(-1, -1, -1, 3)
+        cleaned_rgb_batches = []
+        preview_batches = []
+        metrics = []
+        notch_radius = int(max(1, min(12, round(math.sqrt(user_radius)))))
+
+        for batch in rgb:
+            h, w, _ = batch.shape
+            bchw = batch.permute(2, 0, 1).unsqueeze(0)
+            luma = (
+                batch[..., 0] * 0.299
+                + batch[..., 1] * 0.587
+                + batch[..., 2] * 0.114
+            )
+
+            # Detect narrow periodic peaks in the high-frequency residual, then
+            # subtract only the corresponding RGB component with edge protection.
+            luma_bchw = luma.view(1, 1, h, w)
+            local_low = F.avg_pool2d(luma_bchw, kernel_size=7, stride=1, padding=3)
+            residual = (luma_bchw - local_low)[0, 0]
+            residual = residual - residual.mean()
+
+            hann_y = torch.hann_window(h, periodic=False, device=target_device, dtype=torch.float32)
+            hann_x = torch.hann_window(w, periodic=False, device=target_device, dtype=torch.float32)
+            window = hann_y[:, None] * hann_x[None, :]
+            detector_fft = torch.fft.fftshift(torch.fft.fft2(residual * window))
+            magnitude = torch.log1p(detector_fft.abs())
+
+            yy = torch.arange(h, device=target_device, dtype=torch.float32)[:, None] - (h / 2.0)
+            xx = torch.arange(w, device=target_device, dtype=torch.float32)[None, :] - (w / 2.0)
+            freq_y = yy / max(float(h), 1.0)
+            freq_x = xx / max(float(w), 1.0)
+            radial = torch.sqrt(freq_y ** 2 + freq_x ** 2)
+            valid_band = radial > 0.035
+            valid_values = magnitude[valid_band]
+
+            if valid_values.numel() > 0:
+                source_threshold = valid_values.mean() + valid_values.std(unbiased=False) * 1.35
+            else:
+                source_threshold = torch.tensor(float("inf"), device=target_device, dtype=torch.float32)
+
+            signature_band = max(0.0025, min(0.014, (notch_radius + 1) / max(float(h), float(w))))
+            source_pattern_points = torch.zeros_like(magnitude, dtype=torch.bool)
+            source_pattern_targets = (
+                (-0.5, 0.0),
+                (0.5, 0.0),
+                (0.0, -0.5),
+                (0.0, 0.5),
+                (0.25, -0.25),
+                (-0.25, 0.25),
+            )
+            for target_fx, target_fy in source_pattern_targets:
+                dx = torch.minimum((freq_x - target_fx).abs(), (freq_x + target_fx).abs() if abs(target_fx) == 0.5 else (freq_x - target_fx).abs())
+                dy = torch.minimum((freq_y - target_fy).abs(), (freq_y + target_fy).abs() if abs(target_fy) == 0.5 else (freq_y - target_fy).abs())
+                source_pattern_points |= torch.sqrt(dx * dx + dy * dy) <= signature_band
+
+            peak_mask = source_pattern_points & (magnitude >= source_threshold)
+
+            if peak_mask.any():
+                peak_field = peak_mask.to(torch.float32).view(1, 1, h, w)
+                kernel = notch_radius * 2 + 1
+                notch = F.max_pool2d(peak_field, kernel_size=kernel, stride=1, padding=notch_radius)[0, 0]
+                notch = torch.fft.ifftshift(notch.clamp(0.0, 1.0))
+
+                rgb_fft = torch.fft.fft2(bchw[0])
+                periodic = torch.fft.ifft2(rgb_fft * notch).real.permute(1, 2, 0)
+
+                dx = F.pad(luma[:, 1:] - luma[:, :-1], (0, 1, 0, 0))
+                dy = F.pad(luma[1:, :] - luma[:-1, :], (0, 0, 0, 1))
+                grad = torch.sqrt(dx * dx + dy * dy)
+                grad_scale = torch.quantile(grad.flatten(), 0.92).clamp_min(1e-4)
+                detail_protect = (1.0 - (grad / grad_scale).clamp(0.0, 1.0)).pow(2.0)
+                cleanup_gate = (0.04 + 0.96 * detail_protect).unsqueeze(-1)
+
+                padded_rgb = F.pad(bchw, (1, 1, 1, 1), mode="reflect")
+                micro_low = F.avg_pool2d(padded_rgb, kernel_size=3, stride=1)[0].permute(1, 2, 0)
+                micro_component = (batch - micro_low).clamp(-0.018, 0.018)
+
+                # The measured FFT signature gates the cleanup, but direct FFT
+                # subtraction can ring into dark speckles. Keep it as a tiny
+                # bounded correction and let the edge-protected anti-checker
+                # pass do the visible work in smooth skin/background regions.
+                bounded_periodic = periodic.clamp(-0.006, 0.006)
+                micro_amount = amount * 0.10
+                periodic_amount = amount * 0.18
+
+                removed = (bounded_periodic * periodic_amount + micro_component * micro_amount) * cleanup_gate
+                cleaned = (batch - removed).clamp(0.0, 1.0)
+
+                r = cleaned[..., 0]
+                g = cleaned[..., 1]
+                b = cleaned[..., 2]
+                maxc = torch.maximum(torch.maximum(r, g), b)
+                minc = torch.minimum(torch.minimum(r, g), b)
+                saturation = (maxc - minc) / maxc.clamp_min(1e-4)
+                skin_mask = (
+                    (r > 0.22)
+                    & (r > g * 0.92)
+                    & (g > b * 0.82)
+                    & (saturation > 0.10)
+                    & (saturation < 0.62)
+                ).to(torch.float32)
+
+                cleaned_bchw = cleaned.permute(2, 0, 1).unsqueeze(0)
+                local_rgb = F.avg_pool2d(
+                    F.pad(cleaned_bchw, (2, 2, 2, 2), mode="reflect"),
+                    kernel_size=5,
+                    stride=1,
+                )[0].permute(1, 2, 0)
+                skin_low_rgb = F.avg_pool2d(
+                    F.pad(cleaned_bchw, (3, 3, 3, 3), mode="reflect"),
+                    kernel_size=7,
+                    stride=1,
+                )[0].permute(1, 2, 0)
+                local_luma = (
+                    local_rgb[..., 0] * 0.299
+                    + local_rgb[..., 1] * 0.587
+                    + local_rgb[..., 2] * 0.114
+                )
+                cleaned_luma = (
+                    cleaned[..., 0] * 0.299
+                    + cleaned[..., 1] * 0.587
+                    + cleaned[..., 2] * 0.114
+                )
+                dark_speckle = (local_luma - cleaned_luma - 0.006).clamp(0.0, 0.05)
+                speckle_gate = skin_mask * detail_protect
+                skin_smooth = (speckle_gate * amount * 0.42).unsqueeze(-1)
+                cleaned = (cleaned * (1.0 - skin_smooth) + skin_low_rgb * skin_smooth).clamp(0.0, 1.0)
+                speckle_lift = dark_speckle.unsqueeze(-1) * speckle_gate.unsqueeze(-1) * amount * 0.85
+                cleaned = (cleaned + speckle_lift).clamp(0.0, 1.0)
+                removed_preview = (removed.abs() * 8.0).clamp(0.0, 1.0)
+                metric_before = float(periodic.abs().mean().detach().cpu())
+                metric_after = float((periodic * (1.0 - cleanup_gate * amount)).abs().mean().detach().cpu())
+            else:
+                cleaned = batch
+                removed_preview = torch.zeros_like(batch)
+                metric_before = 0.0
+                metric_after = 0.0
+
+            cleaned_rgb_batches.append(cleaned)
+            preview_batches.append(removed_preview)
+            metrics.append((metric_before, metric_after))
+
+        cleaned_rgb = torch.stack(cleaned_rgb_batches, dim=0)
+        preview = torch.stack(preview_batches, dim=0)
+        if work.shape[-1] == 1:
+            cleaned = cleaned_rgb.mean(dim=-1, keepdim=True)
+            preview = preview.mean(dim=-1, keepdim=True)
+        elif work.shape[-1] > 3:
+            cleaned = torch.cat((cleaned_rgb, work[..., 3:]), dim=-1)
+            preview = torch.cat((preview, torch.zeros_like(work[..., 3:])), dim=-1)
+        else:
+            cleaned = cleaned_rgb
+
+        result = cleaned.to(dtype=target_dtype)
+
+        if return_debug:
+            before = sum(m[0] for m in metrics) / max(1, len(metrics))
+            after = sum(m[1] for m in metrics) / max(1, len(metrics))
+            metrics = {
+                "high_freq_before": before,
+                "high_freq_after": after,
+                "notch_radius": float(notch_radius),
+            }
+            return result, preview.to(dtype=target_dtype), metrics
+        return result
 
     @classmethod
     def ImageCompositeMasked(cls, full_image, _image, x_start,y_start, resize_source, used_mask):
@@ -54,16 +279,28 @@ class TBG_Image():
         # Make sure we are in torch and float32, and break reference chains
         assert isinstance(image_ref, torch.Tensor)
         assert isinstance(image_target, torch.Tensor)
+        image_ref, image_target = self._normalize_colormatch_batches(image_ref, image_target)
 
-        ref = image_ref.to(torch.float32).clone()
-        targ = image_target.to(torch.float32).clone()
-
-        # Branch: old ColorMatch (MKL / HM family) works on BHWC in [0,1]
-        if method in ('mkl', 'hm', 'reinhard', 'mvgd', 'hm-mvgd-hm', 'hm-mkl-hm'):
-            out = ColorMatch().colormatch(ref, targ, method, strength)[0]
+        # Branch: ColorMatch V2 family works on BHWC in [0,1]
+        if method in ('mkl', 'hm', 'reinhard', 'mvgd', 'hm-mvgd-hm', 'hm-mkl-hm', 'reinhard_lab_gpu'):
+            ref = image_ref.to(torch.float32).clone()
+            targ = image_target.to(torch.float32).clone()
+            try:
+                print(f"[TBG ColorMatch] using ETUR ColorMatchV2 method={method} strength={strength}")
+                out = ETURColorMatchV2().colormatch(ref, targ, method, strength, True)[0]
+            except Exception as exc:
+                print(f"[TBG ColorMatch] ETUR ColorMatchV2 failed method={method}: {exc}; falling back to legacy ColorMatch")
+                out = ColorMatch().colormatch(ref, targ, method, strength)[0]
             return (out,)
 
         # --- New methods expect BCHW in [-1,1] ---
+        target_device = image_target.device
+        processing_device = target_device
+        if processing_device.type == "cpu" and torch.cuda.is_available():
+            processing_device = model_management.get_torch_device()
+
+        ref = image_ref.to(device=processing_device, dtype=torch.float32).clone()
+        targ = image_target.to(device=processing_device, dtype=torch.float32).clone()
 
         # BHWC -> BCHW
         ti = targ.permute(0, 3, 1, 2).contiguous()
@@ -95,8 +332,155 @@ class TBG_Image():
 
         # BCHW -> BHWC
         out = out.permute(0, 2, 3, 1).contiguous()
+        if out.device != target_device:
+            out = out.to(target_device)
 
         return (out,)
+
+    @staticmethod
+    def _low_frequency_bhwc(image_bhwc, max_pool=1):
+        bchw = image_bhwc.to(torch.float32).permute(0, 3, 1, 2).contiguous()
+        height, width = bchw.shape[-2:]
+        pooled_h = max(1, min(int(max_pool), max(1, height // 8)))
+        pooled_w = max(1, min(int(max_pool), max(1, width // 8)))
+        low = F.interpolate(
+            F.adaptive_avg_pool2d(bchw, (pooled_h, pooled_w)),
+            size=(height, width),
+            mode="bilinear",
+            align_corners=False,
+        )
+        return low.permute(0, 2, 3, 1).contiguous()
+
+    @staticmethod
+    def _small_low_frequency_bhwc(image_bhwc, kernel_size=5):
+        bchw = image_bhwc.to(torch.float32).permute(0, 3, 1, 2).contiguous()
+        kernel_size = max(3, int(kernel_size) | 1)
+        radius = kernel_size // 2
+        padded = F.pad(bchw, (radius, radius, radius, radius), mode="reflect")
+        low = F.avg_pool2d(padded, kernel_size=kernel_size, stride=1)
+        return low.permute(0, 2, 3, 1).contiguous()
+
+    @staticmethod
+    def _band_abs_mean(band):
+        return float(torch.mean(torch.abs(band)).detach().cpu())
+
+    @staticmethod
+    def _masked_bhwc_mean(image, mask=None):
+        if mask is None:
+            return image.mean(dim=(1, 2), keepdim=True)
+        weight = mask.to(device=image.device, dtype=image.dtype).clamp(0.0, 1.0)
+        if int(weight.shape[0]) == 1 and int(image.shape[0]) > 1:
+            weight = weight.expand(int(image.shape[0]), -1, -1, -1)
+        denom = weight.sum(dim=(1, 2), keepdim=True).clamp_min(1e-6)
+        return (image * weight).sum(dim=(1, 2), keepdim=True) / denom
+
+    @classmethod
+    def _detail_color_metrics(cls, before, after, low_before, low_after, mid_before, mid_after, high_before, high_after, mask=None):
+        eps = 1e-8
+        low_delta = cls._band_abs_mean(low_after - low_before)
+        mid_delta = cls._band_abs_mean(mid_after - mid_before)
+        high_delta = cls._band_abs_mean(high_after - high_before)
+        mid_ref = cls._band_abs_mean(mid_before)
+        high_ref = cls._band_abs_mean(high_before)
+        mid_retention = max(0.0, 1.0 - (mid_delta / max(mid_ref, eps)))
+        high_retention = max(0.0, 1.0 - (high_delta / max(high_ref, eps)))
+        rgb_shift = (after.to(torch.float32) - before.to(torch.float32)).mean(dim=(0, 1, 2))[:3]
+        diff = torch.abs(after.to(torch.float32) - before.to(torch.float32)).mean(dim=-1, keepdim=True)
+        seam_delta = None
+        center_delta = None
+        if mask is not None:
+            m = cls._mask_to_bchw(mask, before.permute(0, 3, 1, 2).contiguous())
+            if m is not None:
+                m = m.permute(0, 2, 3, 1).to(device=diff.device, dtype=diff.dtype)
+                seam_delta = float((diff * m).sum().detach().cpu() / m.sum().clamp_min(1e-6).detach().cpu())
+                inv = 1.0 - m
+                center_delta = float((diff * inv).sum().detach().cpu() / inv.sum().clamp_min(1e-6).detach().cpu())
+        return {
+            "low_delta": low_delta,
+            "mid_retention": mid_retention,
+            "high_retention": high_retention,
+            "rgb_shift": tuple(float(v) for v in rgb_shift.detach().cpu()),
+            "seam_delta": seam_delta,
+            "center_delta": center_delta,
+        }
+
+    @classmethod
+    def detail_preserving_colormatch(cls, image_ref, image_target, method, strength=1.0, apply_mask=None, label=None):
+        """
+        Color-match only as a global color delta. This intentionally avoids
+        spatial low-frequency fields, because pooled fields can imprint grids.
+        """
+        if method is None or str(method).lower() == "none":
+            return (image_target,)
+
+        ref, target = cls._normalize_colormatch_batches(image_ref, image_target)
+        original_device = target.device
+        original_dtype = target.dtype
+        ref = ref.to(torch.float32)
+        target = target.to(torch.float32)
+
+        if int(ref.shape[1]) != int(target.shape[1]) or int(ref.shape[2]) != int(target.shape[2]):
+            ref = nodes.ImageScale().upscale(ref, "bilinear", int(target.shape[2]), int(target.shape[1]), False)[0]
+            ref = ref.to(device=target.device, dtype=torch.float32)
+
+        mask_bhwc = None
+        mask_coverage = 0.0
+        if apply_mask is not None:
+            mask_bchw = cls._mask_to_bchw(apply_mask, target.permute(0, 3, 1, 2).contiguous())
+            if mask_bchw is not None:
+                mask_bhwc = mask_bchw.permute(0, 2, 3, 1).to(device=target.device, dtype=target.dtype).clamp(0.0, 1.0)
+                if mask_bhwc.numel() > 0 and float(mask_bhwc.max().detach().cpu()) > 0.001:
+                    mask_coverage = float((mask_bhwc > 0.001).to(torch.float32).mean().detach().cpu())
+                else:
+                    mask_bhwc = None
+
+        low_ref = cls._masked_bhwc_mean(ref, mask_bhwc)
+        low_target = cls._masked_bhwc_mean(target, mask_bhwc)
+        small_low_target = cls._small_low_frequency_bhwc(target)
+        mid_target = small_low_target - low_target
+        high_target = target - small_low_target
+
+        low_delta = (low_ref - low_target).clamp(-0.15, 0.15) * float(strength)
+
+        if mask_bhwc is not None:
+            low_delta = low_delta * mask_bhwc
+
+        corrected_low = low_target + low_delta
+        corrected = (corrected_low + mid_target + high_target).clamp(0.0, 1.0)
+        corrected = corrected.to(device=original_device, dtype=original_dtype)
+
+        if label:
+            low_after = corrected.to(torch.float32).mean(dim=(1, 2), keepdim=True)
+            small_low_after = cls._small_low_frequency_bhwc(corrected.to(torch.float32))
+            mid_after = small_low_after - low_after
+            high_after = corrected.to(torch.float32) - small_low_after
+            metrics = cls._detail_color_metrics(
+                target,
+                corrected.to(torch.float32),
+                low_target,
+                low_after,
+                mid_target,
+                mid_after,
+                high_target,
+                high_after,
+                mask=apply_mask,
+            )
+            rgb = metrics["rgb_shift"]
+            extra = ""
+            if metrics["seam_delta"] is not None:
+                extra = f" seam_delta={metrics['seam_delta']:.8f} center_delta={metrics['center_delta']:.8f}"
+            print(
+                f"[TBG DetailColor] {label}: method={method} strength={float(strength):.3f} "
+                f"stats={'masked' if mask_bhwc is not None else 'full'} "
+                f"mask_coverage={mask_coverage:.4f} "
+                f"low_delta={metrics['low_delta']:.8f} "
+                f"mid_retention={metrics['mid_retention']:.4f} "
+                f"high_retention={metrics['high_retention']:.4f} "
+                f"rgb_shift=({rgb[0]:+.6f},{rgb[1]:+.6f},{rgb[2]:+.6f})"
+                f"{extra}"
+            )
+
+        return (corrected,)
 
     @staticmethod
     def _mask_to_bchw(mask, ref_tensor):
@@ -264,8 +648,8 @@ class TBG_Image():
         if not isinstance(image_a, torch.Tensor) or not isinstance(image_b, torch.Tensor):
             return 0.0
 
-        a_bchw = image_a.to(torch.float32).permute(0, 3, 1, 2).contiguous()
-        b_bchw = image_b.to(torch.float32).permute(0, 3, 1, 2).contiguous()
+        a_bchw = image_a.to(dtype=torch.float32).permute(0, 3, 1, 2).contiguous()
+        b_bchw = image_b.to(device=image_a.device, dtype=torch.float32).permute(0, 3, 1, 2).contiguous()
         diff = (a_bchw - b_bchw).abs().mean(dim=1, keepdim=True)
 
         if mask is None:
@@ -338,30 +722,38 @@ class TBG_Image():
 
             for seg in seg_list:
                 if hasattr(seg, 'crop_region'):
-                    # This is a proper SEG namedtuple
                     x1, y1, x2, y2 = seg.crop_region
+                    bx1, by1, bx2, by2 = getattr(seg, "bbox", seg.crop_region)
 
                     # Apply transformations: padding first, then scaling
                     new_x1 = int((x1 + pad_x) * upscale_factor)
                     new_y1 = int((y1 + pad_y) * upscale_factor)
                     new_x2 = int((x2 + pad_x) * upscale_factor)
                     new_y2 = int((y2 + pad_y) * upscale_factor)
+                    new_bx1 = int((bx1 + pad_x) * upscale_factor)
+                    new_by1 = int((by1 + pad_y) * upscale_factor)
+                    new_bx2 = int((bx2 + pad_x) * upscale_factor)
+                    new_by2 = int((by2 + pad_y) * upscale_factor)
 
-                    # Create new SEG with updated coordinates
-                    from collections import namedtuple
-                    SEG_impakt = namedtuple("SEG",
-                                            ['cropped_image', 'cropped_mask', 'confidence', 'crop_region', 'bbox', 'label', 'control_net_wrapper'],
-                                            defaults=[None])
-
-                    new_seg = SEG_impakt(
-                        cropped_image=seg.cropped_image,
-                        cropped_mask=seg.cropped_mask,
-                        confidence=seg.confidence,
-                        crop_region=(new_x1, new_y1, new_x2, new_y2),
-                        bbox=seg.bbox,  # You might want to transform this too
-                        label=seg.label,
-                        control_net_wrapper=seg.label
-                    )
+                    if hasattr(seg, "_fields"):
+                        values = {name: getattr(seg, name) for name in seg._fields}
+                        values["crop_region"] = (new_x1, new_y1, new_x2, new_y2)
+                        values["bbox"] = (new_bx1, new_by1, new_bx2, new_by2)
+                        new_seg = type(seg)(**values)
+                    else:
+                        from collections import namedtuple
+                        SEG_impakt = namedtuple("SEG",
+                                                ['cropped_image', 'cropped_mask', 'confidence', 'crop_region', 'bbox', 'label', 'control_net_wrapper'],
+                                                defaults=[None])
+                        new_seg = SEG_impakt(
+                            cropped_image=seg.cropped_image,
+                            cropped_mask=seg.cropped_mask,
+                            confidence=seg.confidence,
+                            crop_region=(new_x1, new_y1, new_x2, new_y2),
+                            bbox=(new_bx1, new_by1, new_bx2, new_by2),
+                            label=seg.label,
+                            control_net_wrapper=getattr(seg, "control_net_wrapper", None)
+                        )
                     transformed_segments.append(new_seg)
                 else:
                     print(f"Warning: Expected SEG object, got {type(seg)}")

@@ -11,7 +11,7 @@ from scipy.ndimage import gaussian_filter, grey_dilation, distance_transform_edt
 import torchvision.transforms.functional as TF
 from collections import namedtuple
 SEG = namedtuple("SEG",
-                 ['cropped_image', 'cropped_mask', 'confidence', 'crop_region', 'bbox', 'label', 'control_net_wrapper', 'inpainting_mask', 'compositing_mask'],
+                 ['cropped_image', 'cropped_mask', 'confidence', 'crop_region', 'bbox', 'label', 'control_net_wrapper', 'inpainting_mask', 'compositing_mask', 'binary_mask'],
                  defaults=[None])
 
 
@@ -172,8 +172,13 @@ class TBG_Segms():
                                off_x:off_x + exact_w
                                ]
 
-            # Convert the binary mask (no gradients) – same as original code.
-            binary_mask = (cropped_mask > 0.01).float()
+            # Convert to a high-confidence binary core. The old 0.01 threshold
+            # treated soft mask halos as solid segment area, which made segment
+            # fusion/compositing masks bbox-shaped and caused hard rectangular
+            # patches after sampling.
+            binary_mask = (cropped_mask > 0.5).float()
+            if not bool(binary_mask.any()):
+                binary_mask = (cropped_mask > 0.01).float()
 
             # -----------------------------------------------------------------
             # e) Build the three auxiliary masks that are used later for the
@@ -196,7 +201,8 @@ class TBG_Segms():
                 label=seg.label,
                 control_net_wrapper=seg.control_net_wrapper,
                 inpainting_mask=inpainting_mask,
-                compositing_mask=compositing_mask
+                compositing_mask=compositing_mask,
+                binary_mask=binary_mask,
             )
             new_segs.append(new_seg)
 

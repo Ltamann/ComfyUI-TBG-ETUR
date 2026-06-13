@@ -29,17 +29,26 @@ import nodes
 import hashlib
 import json
 from functools import wraps
-from types import SimpleNamespace
 from PIL import Image
 from comfy_extras import nodes_upscale_model
 from ...utils.log import log
 from .inc.image import TBG_Image
+from .inc.batch import is_batch_image, make_batch_pipe
+from .inc.tbg_pid import (
+    PID_DEFAULT_COLOR_MATCH,
+    PID_DEFAULT_OVERLAP,
+    PID_DEFAULT_STITCH_BLUR,
+    PID_DEFAULT_STITCH_FEATHER,
+    PID_SCALE,
+    is_pid_upscale_model,
+    run_pid_tiled_upscale,
+)
+from .inc.pid_vlm import PID_VLM_MODEL, make_pid_vlm_prompt_fn
 from .inc.prosegs import TBG_Segms
-from ...vendor.ComfyUI_Janus_Pro.nodes.model_loader import JanusModelLoader
-from ...vendor.ComfyUI_Janus_Pro.nodes.image_understanding import JanusImageUnderstanding
 from ...vendor.ComfyUI_Unload_Models_main.py.unload_one_model import UnloadOneModelNode
 from ...vendor.ComfyUI_QwenVL.AILab_QwenVL import QwenVLBase
 from ...vendor.ComfyUI_QwenVL.AILab_QwenVL_GGUF import QwenVLGGUFBase
+from ...vendor.ComfyUI_QwenVL.response_cleanup import strip_thinking
 from ...vendor.ComfyUI_QwenVL.TBG_QwenVL_Server import QwenVLServerClient
 from ...vendor.ComfyUI_QwenVL.TBG_QwenVL_ServerManager import get_server_manager
 from ...vendor.ComfyUI_QwenVL.nodes import Qwen2VL_TBG
@@ -56,6 +65,19 @@ from ...vendor.flashvsr_ultra_fast.nodes import flashvr
 Tiler_Upscale_Cache = True
 Only_Upscale = False
 OPENAI_COMPAT_MODEL = "OpenAI-Compatible (Labs Server)"
+
+
+def _normalize_vlm_model(value):
+    if value is None:
+        return "NONE"
+    text = str(value).strip()
+    if not text:
+        return "NONE"
+    if text.upper() == "NONE" or text.lower() == "none":
+        return "NONE"
+    if text.lower() == "none (fp16)":
+        return "NONE"
+    return text
 
 
 def _runtime_device_string():
@@ -103,7 +125,7 @@ def upscale_cache_comfy_method(maxsize=1, enabled=True):
             if not is_enabled:
                 if hasattr(cls, cache_name):
                     getattr(cls, cache_name).clear()
-                return func(cls, *args)  # no kwargs if you don't use them
+                return func(cls, *args, **kwargs)
 
             if not hasattr(cls, cache_name):
                 setattr(cls, cache_name, {})
@@ -116,24 +138,11 @@ def upscale_cache_comfy_method(maxsize=1, enabled=True):
                 if len(args) > 0:
                     image = args[0]  # for @classmethod: input_image
 
-                if image is not None:
-                    if hasattr(image, 'cpu'):         # torch tensor
-                        image_np = image.cpu().numpy()
-                        image_bytes = image_np.tobytes()
-                    elif hasattr(image, 'tobytes'):   # numpy array
-                        image_bytes = image.tobytes()
-                    else:
-                        image_bytes = str(image).encode()
-                    image_hash = hashlib.md5(image_bytes).hexdigest()
-                else:
-                    image_hash = "none"
+                image_hash = _hash_tiler_tensor(image) if image is not None else "none"
 
-                # 2) Optional: keep your kwargs-based hash if you want
-                relevant_keys = ['upscale_by', 'upscale_model']
-                cache_kwargs = {k: v for k, v in kwargs.items()
-                                if k in relevant_keys or k == 'PARAMS'}
-                kwargs_str = json.dumps(cache_kwargs, sort_keys=True, default=str)
-                kwargs_hash = hashlib.md5(kwargs_str.encode()).hexdigest()
+                # 2) Cache only when all inputs that can change the upscaled pixels match.
+                cache_kwargs = _input_upscale_cache_payload(image, kwargs)
+                kwargs_hash = _fingerprint_hash(cache_kwargs)
 
                 cache_key = f"{func.__name__}_{image_hash}_{kwargs_hash}"
             except Exception as e:
@@ -146,7 +155,7 @@ def upscale_cache_comfy_method(maxsize=1, enabled=True):
 
             # Otherwise run the function
             log("Upscaled Imag", None, None, f"Node {tbg.INFO.id}")
-            result = func(cls, *args)
+            result = func(cls, *args, **kwargs)
 
             # Store in cache with size limit
             if cache_key:
@@ -167,38 +176,167 @@ from functools import wraps
 
 import hashlib, json
 
-def make_tiler_config(tbg, labs_upscaler_dict):
-    # hash image content
-    img = tbg.OUTPUTS.upscaled_image
-    if hasattr(img, "cpu"):
-        img_bytes = img.cpu().numpy().tobytes()
-    elif hasattr(img, "tobytes"):
-        img_bytes = img.tobytes()
-    else:
-        img_bytes = str(img).encode()
-    img_hash = hashlib.md5(img_bytes).hexdigest()
+def _hash_tiler_tensor(value):
+    if value is None:
+        return None
 
-    # segment: use count + mask flag; if you want, add a hash of Segment_Mask tensor too
-    seg_count = len(tbg.SEGMENTS.segms or [])
-    has_seg_mask = tbg.SEGMENTS.Segment_Mask is not None
+    if torch.is_tensor(value):
+        try:
+            tensor = value.detach().to("cpu").contiguous()
+            if tensor.dtype == torch.bfloat16:
+                tensor = tensor.float()
+
+            h = hashlib.md5()
+            h.update(str(tuple(tensor.shape)).encode())
+            h.update(str(tensor.dtype).encode())
+            h.update(tensor.numpy().tobytes())
+            return h.hexdigest()
+        except Exception as e:
+            return f"tensor-hash-error:{tuple(value.shape)}:{value.dtype}:{value.device}:{e}"
+
+    if hasattr(value, "tobytes"):
+        h = hashlib.md5()
+        h.update(str(getattr(value, "shape", "")).encode())
+        h.update(str(getattr(value, "dtype", "")).encode())
+        h.update(value.tobytes())
+        return h.hexdigest()
+
+    return hashlib.md5(str(value).encode()).hexdigest()
+
+def _stable_tiler_value(value, depth=0):
+    if depth > 8:
+        return f"<max-depth:{type(value).__name__}>"
+
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+
+    if torch.is_tensor(value) or hasattr(value, "tobytes"):
+        return {
+            "type": type(value).__name__,
+            "shape": tuple(getattr(value, "shape", ())),
+            "dtype": str(getattr(value, "dtype", "")),
+            "hash": _hash_tiler_tensor(value),
+        }
+
+    if isinstance(value, dict):
+        return {
+            str(k): _stable_tiler_value(v, depth + 1)
+            for k, v in sorted(value.items(), key=lambda item: str(item[0]))
+        }
+
+    if isinstance(value, (list, tuple, set)):
+        return [_stable_tiler_value(v, depth + 1) for v in list(value)]
+
+    text = re.sub(r"0x[0-9a-fA-F]+", "0xADDR", str(value))
+    return {"type": type(value).__name__, "repr": text}
+
+
+def _fingerprint_hash(payload):
+    return hashlib.md5(
+        json.dumps(payload, sort_keys=True, default=str, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def _filtered_labs_upscaler_config(labs_upscaler_dict):
+    if not isinstance(labs_upscaler_dict, dict):
+        return None
+
+    relevant_names = {
+        "Tiler_Upscale_Cache",
+        "Only_Upscale",
+        "PID_degrade_sigma",
+        "PID_Model",
+        "PID_VAE_Compatible_Model",
+        "PID_CLIP",
+        "PID_Source_VAE",
+    }
+    relevant_prefixes = ("SEEDVR2_", "PID_", "Flash", "Waifu", "Upscale", "upscale")
+    filtered = {}
+    for key, value in labs_upscaler_dict.items():
+        key_text = str(key)
+        if key_text in relevant_names or key_text.startswith(relevant_prefixes):
+            filtered[key_text] = _stable_tiler_value(value)
+    return filtered
+
+
+def _input_upscale_cache_payload(image, kwargs):
+    return {
+        "input_image": _stable_tiler_value(image),
+        "upscale_model": kwargs.get("upscale_model", "NONE"),
+        "upscale_by": kwargs.get("upscale_by", 1),
+        "effective_upscale_by": getattr(tbg.PARAMS, "effective_upscale_by", kwargs.get("upscale_by", 1)),
+        "optimize_upscale_factor_for_tile_use": bool(
+            getattr(
+                tbg.PARAMS,
+                "optimize_upscale_factor_for_tile_use",
+                kwargs.get("Optimize_Upscale_Factor_For_Tile_Use", False),
+            )
+        ),
+        "labs_upscaler": _filtered_labs_upscaler_config(kwargs.get("labs_upscaler", None)),
+    }
+
+
+def _segment_fingerprint(segms):
+    if segms is None:
+        return {"count": 0, "value": None}
+    try:
+        count = len(segms)
+    except Exception:
+        count = None
+    return {
+        "count": count,
+        "value": _stable_tiler_value(segms),
+    }
+
+
+def make_tiler_refresh_fingerprint(tbg, kwargs, labs_upscaler_dict):
+    input_image = getattr(tbg.INPUTS, "image", None)
+    upscaled_image = getattr(tbg.OUTPUTS, "upscaled_image", None)
+    seg_mask = getattr(tbg.SEGMENTS, "Segment_Mask", None)
 
     cfg = {
-        "img": img_hash,
-        "presets":          tbg.PARAMS.preset,
-        "Fusion_strength":  tbg.SIZE.inpaint_max,
-        "tile_size_w":      tbg.SIZE.fullW,
-        "tile_size_h":      tbg.SIZE.fullH,
-        "upscale_model":    tbg.PARAMS.upscale_model_name,
-        "upscale_by":       tbg.PARAMS.upscale_by,
-        "PRO_Tile_Mode":    tbg.PARAMS.Tile_Fusion_Mode,
-        "composite_blur":   tbg.SIZE.composite_blur_margin,
-        "fusion_reference_margin": tbg.SIZE.Fusion_reference_margin,
-        "fusion_margin":    tbg.SIZE.inpaint_blur_margin,
-        "Segment_Mask_on":  has_seg_mask,
-        "PRO_segs_count":   seg_count,
-        "labs_upscaler":    labs_upscaler_dict,  # or a minimal hash of it
+        "input_image": _stable_tiler_value(input_image),
+        "upscaled_image": _stable_tiler_value(upscaled_image),
+        "preset": getattr(tbg.PARAMS, "preset", "NONE"),
+        "fragmentation": getattr(tbg.PARAMS, "fragmentation", 1),
+        "tile_size_w": getattr(tbg.SIZE, "fullW", kwargs.get("tile_size_w", 1024)),
+        "tile_size_h": getattr(tbg.SIZE, "fullH", kwargs.get("tile_size_h", 1024)),
+        "upscale_model": getattr(tbg.PARAMS, "upscale_model_name", kwargs.get("upscale_model", "NONE")),
+        "upscale_by": getattr(tbg.PARAMS, "upscale_by", kwargs.get("upscale_by", 1)),
+        "requested_upscale_by": getattr(tbg.PARAMS, "requested_upscale_by", kwargs.get("upscale_by", 1)),
+        "effective_upscale_by": getattr(tbg.PARAMS, "effective_upscale_by", getattr(tbg.PARAMS, "upscale_by", kwargs.get("upscale_by", 1))),
+        "optimize_upscale_factor_for_tile_use": bool(
+            getattr(
+                tbg.PARAMS,
+                "optimize_upscale_factor_for_tile_use",
+                kwargs.get("Optimize_Upscale_Factor_For_Tile_Use", False),
+            )
+        ),
+        "fusion_mode": getattr(tbg.PARAMS, "Tile_Fusion_Mode", kwargs.get("Fusion Mode", "NONE")),
+        "fusion_reference_margin": getattr(tbg.SIZE, "Fusion_reference_margin", kwargs.get("Fusion Reference Margin", 0)),
+        "fusion_margin": getattr(tbg.SIZE, "inpaint_blur_margin", kwargs.get("Fusion Margin", 64)),
+        "feather_mask": getattr(tbg.SIZE, "composite_blur_margin", kwargs.get("Feather Mask", 16)),
+        "fusion_strength": getattr(tbg.SIZE, "inpaint_max", kwargs.get("Fusion Strength", 0.05)),
+        "segment_mask": {
+            "present": seg_mask is not None,
+            "value": _stable_tiler_value(seg_mask),
+        },
+        "pro_segs": _segment_fingerprint(getattr(tbg.SEGMENTS, "segms", None)),
+        "labs_upscaler": _filtered_labs_upscaler_config(labs_upscaler_dict),
     }
-    return hashlib.md5(json.dumps(cfg, sort_keys=True, default=str).encode()).hexdigest()
+    return _fingerprint_hash(cfg), cfg
+
+
+def _changed_fingerprint_keys(previous, current):
+    if not isinstance(previous, dict) or not isinstance(current, dict):
+        return ["initial"]
+    keys = sorted(set(previous.keys()) | set(current.keys()))
+    return [key for key in keys if previous.get(key) != current.get(key)]
+
+
+def make_tiler_config(tbg, labs_upscaler_dict):
+    key, _ = make_tiler_refresh_fingerprint(tbg, {}, labs_upscaler_dict)
+    return key
 
 
 
@@ -207,6 +345,147 @@ from comfy.utils import ProgressBar
 @register_main_class
 class TBG_Upscaler_v1():
     _pbar = None
+
+    @classmethod
+    def _classify_segment_sampling_case(cls, bbox_w, bbox_h, crop_w, crop_h, tile_w, tile_h, scale_x, scale_y, guard_applied=False, ratio_adjustment="none"):
+        scale_x = float(scale_x)
+        scale_y = float(scale_y)
+        min_scale = min(scale_x, scale_y)
+        max_scale = max(scale_x, scale_y)
+        ratio_adjustment = str(ratio_adjustment or "none")
+
+        if bool(guard_applied):
+            case = "large_context_guarded_restore"
+            reason = "Flux2/large segment guard changed sampling tile size; restore through transform only"
+        elif min_scale > 1.05:
+            case = "small_segment_upscaled_bbox_restore"
+            reason = "segment is intentionally upscaled in sampling tile for detail, then restored to native bbox/crop"
+        elif max_scale < 0.95:
+            case = "large_segment_downscaled_context_restore"
+            reason = "segment/context is downscaled for sampling, then restored to native crop"
+        else:
+            case = "native_scale_segment_restore"
+            reason = "segment sampling scale is close to native"
+        if ratio_adjustment != "none":
+            case += "_ratio_adjusted"
+            reason += f"; crop ratio adjusted={ratio_adjustment}"
+        return case, reason
+
+    @classmethod
+    def _simulate_grid_for_size(cls, image_h, image_w):
+        size = copy.copy(tbg.SIZE)
+        mode = getattr(tbg.PARAMS, "Tile_Fusion_Mode", None)
+        size_unit = 64
+        size.fullW = int(math.floor(int(size.fullW) / size_unit) * size_unit)
+        size.fullH = int(math.floor(int(size.fullH) / size_unit) * size_unit)
+        size.inpaint_border_margin = max(int(getattr(size, "inpaint_border_margin", 0) or 0), 0)
+        size.composite_blur_margin = max(int(getattr(size, "composite_blur_margin", 0) or 0), 0)
+
+        if mode == "Tile_Fusion":
+            outer_mask_area = max(
+                0,
+                int(getattr(size, "inpaint_border_margin", 0) or 0)
+                + int(getattr(size, "inpaint_blur_margin", 0) or 0),
+            )
+            overlay_between_tiles = 2 * outer_mask_area
+            crop_margin = outer_mask_area - int(getattr(size, "shift", 0) or 0)
+        elif mode in ("Neuro_Generative_Tile_Fusion", "NGTF_FLUX_Kontext"):
+            outer_mask_area = max(0, int(getattr(size, "Fusion_reference_margin", 0) or 0))
+            overlay_between_tiles = (2 * outer_mask_area) + size.composite_blur_margin
+            crop_margin = outer_mask_area
+        else:
+            outer_mask_area = size.composite_blur_margin
+            overlay_between_tiles = size.composite_blur_margin
+            crop_margin = 0
+
+        tile_grid_w = max(1, int(size.fullW) - int(overlay_between_tiles))
+        tile_grid_h = max(1, int(size.fullH) - int(overlay_between_tiles))
+        if mode == "Soft Merge":
+            rows_qty = math.ceil(int(image_h) / tile_grid_h)
+            cols_qty = math.ceil(int(image_w) / tile_grid_w)
+        else:
+            rows_qty = math.ceil((int(image_h) - outer_mask_area) / tile_grid_h)
+            cols_qty = math.ceil((int(image_w) - outer_mask_area) / tile_grid_w)
+
+        if ((rows_qty - 2) * tile_grid_h) >= (int(image_h) - int(size.fullH)):
+            rows_qty -= 1
+        if ((cols_qty - 2) * tile_grid_w) >= (int(image_w) - int(size.fullW)):
+            cols_qty -= 1
+
+        size.crop_margin = crop_margin
+        size.tile_grid_W = tile_grid_w
+        size.tile_grid_H = tile_grid_h
+        size.rows_qty = max(1, int(rows_qty))
+        size.cols_qty = max(1, int(cols_qty))
+        size.outer_mask_area = outer_mask_area
+        size.overlay_between_tiles = overlay_between_tiles
+        size.actual_inner_tile_sizeW = int(size.fullW) - 2 * outer_mask_area
+        size.actual_inner_tile_sizeH = int(size.fullH) - 2 * outer_mask_area
+        return int(size.rows_qty), int(size.cols_qty), size
+
+    @classmethod
+    def _optimize_upscale_factor_for_tile_use(cls, input_image):
+        if input_image is None or not torch.is_tensor(input_image):
+            return
+        requested = float(getattr(tbg.PARAMS, "requested_upscale_by", getattr(tbg.PARAMS, "upscale_by", 1.0)) or 1.0)
+        if requested <= 0:
+            requested = 1.0
+        tbg.PARAMS.effective_upscale_by = requested
+        if not bool(getattr(tbg.PARAMS, "optimize_upscale_factor_for_tile_use", False)):
+            return
+        if getattr(tbg.PARAMS, "upscale_model_name", "NONE") == "NONE":
+            tbg.PARAMS.effective_upscale_by = 1.0
+            tbg.PARAMS.upscale_by = 1.0
+            return
+
+        source_h = int(input_image.shape[1])
+        source_w = int(input_image.shape[2])
+        if source_h <= 0 or source_w <= 0:
+            return
+
+        requested_w = max(1, int(round(source_w * requested)))
+        requested_h = max(1, int(round(source_h * requested)))
+        previous_h = getattr(tbg.SIZE, "UpscaledInputImageH", None)
+        previous_w = getattr(tbg.SIZE, "UpscaledInputImageW", None)
+        try:
+            tbg.SIZE.UpscaledInputImageH = requested_h
+            tbg.SIZE.UpscaledInputImageW = requested_w
+            rows, cols, size = cls._simulate_grid_for_size(requested_h, requested_w)
+        finally:
+            tbg.SIZE.UpscaledInputImageH = previous_h
+            tbg.SIZE.UpscaledInputImageW = previous_w
+
+        if rows <= 1 and cols <= 1:
+            return
+
+        tile_w = int(size.fullW)
+        tile_h = int(size.fullH)
+        step_w = max(1, int(getattr(size, "tile_grid_W", tile_w)))
+        step_h = max(1, int(getattr(size, "tile_grid_H", tile_h)))
+        mode = getattr(tbg.PARAMS, "Tile_Fusion_Mode", None)
+        max_w = tile_w + max(0, cols - 1) * step_w
+        max_h = tile_h + max(0, rows - 1) * step_h
+
+        # Keep one scalar scale: the image aspect ratio never changes.
+        optimized = min(requested, max_w / source_w, max_h / source_h)
+        optimized = max(0.05, float(optimized))
+        tbg.PARAMS.effective_upscale_by = optimized
+        tbg.PARAMS.upscale_by = optimized
+        tbg.PARAMS.optimized_upscale_tile_grid = f"{cols}x{rows}"
+        tbg.PARAMS.optimized_upscale_target_size = (
+            int(round(source_w * optimized)),
+            int(round(source_h * optimized)),
+        )
+
+        log(
+            "Optimized upscale factor for tile use: "
+            f"requested={requested:.4f} effective={optimized:.4f} "
+            f"grid={cols}x{rows} target={tbg.PARAMS.optimized_upscale_target_size[0]}x{tbg.PARAMS.optimized_upscale_target_size[1]} "
+            f"mode={mode} step={step_w}x{step_h}",
+            "BRIGHT_BLUE",
+            "BRIGHT_CYAN",
+            f"Node {tbg.INFO.id}",
+        )
 
 
     @classmethod
@@ -228,6 +507,35 @@ class TBG_Upscaler_v1():
         all tilers/refiners share the same shutdown logic.
         """
         TBG_Controller.schedule_worker_shutdown(delay)
+
+    @classmethod
+    def _apply_dev_debug_mode(cls, labs_upscaler_dict):
+        mode = "dev debug on"
+        if isinstance(labs_upscaler_dict, dict):
+            mode = str(labs_upscaler_dict.get("Dev_Debug_Mode", mode) or mode)
+        if mode not in ("dev debug on", "dev debug off", "dev free user test"):
+            mode = "dev debug on"
+
+        real_status = getattr(tbg.API, "status", "Guest")
+        is_real_dev = real_status == "Dev"
+        tbg.API.real_status = real_status
+        tbg.API.dev_debug_mode = mode if is_real_dev else "dev debug on"
+        tbg.API.dev_debug_enabled = bool(is_real_dev and mode == "dev debug on")
+        tbg.API.dev_free_user_test = bool(is_real_dev and mode == "dev free user test")
+
+        tbg.PARAMS.Dev_Debug_Mode = tbg.API.dev_debug_mode
+        tbg.PARAMS.Dev_Debug_Enabled = tbg.API.dev_debug_enabled
+        tbg.PARAMS.Dev_Free_User_Test = tbg.API.dev_free_user_test
+
+        if tbg.API.dev_free_user_test:
+            tbg.API.status = "Free"
+
+    @classmethod
+    def _dev_debug_enabled(cls):
+        return bool(
+            getattr(tbg.API, "status", None) == "Dev"
+            and getattr(tbg.API, "dev_debug_enabled", True)
+        )
 
     # Apply decorator directly to instance method
     @classmethod
@@ -254,10 +562,14 @@ class TBG_Upscaler_v1():
 
         # INIT upscale_by could be changes in upscale
         tbg.PARAMS.upscale_model_name = kwargs.get('upscale_model', "NONE")
-        tbg.PARAMS.upscale_by = kwargs.get('upscale_by', 1)
+        tbg.PARAMS.requested_upscale_by = kwargs.get('upscale_by', 1)
+        tbg.PARAMS.effective_upscale_by = tbg.PARAMS.requested_upscale_by
+        tbg.PARAMS.optimize_upscale_factor_for_tile_use = bool(kwargs.get('Optimize_Upscale_Factor_For_Tile_Use', False))
+        tbg.PARAMS.upscale_by = tbg.PARAMS.effective_upscale_by
         cls.clear_stale_refiner_params()
         if tbg.PARAMS.upscale_model_name == "NONE":
             tbg.PARAMS.upscale_by = 1
+            tbg.PARAMS.effective_upscale_by = 1
 
 
 
@@ -270,6 +582,7 @@ class TBG_Upscaler_v1():
             info,status,creditsleft,current_credits, info_url = WORKER.id(tiler_id).TBG_api.check_status(tbg.API.token, True,_tbg_send_images=False, )
             return  info,status,creditsleft,current_credits,info_url
         tbg.API.info, tbg.API.status, tbg.API.creditsleft, tbg.API.current_credits, tbg.API.info_url = get_api_infos()
+        cls._apply_dev_debug_mode(kwargs.get('labs_upscaler', None))
 
 
         end_time = time.time()
@@ -284,18 +597,20 @@ class TBG_Upscaler_v1():
         # ADD THIS BLOCK:
         if tbg.SEGMENTS.Segment_Mask is None and tbg.SEGMENTS.segms is None:
             # No segment inputs → clear everything
-            tbg.SEGMENTS.upscale_factor = None,
-            tbg.SEGMENTS.pad_offset = None,
-            tbg.SEGMENTS.segment_tiles = None,
-            tbg.SEGMENTS.orig_segment_tiles = None,
-            tbg.SEGMENTS.segms_scale = None,
-            tbg.SEGMENTS.segms_cropped_masks = None,
-            tbg.SEGMENTS.segms_crop_regions = None,
-            tbg.SEGMENTS.segms_new = None,
-            tbg.SEGMENTS.inpainting_mask = None,
-            tbg.SEGMENTS.compositing_mask = None,
-            tbg.SEGMENTS.h = None,
-            tbg.SEGMENTS.w = None,
+            tbg.SEGMENTS.upscale_factor = None
+            tbg.SEGMENTS.pad_offset = None
+            tbg.SEGMENTS.segment_tiles = None
+            tbg.SEGMENTS.orig_segment_tiles = None
+            tbg.SEGMENTS.segms_scale = None
+            tbg.SEGMENTS.segms_cropped_masks = None
+            tbg.SEGMENTS.segment_binary_masks = None
+            tbg.SEGMENTS.segms_crop_regions = None
+            tbg.SEGMENTS.segment_sampling_transforms = None
+            tbg.SEGMENTS.segms_new = None
+            tbg.SEGMENTS.inpainting_mask = None
+            tbg.SEGMENTS.compositing_mask = None
+            tbg.SEGMENTS.h = None
+            tbg.SEGMENTS.w = None
 
         if tbg.SEGMENTS.Segment_Mask is not None:
             SEG = MaskToSEGS(tbg.SEGMENTS.Segment_Mask, False, 2, False, 0, False)
@@ -306,10 +621,22 @@ class TBG_Upscaler_v1():
             print(f"TBG[Node {tbg.INFO.id}] Converted {len(SEG)} segment{'s' if len(SEG) != 1 else ''} to Tiles.")
 
         cls.init(**kwargs)
+        if is_batch_image(tbg.INPUTS.image) and not Only_Upscale:
+            batch_size = int(tbg.INPUTS.image.shape[0])
+            log(
+                f"ETUR batch mode detected: deferring tiling for {batch_size} images to the refiner",
+                None,
+                None,
+                f"Node {tbg.INFO.id}",
+            )
+            batch_pipe = make_batch_pipe(tbg, kwargs, copy.copy(tbg.INFO.id), tiler_id)
+            return (batch_pipe, tbg.INPUTS.image)
+
         # Upscale - SR upscales are overwriting the tbg so we mantain the original images and pass it later again into the tbg
         # st jetzt sauber getrennt
         #orig_image = copy.deepcopy(tbg.INPUTS.image)
 
+        cls._optimize_upscale_factor_for_tile_use(tbg.INPUTS.image)
         tbg.OUTPUTS.upscaled_image = cls.upscale_full_input_image(tbg.INPUTS.image, **kwargs) # goes to cache wrapper with kwargs
 
         if Only_Upscale:
@@ -322,14 +649,25 @@ class TBG_Upscaler_v1():
 
         # in TBG_Tiler.start_tiles or just after init()
         labs_upscaler_dict = kwargs.get('labs_upscaler', None)
-        new_key = make_tiler_config(tbg, labs_upscaler_dict)
+        new_key, fingerprint_debug = make_tiler_refresh_fingerprint(tbg, kwargs, labs_upscaler_dict)
+        tbg.PARAMS.tiler_cache_key = new_key
         last_key = getattr(tbg.TEMP, "last_tiler_config", None)
+        last_debug = getattr(tbg.TEMP, "last_tiler_config_debug", None)
 
         if last_key == new_key:
             tbg.TEMP.skip_tiler = True
         else:
             tbg.TEMP.skip_tiler = False
             tbg.TEMP.last_tiler_config = new_key
+            tbg.TEMP.last_tiler_config_debug = copy.deepcopy(fingerprint_debug)
+            if cls._dev_debug_enabled():
+                changed_keys = _changed_fingerprint_keys(last_debug, fingerprint_debug)
+                log(
+                    f"[TBG Tiler Cache] refresh fingerprint changed; rerunning tiler. changed={changed_keys}",
+                    None,
+                    None,
+                    f"Node {tbg.INFO.id}",
+                )
 
         return  cls.start_tiles(**kwargs)
 
@@ -416,6 +754,7 @@ class TBG_Upscaler_v1():
             Only_Upscale = labs_upscaler_dict.get('Only_Upscale', True)
             tbg.PARAMS.VLM_Server_Base_URL = labs_upscaler_dict.get('VLM_Server_Base_URL', "http://127.0.0.1:8080/v1")
             tbg.PARAMS.VLM_Server_Model = labs_upscaler_dict.get('VLM_Server_Model', "")
+            tbg.PARAMS.PID_degrade_sigma = labs_upscaler_dict.get('PID_degrade_sigma', 0.1)
             # Keep these internal defaults for backwards compatibility in GGUF server paths.
             tbg.PARAMS.VLM_Server_API_Key_Env = "TBG_ETUR_OPENAI_API_KEY"
             tbg.PARAMS.VLM_Server_Launch_Mode = "external_only"
@@ -451,6 +790,7 @@ class TBG_Upscaler_v1():
             Only_Upscale = False
             tbg.PARAMS.VLM_Server_Base_URL = "http://127.0.0.1:8080/v1"
             tbg.PARAMS.VLM_Server_Model = ""
+            tbg.PARAMS.PID_degrade_sigma = 0.1
             tbg.PARAMS.VLM_Server_API_Key_Env = "TBG_ETUR_OPENAI_API_KEY"
             tbg.PARAMS.VLM_Server_Launch_Mode = "external_only"
             tbg.PARAMS.VLM_Server_Command = ""
@@ -466,11 +806,17 @@ class TBG_Upscaler_v1():
         tbg.PARAMS.Creativity=kwargs.get('Creativity', None)
         tbg.INFO.id = kwargs.get('id', None)
         tbg.INPUTS.image = kwargs.get('image', None)
-        tbg.PROMPTER.Prompt_Selected_Tiles_Only = kwargs.get('VLM_Selected_Tiles_Only', False)
-        tbg.PROMPTER.Prompt_Selected_Tiles_By_Numbers = kwargs.get('VLM_Selected_Tiles_By_Numbers', " ")
+        tbg.PROMPTER.Prompt_Selected_Tiles_Only = kwargs.get(
+            'VLM_Process_Selected_Tiles_Only',
+            kwargs.get('VLM_Selected_Tiles_Only', False),
+        )
+        tbg.PROMPTER.Prompt_Selected_Tiles_By_Numbers = kwargs.get(
+            'VLM_Selected_Tiles_Index_Numbers',
+            kwargs.get('VLM_Selected_Tiles_By_Numbers', " "),
+        )
         tbg.LLM.prompt = kwargs.get('VLM_Prompt', " ")
         tbg.LLM.quantization =   kwargs.get('VLM_Quantization', "None (FP16)")
-        tbg.LLM.model = kwargs.get('VLM_Model', 'NONE')
+        tbg.LLM.model = _normalize_vlm_model(kwargs.get('VLM_Model', 'NONE'))
         tbg.PARAMS.VLM_Model = tbg.LLM.model
         tbg.PARAMS.VLM_Server_Active = False
         tbg.PARAMS.MODEL_TYPE_SIZES = kwargs.get('MODEL_TYPE_SIZES', False)
@@ -478,6 +824,16 @@ class TBG_Upscaler_v1():
         tbg.PARAMS.upscale_model_name=kwargs.get('upscale_model', "NONE")
         tbg.PARAMS.preset = kwargs.get('presets', "NONE")
         tbg.PARAMS.fragmentation = kwargs.get('Fragmentation', 1)
+        tbg.PARAMS.requested_upscale_by = getattr(tbg.PARAMS, "requested_upscale_by", kwargs.get('upscale_by', 1))
+        tbg.PARAMS.effective_upscale_by = getattr(tbg.PARAMS, "effective_upscale_by", tbg.PARAMS.requested_upscale_by)
+        tbg.PARAMS.optimize_upscale_factor_for_tile_use = bool(
+            getattr(
+                tbg.PARAMS,
+                "optimize_upscale_factor_for_tile_use",
+                kwargs.get('Optimize_Upscale_Factor_For_Tile_Use', False),
+            )
+        )
+        tbg.PARAMS.upscale_by = tbg.PARAMS.effective_upscale_by
 
         tbg.SIZE.fullH = kwargs.get('tile_size_h', 1024)
         tbg.SIZE.fullW = kwargs.get('tile_size_w', 1024)
@@ -489,21 +845,29 @@ class TBG_Upscaler_v1():
 
         tbg.SIZE.Fusion_reference_margin = kwargs.get('Fusion Reference Margin', 0)
         tbg.SIZE.Fusion_margin = kwargs.get('Fusion Margin', 64)
+        if is_pid_upscale_model(tbg.PARAMS.upscale_model_name):
+            if tbg.PARAMS.Tile_Fusion_Mode in (None, "NONE"):
+                tbg.PARAMS.Tile_Fusion_Mode = "Neuro_Generative_Tile_Fusion"
+            tbg.PARAMS.Flux2_Tile_Color_Correction = True
+            tbg.PARAMS.color_match_method = PID_DEFAULT_COLOR_MATCH
+            tbg.PARAMS.color_match_str = 1.0
+            if tbg.SIZE.Fusion_reference_margin == 0:
+                tbg.SIZE.Fusion_reference_margin = PID_DEFAULT_OVERLAP
+            if tbg.SIZE.Fusion_margin == 64:
+                tbg.SIZE.Fusion_margin = PID_DEFAULT_STITCH_BLUR
         # auto fusion border calculation
         tbg.SIZE.inpaint_blur_margin = tbg.SIZE.Fusion_margin
         tbg.SIZE.shift = 0
         tbg.SIZE.composite_blur_margin = kwargs.get('Feather Mask', 16)
+        if is_pid_upscale_model(tbg.PARAMS.upscale_model_name) and tbg.SIZE.composite_blur_margin == 16:
+            tbg.SIZE.composite_blur_margin = PID_DEFAULT_STITCH_FEATHER
         tbg.SIZE.inpaint_border_margin = tbg.SIZE.Fusion_reference_margin
         tbg.SIZE.shifttl = 0
         tbg.SIZE.inpaint_max = kwargs.get('Fusion Strength', 0.05)
 
     @classmethod
     @upscale_cache_comfy_method(maxsize=1, enabled=lambda: Tiler_Upscale_Cache)
-    def upscale_full_input_image(cls, input_image):
-
-        print("[DEBUG] upscale gate:",
-              "model=", tbg.PARAMS.upscale_model_name,
-              "factor=", tbg.PARAMS.upscale_by)
+    def upscale_full_input_image(cls, input_image, **kwargs):
 
         if input_image is None:
             raise ValueError(f"TBG Enhanced Tiled Generator id {tbg.INFO.id}: No image provided")
@@ -511,11 +875,122 @@ class TBG_Upscaler_v1():
         log("TBG Enhanced Tiled Generator is starting", None, None, f"Node {tbg.INFO.id}")
         # log(f"Starting Upscaling  upscale_type", None, None, f"Node {tbg.INFO.id}")
 
-        if tbg.PARAMS.upscale_model_name != "NONE" and tbg.PARAMS.upscale_by not in (0,1):
+        is_pid_upscale = is_pid_upscale_model(tbg.PARAMS.upscale_model_name)
+        if tbg.PARAMS.upscale_model_name != "NONE" and (tbg.PARAMS.upscale_by not in (0,1) or is_pid_upscale):
             upscaled_image = copy.copy(input_image)
 
+            if is_pid_upscale:
+                requested_upscale_by = float(tbg.PARAMS.upscale_by or 1.0)
+                pid_overlap = PID_DEFAULT_OVERLAP
+                pid_prompt_fn = None
+                pid_prompt_cleanup = None
+                if tbg.LLM.model == PID_VLM_MODEL:
+                    print(f"TBG[Node {tbg.INFO.id}] PID VLM prompt generation explicitly enabled by VLM_Model={tbg.LLM.model}")
+                    pid_prompt_fn, pid_prompt_cleanup = make_pid_vlm_prompt_fn(
+                        seed=getattr(tbg.PARAMS, "Prompt_seed", 0),
+                        prompt_text=getattr(tbg.LLM, "prompt", ""),
+                        model_name=PID_VLM_MODEL,
+                        quantization=getattr(tbg.LLM, "quantization", "None (FP16)"),
+                    )
+                else:
+                    print(f"TBG[Node {tbg.INFO.id}] PID VLM disabled by user")
+                def rebuild_pid_tiles(pid_tiles, grid_specs, reference_image, target_width, target_height):
+                    pid_tiles = [tile.detach().to("cpu", copy=True).contiguous() if torch.is_tensor(tile) else tile for tile in pid_tiles]
+                    if torch.is_tensor(reference_image):
+                        reference_image = reference_image.detach().to("cpu", copy=True).contiguous()
+                    previous_grid_specs = getattr(tbg.PARAMS, "grid_specs", None)
+                    previous_grid_prompts = getattr(tbg.PARAMS, "grid_prompts", None)
+                    previous_output_prompts = getattr(tbg.PROMPTER, "output_prompts", None)
+                    previous_stitch_blending = getattr(tbg.PARAMS, "stitch_blending", None)
+                    previous_overlay_between_tiles = getattr(tbg.SIZE, "overlay_between_tiles", None)
+                    previous_composite_blur_margin = getattr(tbg.SIZE, "composite_blur_margin", None)
+                    previous_inpaint_blur_margin = getattr(tbg.SIZE, "inpaint_blur_margin", None)
+                    previous_inpaint_border_margin = getattr(tbg.SIZE, "inpaint_border_margin", None)
+                    try:
+                        tbg.PARAMS.grid_specs = grid_specs
+                        tbg.PARAMS.grid_prompts = [""] * len(grid_specs)
+                        tbg.PROMPTER.output_prompts = [""] * len(grid_specs)
+                        tbg.PARAMS.stitch_blending = "gpupyramid"
+                        tbg.SIZE.overlay_between_tiles = pid_overlap * PID_SCALE
+                        tbg.SIZE.inpaint_blur_margin = PID_DEFAULT_STITCH_BLUR
+                        tbg.SIZE.composite_blur_margin = PID_DEFAULT_STITCH_FEATHER
+                        tbg.SIZE.inpaint_border_margin = pid_overlap * PID_SCALE
+                        worker_image = WORKER.id(tiler_id).TBG_Image
+                        rebuilt, _, _ = worker_image.rebuild_final_image(
+                            list(pid_tiles),
+                            reference_image,
+                            [],
+                            [],
+                            True,
+                            None,
+                            _tbg_send_images=False,
+                        )
+                        if torch.is_tensor(rebuilt) and rebuilt.ndim == 3:
+                            rebuilt = rebuilt.unsqueeze(0)
+                        if torch.is_tensor(rebuilt):
+                            rebuilt = rebuilt[:, :target_height, :target_width, :]
+                        return rebuilt
+                    finally:
+                        tbg.PARAMS.grid_specs = previous_grid_specs
+                        tbg.PARAMS.grid_prompts = previous_grid_prompts
+                        tbg.PROMPTER.output_prompts = previous_output_prompts
+                        tbg.PARAMS.stitch_blending = previous_stitch_blending
+                        tbg.SIZE.overlay_between_tiles = previous_overlay_between_tiles
+                        tbg.SIZE.composite_blur_margin = previous_composite_blur_margin
+                        tbg.SIZE.inpaint_blur_margin = previous_inpaint_blur_margin
+                        tbg.SIZE.inpaint_border_margin = previous_inpaint_border_margin
+
+                def color_match_pid_tile(reference_tile, pid_tile, method):
+                    if hasattr(TBG_Image, "detail_preserving_colormatch"):
+                        return TBG_Image.detail_preserving_colormatch(
+                            reference_tile,
+                            pid_tile,
+                            method,
+                            1.0,
+                            label="tiler_pid_tile_color",
+                        )[0]
+                    return TBG_Image.colormatch(reference_tile, pid_tile, method, 1.0)[0]
+
+                try:
+                    upscaled_image, pid_meta = run_pid_tiled_upscale(
+                        upscaled_image,
+                        tbg.PARAMS.upscale_model_name,
+                        prompt_text=getattr(tbg.LLM, "prompt", ""),
+                        seed=getattr(tbg.PARAMS, "Prompt_seed", 0),
+                        rebuild_fn=rebuild_pid_tiles,
+                        pid_model=labs_upscaler_dict.get("PID_Model", None) if labs_upscaler_dict else None,
+                        pid_model_type=labs_upscaler_dict.get("PID_VAE_Compatible_Model", None) if labs_upscaler_dict else None,
+                        clip=labs_upscaler_dict.get("PID_CLIP", None) if labs_upscaler_dict else None,
+                        source_vae=labs_upscaler_dict.get("PID_Source_VAE", None) if labs_upscaler_dict else None,
+                        overlap=pid_overlap,
+                        degrade_sigma=getattr(tbg.PARAMS, "PID_degrade_sigma", 0.1),
+                        color_match_fn=color_match_pid_tile,
+                        color_match_method=PID_DEFAULT_COLOR_MATCH,
+                        prompt_fn=pid_prompt_fn,
+                    )
+                finally:
+                    if pid_prompt_cleanup is not None:
+                        pid_prompt_cleanup()
+                final_width = max(1, int(round(input_image.shape[2] * requested_upscale_by)))
+                final_height = max(1, int(round(input_image.shape[1] * requested_upscale_by)))
+                if int(upscaled_image.shape[2]) != final_width or int(upscaled_image.shape[1]) != final_height:
+                    upscaled_image = nodes.ImageScale().upscale(
+                        upscaled_image,
+                        "lanczos",
+                        final_width,
+                        final_height,
+                        False,
+                    )[0]
+                tbg.PARAMS.upscale_by = requested_upscale_by
+                tbg.PARAMS.pid_internal_scale_x = float(pid_meta.get("effective_scale_x", requested_upscale_by))
+                tbg.PARAMS.pid_internal_scale_y = float(pid_meta.get("effective_scale_y", requested_upscale_by))
+                tbg.PARAMS.pid_tile_count = int(pid_meta.get("tile_count", 0))
+                tbg.PARAMS.pid_overlap = int(pid_meta.get("overlap", pid_overlap))
+                tbg.PARAMS.pid_degrade_sigma = float(pid_meta.get("degrade_sigma", getattr(tbg.PARAMS, "PID_degrade_sigma", 0.1)))
+                tbg.PARAMS.pid_color_match_method = pid_meta.get("color_match_method", PID_DEFAULT_COLOR_MATCH)
+
             #GAN MODELS
-            if tbg.PARAMS.upscale_model_name != None and tbg.PARAMS.upscale_model_name not in tbg.upscale_models:
+            elif tbg.PARAMS.upscale_model_name != None and tbg.PARAMS.upscale_model_name not in tbg.upscale_models:
                 if hasattr(nodes_upscale_model_UpscaleModelLoader, "execute"):
                     tbg.PARAMS.upscale_model = \
                     nodes_upscale_model_UpscaleModelLoader_execute(tbg.PARAMS.upscale_model_name)[0]
@@ -592,20 +1067,6 @@ class TBG_Upscaler_v1():
                 setattr(tbg.PARAMS, name, None)
 
     @classmethod
-    def _worker_cpu_value(cls, value):
-        if torch.is_tensor(value):
-            return value.detach().to("cpu", copy=True).contiguous()
-        if isinstance(value, SimpleNamespace):
-            return SimpleNamespace(**{name: cls._worker_cpu_value(item) for name, item in vars(value).items()})
-        if isinstance(value, dict):
-            return {key: cls._worker_cpu_value(item) for key, item in value.items()}
-        if isinstance(value, list):
-            return [cls._worker_cpu_value(item) for item in value]
-        if isinstance(value, tuple):
-            return tuple(cls._worker_cpu_value(item) for item in value)
-        return value
-
-    @classmethod
     def _worker_tiler_init_args(cls):
         params = copy.copy(tbg.PARAMS)
         size = copy.copy(tbg.SIZE)
@@ -619,7 +1080,297 @@ class TBG_Upscaler_v1():
         ):
             if hasattr(params, name):
                 setattr(params, name, None)
-        return cls._worker_cpu_value(params), cls._worker_cpu_value(size)
+        return (
+            TBG_Refiner_v1._worker_cpu_value(params),
+            TBG_Refiner_v1._worker_cpu_value(size),
+        )
+
+    @classmethod
+    def _segment_sampling_transform(cls, seg, index_seg, full_image):
+        if torch.is_tensor(full_image) and full_image.dim() == 3:
+            full_image = full_image.unsqueeze(0)
+        base_tile_w = max(8, int(getattr(tbg.SIZE, "fullW", 1024) or 1024))
+        base_tile_h = max(8, int(getattr(tbg.SIZE, "fullH", 1024) or 1024))
+        max_segment_side = max(
+            8,
+            int(getattr(tbg.PARAMS, "max_upscale_size_segment_inpainting", 2048) or 2048),
+        )
+        max_segment_side = max(max_segment_side, base_tile_w, base_tile_h)
+        image_w = int(full_image.shape[2])
+        image_h = int(full_image.shape[1])
+
+        bx1, by1, bx2, by2 = [int(round(float(v))) for v in seg.bbox]
+        bx1 = max(0, min(image_w, bx1))
+        by1 = max(0, min(image_h, by1))
+        bx2 = max(bx1 + 1, min(image_w, bx2))
+        by2 = max(by1 + 1, min(image_h, by2))
+        bbox_w = max(1, bx2 - bx1)
+        bbox_h = max(1, by2 - by1)
+
+        margin_info = cls._segment_sampling_margins()
+        reserved_margin = int(margin_info.get("reserved_margin", 0))
+        required_w = bbox_w + (reserved_margin * 2)
+        required_h = bbox_h + (reserved_margin * 2)
+
+        usable_w = max(1, max_segment_side - (reserved_margin * 2))
+        usable_h = max(1, max_segment_side - (reserved_margin * 2))
+        scale = max(0.01, min(1.5, usable_w / float(bbox_w), usable_h / float(bbox_h)))
+        tile_w = cls._align_segment_size(int(round((bbox_w * scale) + (reserved_margin * 2))), base_tile_w, max_segment_side)
+        tile_h = cls._align_segment_size(int(round((bbox_h * scale) + (reserved_margin * 2))), base_tile_h, max_segment_side)
+        original_tile_w = int(tile_w)
+        original_tile_h = int(tile_h)
+        flux2_segment_size_guard = False
+        model_markers = [
+            getattr(tbg.PARAMS, "model_type", None),
+            getattr(tbg.KSAMPLER, "model_type", None),
+            getattr(tbg.KSAMPLER, "model_name", None),
+            getattr(tbg.PARAMS, "checkpoint", None),
+            getattr(tbg.PARAMS, "unet_name", None),
+            getattr(tbg.PARAMS, "clip_name", None),
+            getattr(tbg.PARAMS, "text_encoder", None),
+        ]
+        model_marker_text = " ".join(str(value) for value in model_markers if value is not None).upper()
+        is_flux2_segment = (
+            "FLUX2" in model_marker_text
+            or "FLUX 2" in model_marker_text
+            or bool(getattr(tbg.PARAMS, "Flux2_Tile_Color_Correction", False))
+        )
+        needs_flux2_segment_size_guard = (
+            is_flux2_segment
+            and (
+                tile_w > base_tile_w
+                or tile_h > base_tile_h
+                or tile_w % 64 != 0
+                or tile_h % 64 != 0
+            )
+        )
+        if needs_flux2_segment_size_guard:
+            tile_w, tile_h = cls._align_flux2_oversized_segment_size(
+                tile_w,
+                tile_h,
+                max_segment_side,
+                max_pixels=4194304,
+            )
+            flux2_segment_size_guard = (tile_w != original_tile_w or tile_h != original_tile_h)
+        crop_w = max(8, min(image_w, max(required_w, int(round(tile_w / scale)))))
+        crop_h = max(8, min(image_h, max(required_h, int(round(tile_h / scale)))))
+        crop_w, crop_h, crop_ratio_adjustment = cls._adjust_segment_crop_to_tile_ratio(
+            crop_w,
+            crop_h,
+            tile_w,
+            tile_h,
+            min(required_w, image_w),
+            min(required_h, image_h),
+            image_w,
+            image_h,
+        )
+        requested_crop_w = int(crop_w)
+        requested_crop_h = int(crop_h)
+
+        cx = (bx1 + bx2) / 2.0
+        cy = (by1 + by2) / 2.0
+        crop_x1 = int(round(cx - crop_w / 2.0))
+        crop_y1 = int(round(cy - crop_h / 2.0))
+        crop_x1 = max(0, min(max(0, image_w - crop_w), crop_x1))
+        crop_y1 = max(0, min(max(0, image_h - crop_h), crop_y1))
+        crop_x2 = min(image_w, crop_x1 + crop_w)
+        crop_y2 = min(image_h, crop_y1 + crop_h)
+        crop_w = max(1, crop_x2 - crop_x1)
+        crop_h = max(1, crop_y2 - crop_y1)
+
+        scale_x = tile_w / float(crop_w)
+        scale_y = tile_h / float(crop_h)
+        stretch_warning = abs(scale_x - scale_y) > 0.001
+        segment_case, segment_case_reason = cls._classify_segment_sampling_case(
+            bbox_w,
+            bbox_h,
+            crop_w,
+            crop_h,
+            tile_w,
+            tile_h,
+            scale_x,
+            scale_y,
+            guard_applied=flux2_segment_size_guard,
+            ratio_adjustment=crop_ratio_adjustment,
+        )
+        bbox_tile_x1 = int(round((bx1 - crop_x1) * scale_x))
+        bbox_tile_y1 = int(round((by1 - crop_y1) * scale_y))
+        bbox_tile_x2 = int(round((bx2 - crop_x1) * scale_x))
+        bbox_tile_y2 = int(round((by2 - crop_y1) * scale_y))
+        bbox_tile_x1 = max(0, min(tile_w - 1, bbox_tile_x1))
+        bbox_tile_y1 = max(0, min(tile_h - 1, bbox_tile_y1))
+        bbox_tile_x2 = max(bbox_tile_x1 + 1, min(tile_w, bbox_tile_x2))
+        bbox_tile_y2 = max(bbox_tile_y1 + 1, min(tile_h, bbox_tile_y2))
+
+        context_crop = full_image[:, crop_y1:crop_y2, crop_x1:crop_x2, :]
+        context_tile = nodes.ImageScale().upscale(context_crop, "bicubic", tile_w, tile_h, False)[0]
+
+        transform = {
+            "native_bbox": (bx1, by1, bx2, by2),
+            "native_bbox_size": (bbox_w, bbox_h),
+            "native_crop_region": tuple(int(round(float(v))) for v in seg.crop_region),
+            "sampling_crop_region": (crop_x1, crop_y1, crop_x2, crop_y2),
+            "sampling_tile_size": (tile_w, tile_h),
+            "full_image_size": (image_w, image_h),
+            "sampling_scale": min(scale_x, scale_y),
+            "sampling_scale_xy": (scale_x, scale_y),
+            "bbox_in_sampling_tile": (bbox_tile_x1, bbox_tile_y1, bbox_tile_x2, bbox_tile_y2),
+            "sampling_margin": reserved_margin,
+            "sampling_margins": margin_info,
+            "max_segment_side": max_segment_side,
+            "flux2_oversized_guard": flux2_segment_size_guard,
+            "flux2_segment_size_guard": flux2_segment_size_guard,
+            "requested_sampling_tile_size": (original_tile_w, original_tile_h),
+            "requested_sampling_crop_size": (requested_crop_w, requested_crop_h),
+            "crop_ratio_adjustment": crop_ratio_adjustment,
+            "stretch_warning": stretch_warning,
+            "segment_case": segment_case,
+            "segment_case_reason": segment_case_reason,
+        }
+
+        if cls._dev_debug_enabled():
+            if needs_flux2_segment_size_guard:
+                print(
+                    f"[TBG SegmentSampling] segment size guard for Flux2 {index_seg + 1}: "
+                    f"user_tile={base_tile_w}x{base_tile_h} "
+                    f"requested={original_tile_w}x{original_tile_h} "
+                    f"adjusted={tile_w}x{tile_h} expanded_crop={requested_crop_w}x{requested_crop_h} "
+                    f"actual_crop={crop_w}x{crop_h} pixels={tile_w * tile_h} "
+                    f"guard_applied={flux2_segment_size_guard}"
+                )
+                if stretch_warning:
+                    print(
+                        f"[TBG SegmentSampling] WARNING Flux2 segment {index_seg + 1}: "
+                        f"image borders prevented exact uniform scale; "
+                        f"scale_x={scale_x:.6f} scale_y={scale_y:.6f}"
+                    )
+            print(
+                f"[TBG SegmentSampling] tiler context crop segment {index_seg + 1}: "
+                f"bbox={bbox_w}x{bbox_h} crop={crop_w}x{crop_h} tile={tile_w}x{tile_h} "
+                f"scale={min(scale_x, scale_y):.4f} margin={reserved_margin} max={max_segment_side} "
+                f"actual=({scale_x:.4f},{scale_y:.4f}) ratio_adjust={crop_ratio_adjustment} "
+                f"case={segment_case}"
+            )
+            print(
+                f"[TBG SegmentSampling] segment case {index_seg + 1}: "
+                f"{segment_case} - {segment_case_reason}"
+            )
+        return context_tile, transform
+
+    @classmethod
+    def _align_segment_size(cls, value, minimum, maximum):
+        value = max(int(minimum), int(value))
+        value = min(int(maximum), value)
+        aligned = int(math.ceil(value / 8.0) * 8)
+        if aligned > int(maximum):
+            aligned = int(maximum) - (int(maximum) % 8)
+        return max(8, aligned)
+
+    @classmethod
+    def _adjust_segment_crop_to_tile_ratio(cls, crop_w, crop_h, tile_w, tile_h, min_w, min_h, image_w, image_h):
+        crop_w = max(1, min(int(image_w), int(round(float(crop_w)))))
+        crop_h = max(1, min(int(image_h), int(round(float(crop_h)))))
+        min_w = max(1, min(int(image_w), int(round(float(min_w)))))
+        min_h = max(1, min(int(image_h), int(round(float(min_h)))))
+        tile_w = max(1, int(round(float(tile_w))))
+        tile_h = max(1, int(round(float(tile_h))))
+
+        target_ratio = tile_w / float(tile_h)
+        current_ratio = crop_w / float(crop_h)
+        if abs(current_ratio - target_ratio) <= 0.001:
+            return crop_w, crop_h, "none"
+
+        adjustment = "none"
+        if current_ratio < target_ratio:
+            grown_w = max(crop_w, int(round(crop_h * target_ratio)))
+            if grown_w <= image_w:
+                crop_w = grown_w
+                adjustment = "grow_width"
+            else:
+                reduced_h = int(math.floor(crop_w / target_ratio))
+                crop_h = max(min_h, min(crop_h, reduced_h))
+                adjustment = "reduce_height_border_limited"
+        else:
+            grown_h = max(crop_h, int(round(crop_w / target_ratio)))
+            if grown_h <= image_h:
+                crop_h = grown_h
+                adjustment = "grow_height"
+            else:
+                reduced_w = int(math.floor(crop_h * target_ratio))
+                crop_w = max(min_w, min(crop_w, reduced_w))
+                adjustment = "reduce_width_border_limited"
+
+        crop_w = max(min_w, min(int(image_w), int(crop_w)))
+        crop_h = max(min_h, min(int(image_h), int(crop_h)))
+        return crop_w, crop_h, adjustment
+
+    @classmethod
+    def _align_flux2_oversized_segment_size(cls, width, height, max_side, max_pixels=4194304):
+        width = max(64, int(round(float(width))))
+        height = max(64, int(round(float(height))))
+        _ = max(64, int(round(float(max_side))))
+        max_pixels = max(64 * 64, int(max_pixels))
+
+        rounded_w = max(64, int(math.ceil(width / 64.0) * 64))
+        rounded_h = max(64, int(math.ceil(height / 64.0) * 64))
+        if rounded_w * rounded_h <= max_pixels:
+            return rounded_w, rounded_h
+
+        scale = min(
+            1.0,
+            math.sqrt(max_pixels / float(max(width * height, 1))),
+        )
+        width = max(64, int(math.floor((width * scale) / 64.0) * 64))
+        height = max(64, int(math.floor((height * scale) / 64.0) * 64))
+
+        while width * height > max_pixels and (width > 64 or height > 64):
+            if width >= height and width > 64:
+                width -= 64
+            elif height > 64:
+                height -= 64
+            else:
+                break
+
+        return max(64, width), max(64, height)
+
+    @classmethod
+    def _segment_sampling_margins(cls):
+        reference = min(16, int(max(
+            0,
+            round(float(max(
+                getattr(tbg.SIZE, "Fusion_reference_margin", 0) or 0,
+                getattr(tbg.SIZE, "inpaint_border_margin", 0) or 0,
+            )))
+        )))
+        fusion = min(64, int(max(
+            0,
+            round(float(max(
+                getattr(tbg.SIZE, "Fusion_margin", 0) or 0,
+                getattr(tbg.SIZE, "inpaint_blur_margin", 0) or 0,
+            )))
+        )))
+        feather = min(24, int(max(
+            0,
+            round(float(max(
+                getattr(tbg.SIZE, "composite_blur_margin", 0) or 0,
+                getattr(tbg.SIZE, "Feather_Mask", 0) or 0,
+            )))
+        )))
+        mode = getattr(tbg.PARAMS, "Tile_Fusion_Mode", None)
+        if mode == "Soft Merge":
+            reserved = feather
+        elif mode in ("Neuro_Generative_Tile_Fusion", "NGTF_FLUX_Kontext", "Tile_Fusion"):
+            reserved = reference + fusion + 8
+        else:
+            reserved = 0
+        return {
+            "mode": mode,
+            "reference": reference,
+            "fusion": fusion,
+            "feather": feather,
+            "safety": 8 if reserved > 0 else 0,
+            "reserved_margin": reserved,
+        }
 
     @classmethod
     #@tiler_cache_comfy_method(maxsize=1)
@@ -654,9 +1405,20 @@ class TBG_Upscaler_v1():
             upscaled_segments = TBG_Segms.upscale_segm_to_match_div8_and_upscalebysettings(
                 transformed_segments, tbg.OUTPUTS.upscaled_image
             )
+            accepted_segments = []
+            segment_tiles = []
+            segment_sampling_transforms = []
+            for i, seg in enumerate(upscaled_segments[1]):
+                segment_tile, segment_transform = cls._segment_sampling_transform(seg, i, tbg.OUTPUTS.upscaled_image)
+                if segment_tile is None or segment_transform is None:
+                    continue
+                accepted_segments.append(seg)
+                segment_tiles.append(segment_tile)
+                segment_sampling_transforms.append(segment_transform)
+
             # get updated grid_specs
 
-            crop_regions = [seg.crop_region for seg in upscaled_segments[1]]
+            crop_regions = [seg.crop_region for seg in accepted_segments]
 
             h, w = upscaled_segments[0]
             def get_workers_grid_specs(h, w, crop_regions):
@@ -666,21 +1428,21 @@ class TBG_Upscaler_v1():
                                                                                         tbg.SIZE.cols_qty,_tbg_send_images=False, )
                 return grid_specs
 
-            tbg.PARAMS.grid_specs = get_workers_grid_specs(h, w, crop_regions)
+            tbg.PARAMS.grid_specs = get_workers_grid_specs(h, w, crop_regions) if crop_regions else tbg.PARAMS.grid_specs
 
             # create array of tiles and mask
 
             segs_cropped_masks = []
-            segment_tiles = []
+            segment_binary_masks = []
             segs_scale = []
             segment_inpainting_mask = []
             segment_compositing_mask = []
-            for i, seg in enumerate(upscaled_segments[1]):
+            for seg, segment_transform in zip(accepted_segments, segment_sampling_transforms):
                 segs_cropped_masks.append(seg.cropped_mask)  # composite mask - upscaled mask
-                segment_tiles.append(seg.cropped_image)
+                segment_binary_masks.append(getattr(seg, "binary_mask", None))
                 segment_inpainting_mask.append(seg.inpainting_mask)
                 segment_compositing_mask.append(seg.compositing_mask)
-                segs_scale.append(1) # hardcoded to 1 - not used anymore
+                segs_scale.append(segment_transform.get("sampling_scale", 1.0))
             tbg.PARAMS.segs_scale = segs_scale
             tbg.OUTPUTS.grid_images_all = (grid_images or []) + (segment_tiles or [])
             tbg.OUTPUTS.orig_grid_images_all = copy.copy(tbg.OUTPUTS.grid_images_all)
@@ -689,10 +1451,18 @@ class TBG_Upscaler_v1():
             tbg.PARAMS.len_segments = len(segment_tiles)
             tbg.SEGMENTS.segms_scale = segs_scale
             tbg.SEGMENTS.segms_cropped_masks = segs_cropped_masks
-            tbg.SEGMENTS.segms_new = upscaled_segments
+            tbg.SEGMENTS.segment_binary_masks = segment_binary_masks
+            tbg.SEGMENTS.segms_new = (upscaled_segments[0], accepted_segments)
             tbg.SEGMENTS.segms_crop_regions = crop_regions
+            tbg.SEGMENTS.segment_sampling_transforms = segment_sampling_transforms
             tbg.SEGMENTS.inpainting_mask = segment_inpainting_mask
             tbg.SEGMENTS.compositing_mask = segment_compositing_mask
+            if cls._dev_debug_enabled():
+                print(
+                    f"[TBG SegmentIndex] normal_tiles={len(grid_images)} "
+                    f"segments={len(segment_tiles)} total={len(tbg.OUTPUTS.grid_images_all)} "
+                    f"first_segment_index={len(grid_images) if segment_tiles else 'none'}"
+                )
 
         else:
             tbg.OUTPUTS.grid_images_all = grid_images + [] # + to capy so we can clear grid_image
@@ -701,7 +1471,12 @@ class TBG_Upscaler_v1():
             tbg.PARAMS.len_segments = 0
             tbg.PARAMS.segs_scale = None
             tbg.SEGMENTS.segms_cropped_masks = None
+            tbg.SEGMENTS.segment_binary_masks = None
             tbg.SEGMENTS.segms_new = None
+            tbg.SEGMENTS.segms_crop_regions = None
+            tbg.SEGMENTS.segment_sampling_transforms = None
+            tbg.SEGMENTS.inpainting_mask = None
+            tbg.SEGMENTS.compositing_mask = None
 
         # reset to save memory
         tbg.PARAMS.len_grid_images = len(grid_images)
@@ -713,7 +1488,6 @@ class TBG_Upscaler_v1():
         print("len(tbg.OUTPUTS.grid_images_all)",len(tbg.OUTPUTS.grid_images_all))
         grid_prompts = []
         qwen = None
-        janus = None
         QwenVL = None
         QwenVLGGUF = None
         OpenAIServer = None
@@ -776,8 +1550,6 @@ class TBG_Upscaler_v1():
                 QwenVLGGUF = QwenVLGGUFBase()
             if "sky" in tbg.LLM.model.lower():
                 qwen = Qwen2VL_TBG()
-            if "janus" in tbg.LLM.model.lower():
-                janus = JanusModelLoader()
             if tbg.LLM.model.startswith("Qwen"):
                 QwenVL = QwenVLBase()
             if "florence" in tbg.LLM.model.lower():
@@ -805,32 +1577,17 @@ class TBG_Upscaler_v1():
             image = s.movedim(1, -1)
             images = [image[:, :, :, :3]]
 
-            januspromt = tbg.LLM.prompt
+            vlm_prompt = tbg.LLM.prompt
             llm_model = tbg.LLM.model  # modelname
 
-            if llm_model == "Janus-Pro-1B":
-                janusmodel, janusprocessor = janus.load_model("deepseek-ai/Janus-Pro-1B")
-                return JanusImageUnderstanding.analyze_image(
-                    tbg, janusmodel, janusprocessor, images[0], januspromt,
-                    tbg.PARAMS.Prompt_seed, 0.1, 0.9, 512
-                )[0]
-
-            elif llm_model == "Janus-Pro-7B":
-
-                janusmodel, janusprocessor = janus.load_model("deepseek-ai/Janus-Pro-7B")
-                return JanusImageUnderstanding.analyze_image(
-                    tbg, janusmodel, janusprocessor, images[0], januspromt,
-                    tbg.PARAMS.Prompt_seed, 0.1, 0.9, 512
-                )[0]
-
-            elif llm_model.startswith("GGUF\\"):
+            if llm_model.startswith("GGUF\\"):
                 seed = tbg.PARAMS.Prompt_seed
                 print(f"[QwenVL-GGUF] VLM_Quantization is ignored for GGUF models: '{tbg.LLM.quantization}'")
                 return QwenVLGGUF.run(
                     llm_model,
                     tbg.LLM.quantization,
                     preset_prompt="🖼️ Detailed Analysis",
-                    custom_prompt=januspromt,
+                    custom_prompt=vlm_prompt,
                     image=images[0],
                     video=None,
                     frame_count=16,
@@ -849,7 +1606,7 @@ class TBG_Upscaler_v1():
                 seed = tbg.PARAMS.Prompt_seed
                 return OpenAIServer.run_with_model(
                     model_name=openai_server_model,
-                    custom_prompt=januspromt,
+                    custom_prompt=vlm_prompt,
                     image=images[0],
                     seed=seed,
                 )[0]
@@ -865,7 +1622,7 @@ class TBG_Upscaler_v1():
                     tbg.LLM.model,
                     tbg.LLM.quantization,
                     preset_prompt="🖼️ Detailed Analysis",
-                    custom_prompt=januspromt,
+                    custom_prompt=vlm_prompt,
                     image=images[0],
                     video=None,
                     frame_count=16,
@@ -896,22 +1653,22 @@ class TBG_Upscaler_v1():
                                            seed=seed)[2]
             elif llm_model == "SkyCaptioner-V1":
                 return \
-                qwen.inference(januspromt, "SkyCaptioner-V1", "none", True, 0.7, 512, -1, images, video_path=None)[0]
+                qwen.inference(vlm_prompt, "SkyCaptioner-V1", "none", True, 0.7, 512, -1, images, video_path=None)[0]
 
             elif llm_model == "SkyCaptioner-V1_4bit":
                 return \
-                qwen.inference(januspromt, "SkyCaptioner-V1", "4bit", True, 0.7, 512, -1, images, video_path=None)[0]
+                qwen.inference(vlm_prompt, "SkyCaptioner-V1", "4bit", True, 0.7, 512, -1, images, video_path=None)[0]
 
             elif llm_model == "SkyCaptioner-V1_8bit":
                 return \
-                qwen.inference(januspromt, "SkyCaptioner-V1", "8bit", True, 0.7, 512, -1, images, video_path=None)[0]
+                qwen.inference(vlm_prompt, "SkyCaptioner-V1", "8bit", True, 0.7, 512, -1, images, video_path=None)[0]
 
             elif llm_model == "Apple FastVLM 7B Research use only":
                 from nodes import NODE_CLASS_MAPPINGS
                 node_name = "FastVLM7BNode"
                 if node_name in NODE_CLASS_MAPPINGS:
                     FastVLM7BNode = NODE_CLASS_MAPPINGS[node_name]
-                    return FastVLM7BNode.inference(0, images, januspromt, 200)[0]
+                    return FastVLM7BNode.inference(0, images, vlm_prompt, 200)[0]
             else:
                 raise ValueError(f"Unsupported VLM Model: {llm_model}")
 
@@ -930,13 +1687,34 @@ class TBG_Upscaler_v1():
             return tiles_to_process
 
         tbg.PROMPTER.tiles_to_process = get_worker_tiles_to_process()
+        vlm_selected_only = bool(tbg.PROMPTER.Prompt_Selected_Tiles_Only)
+        vlm_selected_tiles = list(tbg.PROMPTER.tiles_to_process or [])
+        vlm_selected_tiles_human = [i + 1 for i in vlm_selected_tiles if isinstance(i, int) and i >= 0]
 
-        print(
-            f"TBG[Node {tbg.INFO.id}] VLM {tbg.LLM.model} working  of {len(tbg.OUTPUTS.grid_images_all)}")
+        if tbg.LLM.model == "NONE":
+            print(f"TBG[Node {tbg.INFO.id}] VLM disabled by user")
+        else:
+            print(
+                f"TBG[Node {tbg.INFO.id}] VLM {tbg.LLM.model} working  of {len(tbg.OUTPUTS.grid_images_all)}")
+            log(
+                f"[TBG VLM Selection] selected_only={vlm_selected_only} "
+                f"total_tiles={len(tbg.OUTPUTS.grid_images_all)} "
+                f"selected_tiles={vlm_selected_tiles_human}",
+                None,
+                None,
+                f"Node {tbg.INFO.id}",
+            )
+            if vlm_selected_only and not vlm_selected_tiles:
+                log(
+                    "[TBG VLM Selection] selected-only is enabled but no valid VLM tile indexes were parsed; "
+                    "VLM prompt generation will skip all tiles.",
+                    "BRIGHT_YELLOW",
+                    "YELLOW",
+                    f"Node {tbg.INFO.id}",
+                )
         try:
             for index, tile_to_process in enumerate(tbg.OUTPUTS.grid_images_all):
-                # Skip tile only if user selected some tiles AND this index is not one of them
-                if len(tbg.PROMPTER.tiles_to_process) != 0 and index not in tbg.PROMPTER.tiles_to_process:
+                if vlm_selected_only and index not in vlm_selected_tiles:
                     prompt_tile = ""
                     grid_prompts.append(prompt_tile)
                     continue
@@ -944,8 +1722,12 @@ class TBG_Upscaler_v1():
 
                 prompt_tile = prompt_context
                 if tbg.LLM.model != "NONE":
-                    print(f"TBG[Node {tbg.INFO.id}] VLM {tbg.LLM.model} working on Tile {index} of {len(tbg.OUTPUTS.grid_images_all)}")
+                    print(f"TBG[Node {tbg.INFO.id}] VLM {tbg.LLM.model} working on Tile {index + 1} of {len(tbg.OUTPUTS.grid_images_all)}")
                     prompt_tile = get_prompt_tile(tile_to_process)
+                    prompt_tile = strip_thinking(
+                        prompt_tile,
+                        f"[QwenVL] tile {index + 1}/{total}",
+                    )
                     sentences_with_words_to_remove = [
                         "assistant", "helpful", "vision", "Thedescription", "TheUser", "The睿", "The description",
                         "The User",
@@ -953,7 +1735,7 @@ class TBG_Upscaler_v1():
                     ]
                     prompt_tile = cls.remove_sentences_with_words(prompt_tile, sentences_with_words_to_remove)
 
-                    log(f"tile {index + 1}/{total} - [tile prompt] {prompt_tile}", None, None,
+                    log(f"tile {index + 1}/{total} - [tile answer] {prompt_tile}", "BRIGHT_BLUE", "BRIGHT_CYAN",
                         f"Node {tbg.INFO.id} - Prompting {iteration}")
                 grid_prompts.append(prompt_tile)
 
@@ -965,12 +1747,12 @@ class TBG_Upscaler_v1():
             tbg.PROMPTER.output_denoises = cls._normalize([], tiles_len)
             tbg.PROMPTER.output_seeds_js = cls._normalize([], tiles_len)
             tbg.PROMPTER.output_cnet_js = cls._normalize([], tiles_len)
+            tbg.PROMPTER.output_model_js = cls._normalize([], tiles_len)
+            tbg.PROMPTER.output_color_match_js = cls._normalize([], tiles_len)
         finally:
             if tbg.LLM.model != "NONE":
                 if "sky" in tbg.LLM.model.lower() and qwen is not None:
                     UnloadOneModelNode.route(qwen)
-                if "janus" in tbg.LLM.model.lower() and janus is not None:
-                    UnloadOneModelNode.route(janus)
                 if tbg.LLM.model.startswith("GGUF\\") and QwenVLGGUF is not None:
                     print("[QwenVL-GGUF] unloading cached GGUF model after prompting")
                     QwenVLGGUF.clear()

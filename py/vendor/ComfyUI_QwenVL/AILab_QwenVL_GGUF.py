@@ -12,6 +12,7 @@ from PIL import Image
 from huggingface_hub import hf_hub_download
 
 import folder_paths
+from .response_cleanup import strip_thinking
 
 
 NODE_DIR = Path(__file__).parent
@@ -400,4 +401,4 @@ class QwenVLGGUFBase:
 
         if not keep_model_loaded:
             self.clear()
-        return (text,)
+        return (strip_thinking(text, "[QwenVL-GGUF]"),)

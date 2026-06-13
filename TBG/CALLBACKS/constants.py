@@ -106,6 +106,14 @@ class tbg:
             output_denoises=None,
             output_seeds_js=None,
             output_cnet_js=None,
+            output_cfg_js=None,
+            output_model_js=None,
+            output_cnetpipe_js=None,
+            output_color_match_js=None,
+            model_overrides=None,
+            model_override_key=None,
+            cnetpipe_overrides=None,
+            cnetpipe_override_key=None,
             tiles_to_process=None,
             cache_key=None,
             Prompt_Selected_Tiles_Only=None,
@@ -122,6 +130,10 @@ class tbg:
         self.API = SimpleNamespace(
             token=None,
             status="Guest",
+            real_status="Guest",
+            dev_debug_mode="dev debug on",
+            dev_debug_enabled=False,
+            dev_free_user_test=False,
             info=None,
             activate_pro=False,
             creditsleft=0,
@@ -179,6 +191,7 @@ class tbg:
             Laplacian_Pyramid_Blending=None,
             color_match_method=None,
             color_match_str=None,
+            rgb_luma_nonstructural=False,
             model_type=None,
             Flux2_Tile_Color_Correction=True,
             tiles_to_process_active=None,
@@ -304,7 +317,9 @@ class tbg:
             orig_segment_tiles=None,
             segms_scale=None,
             segms_cropped_masks=None,
+            segment_binary_masks=None,
             segms_crop_regions=None,
+            segment_sampling_transforms=None,
             segms_new=None,
             Segment_Mask=None,
             inpainting_mask=None,
@@ -542,6 +557,8 @@ class tbg:
                                     "KSAMPLER",
                                     "SIZE",
                                     "CACHE"):
+                        continue
+                    if base_path == "PROMPTER" and name == "model_overrides":
                         continue
                     sub = f"{base_path}.{name}" if base_path else name
                     recurse(val, sub)

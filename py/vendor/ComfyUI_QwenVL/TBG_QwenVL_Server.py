@@ -11,6 +11,7 @@ from PIL import Image
 from huggingface_hub import hf_hub_download
 
 import folder_paths
+from .response_cleanup import strip_thinking
 
 
 NODE_DIR = Path(__file__).parent
@@ -325,7 +326,7 @@ class QwenVLServerClient:
                 f"url='{self.base_v1}' error=invalid_json body='{body[:512]}'"
             ) from exc
 
-        content = _parse_openai_content(parsed)
+        content = strip_thinking(_parse_openai_content(parsed), "[OpenAI-VLM]")
         if not content:
             raise RuntimeError(
                 f"[OpenAI-VLM] Request failed stage=parse alias='{alias}' model='{model_name}' "
@@ -421,7 +422,7 @@ class QwenVLServerClient:
                 f"url='{self.base_v1}' error=invalid_json body='{body[:512]}'"
             ) from exc
 
-        content = _parse_openai_content(parsed)
+        content = strip_thinking(_parse_openai_content(parsed), "[OpenAI-VLM]")
         if not content:
             raise RuntimeError(
                 f"[OpenAI-VLM] Request failed stage=parse model='{model_name}' "

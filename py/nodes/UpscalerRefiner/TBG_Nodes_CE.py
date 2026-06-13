@@ -23,8 +23,6 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_CE():
 
     VLM = [
         "NONE",
-        "Janus-Pro-1B",
-        "Janus-Pro-7B",
         "SkyCaptioner-V1",
         "SkyCaptioner-V1_8bit",
         "SkyCaptioner-V1_4bit",
@@ -75,6 +73,11 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_CE():
                 "tile_size": ("INT",{"label": "Tile Size height", "default": 1024, "min": 320, "max": 8192, "step": 64}),
                 "upscale_model": (self.upscale_models, {"label": "Upscale Model","default":"NONE"}),
                 "upscale_by": ("FLOAT", {"default": 2, "min": 0.05, "max": 8, "step": 0.05, "round": 0.01}),
+                "Optimize_Upscale_Factor_For_Tile_Use": ("BOOLEAN", {
+                    "label": "Optimize upscale factor for optimal tile use",
+                    "default": False,
+                    "tooltip": "Keeps the tile grid from the requested upscale factor, then lowers the effective scale to the largest size that uses only the required tile overlap."
+                }),
                 "VLM_Model": (
                     self.VLM,
                     {
@@ -158,6 +161,8 @@ class TBG_ETUR_Refiner_CE():
         'FLUX1 Kontext': 1024,
         'Qwen Image': 1328,
         'Qwen Image Edit': 1328,
+        'SDXL': 1024,
+        'SD3': 1024,
         'Z-Image': 1024,
         'Others': 1024,
     }
@@ -168,10 +173,18 @@ class TBG_ETUR_Refiner_CE():
 
     COLOR_MATCH_METHODS = [
         'none',
+        TBG_Refiner_v1.TILE_STABILIZER_METHOD,
         'lab full color match',
         'wavelet',
+        'reinhard_lab_gpu',
         'hm-mkl-hm',
     ]
+
+    VAE_ENCODE_TOOLTIP = (
+        "tiled slow is the standard ComfyUI tiled VAE path. "
+        "tbg Color-preserving fast is the faster TBG VAE path that preserves colors. "
+        "Nvidia PiD 4x changes VAE decoding to the PiD model; 1024x1024 uses the native fast path, while other tile or segment sizes use tiled PiD latent decode. It works with FLUX1, FLUX2, Qwen Image, Qwen Image Edit, SDXL, SD3, and Z-Image."
+    )
 
 
     @classmethod
@@ -205,14 +218,25 @@ class TBG_ETUR_Refiner_CE():
                 "basic_scheduler": (comfy.samplers.KSampler.SCHEDULERS, {"label": "Basic Scheduler"}),
 
 
-                "vae_encode": ("BOOLEAN", {"label": "VAE Encode type", "default": True, "label_on": "tiled slow","label_off": "tbg Color-preserving fast",  "tooltip": ""}),
+                "vae_encode": ("BOOLEAN", {"label": "VAE Encode type", "default": True, "label_on": "tiled slow","label_off": "tbg Color-preserving fast",  "tooltip": self.VAE_ENCODE_TOOLTIP}),
                 "tile_size_vae": ("INT",{"label": "Tile Size (VAE)", "default": 1024, "min": 256, "max": 4096, "step": 64}),
                 "General_Prompt_Positive": ("STRING", {"tooltip": "General_Prompt_Positive", "multiline": True, "label": "General Positive Prompt for all Tiles", "default": ""}),
                 "General_Prompt_Negative": ("STRING",  {"tooltip": "General_Prompt_Negative", "multiline": True, "label": "General Negative Prompt for all Tiles",
                                                         "default": "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理"}),
 
                 "denoise": ("FLOAT", {"label": "Denoise", "default": 0.27, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "Color_Match": (self.COLOR_MATCH_METHODS, {"label": "Color Match Method", "default": 'none'}),
+                "Color_Match": (self.COLOR_MATCH_METHODS, {
+                    "label": "Color Match Method",
+                    "default": TBG_Refiner_v1.TILE_STABILIZER_METHOD,
+                    "tooltip": "Tile-aware detail-preserving color stabilization with feathered seam blending into generated neighbor tiles. If tile-aware conditions are unavailable, it falls back to TBG Detail-Preserving Color Stabilizer.",
+                }),
+                "Scale-Invariant Feature Transform": ("BOOLEAN", {
+                    "label": "Geometry Drift Correction",
+                    "default": True,
+                    "label_on": "On",
+                    "label_off": "Off",
+                    "tooltip": "After a tile is generated, aligns it back to the reference tile. Off disables it. On uses the strongest x4 drift-correction path.",
+                }),
                 "Redux_strength": ("FLOAT", {"display": "slider", "default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001, "round": 0.001}),
 
                 "Fast_1_Tile_Preview": ("BOOLEAN", {"label": "Fast_1_Tile_Preview", "default": False, "label_on": "Preview Single Tile", "label_off": "Disabled",
@@ -220,7 +244,6 @@ class TBG_ETUR_Refiner_CE():
                 "Selected_Tiles_Only": ("BOOLEAN", {"label": "Process_selected_Tiles_only", "default": False, "label_on": "Generate Selected Tiles Only", "label_off": "Disabled"}),
                 "Selected_Tiles_By_Numbers": ("STRING", {"label": "Selected_Tiles_Index_Numbers to process", "default": '',
                                                          "tooltip": "You can set a list of selected tiles to process like 1,2,3,6 and activate Selected_Tiles_Only"}),
-
             },
             "hidden": {
                 "id": "UNIQUE_ID",
