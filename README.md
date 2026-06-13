@@ -1,13 +1,70 @@
 # ComfyUI-TBG-ETUR: 100MP Enhanced Tiled Upscaler & Refiner FLUX Pro. Enhance Your Images with TBG's Upscaler
-**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.1.0**  tested on Comfyui 0.8.2
+**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.2.9**  member beta release
 
   ![TBG_ETUR_v1-1-0.png.png](img/TBG_ETUR_v1-1-0.png)
-**Keep in mind this is still an beta version, and we're updating and fine-tuning it daily. So do the same**
+**Keep in mind this is still a beta version, and we're updating and fine-tuning it daily. So do the same**
 
 Tutorials of old version and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@TBG_AI)). 
 
 and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)). 
 
+
+## TBG ETUR 1.2.9
+
+Last version v1.2.9, released on **June 13, 2026 at 20:25 CEST (UTC+2)**.
+
+This is a major upgrade over the public 1.1.18 branch. The focus is on NVIDIA PixelDiT / PiD support, stronger Flux 2 handling, better tile overrides, batch processing, improved color and geometry stabilization, new helper nodes, frontend improvements, and a long list of stability fixes.
+
+### Highlights
+
+- NVIDIA PiD can now be used as a dedicated tiled image or latent upscaler.
+- Flux 2 and Flux 2 Klein now have a more complete harness for refinement and upscaling.
+- Tile Overrides gained per-tile CFG, model overrides, ControlNet support, selective color matching, and an option to ignore the global prompt per tile.
+- Batch image processing is now supported with better VRAM efficiency.
+- Tile-aware color correction and geometry drift correction improve consistency across tiled generations.
+- Segment processing, cache invalidation, and final PiD compositing were optimized for reliability and performance.
+- Qwen VLM and reasoning outputs are handled more consistently.
+- Worker lifecycle management is more robust, including startup, shutdown, and stale-worker cleanup.
+
+### New Standalone Nodes
+
+We also extracted a number of important ETUR features into standalone custom nodes so you can reuse the best parts without depending on the full ETUR graph:
+
+- TBG ETUR Download PiD Model
+- TBG ETUR tiled Nvidia PID Image Upscale
+- PiD SDE sampler
+- TBG Flux2 Differential Diffusion Inpainting
+- TBG Color Correction
+- TBG SIFT Drift Correction
+- Open AI Source Pattern Cleanup
+- TBG Model Agnostic Color Anchor
+- TBG Model Agnostic Latent Anchor
+- TBG ETUR ColorMatch Debug Gates
+- TBG Flux2 Sampler
+
+### Workflow Notes
+
+- FLUX 2 Klein without PiD: a small upscale / refinement pass focused on clean tile fusion, the Hildegard LoRA path, and Flux 2 Klein reference handling.
+- FLUX 1 + Nvidia PiD: a workflow for per-tile editing, segment-based fixes, and PiD-assisted reconstruction.
+
+### Videos and News
+
+- Release / news post: [TBG ETUR version 1.2.9 update](https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433)
+- YouTube channel: [@TBG_AI](https://www.youtube.com/@TBG_AI)
+- Demo video: [20 x Super Upscaler - Together TBG ETUR Comfyui](https://www.youtube.com/watch?v=J-BkPLFCB1Y)
+- Demo short: [Alfa v1 LIVE: TBG ETUR COMFIUI NODE](https://www.youtube.com/shorts/4zEmUfs8BQM)
+- Related workflow guide: [Best Flux Workflow for enhanced refinment up to 100MP](https://www.youtube.com/watch?v=ncoxrwZWJcU)
+
+### Downloads and Workflows
+
+- Source branch for this update: [TBG_ETUR-V1.2](https://github.com/Ltamann/ComfyUI-TBG-ETUR/tree/TBG_ETUR-V1.2)
+- Flux 2 Klein workflow: [example_workflows/TBG ETUR PRO - FLUX_2_KLEIN enhanced Upscaler and Refiner Pro.json](example_workflows/TBG%20ETUR%20PRO%20-%20FLUX_2_KLEIN%20enhanced%20Upscaler%20and%20Refiner%20Pro.json)
+- Flux 1 workflow: [example_workflows/TBG ETUR PRO - FLUX_1_DEV enhanced Upscaler and Refiner Pro.json](example_workflows/TBG%20ETUR%20PRO%20-%20FLUX_1_DEV%20enhanced%20Upscaler%20and%20Refiner%20Pro.json)
+- Community upscaler workflow: [example_workflows/TBG ETUR CE UPSCALER SUPER RESOLUTION.json](example_workflows/TBG%20ETUR%20CE%20UPSCALER%20SUPER%20RESOLUTION.json)
+
+### Bug Fixes v1.2.8
+
+- Fixed the mixed CPU/CUDA tensor crash when using Refiner VAE decode Nvidia PiD with Flux1.
 
 
 
@@ -31,7 +88,8 @@ Notes:
 - [API_Access](#API_Access)
 - [Usage](#usage)
 - [TBG_Magnific_Magnifier_Node](#TBG_Magnific_Magnifier_Node)
-- [Update 1.07 alfa v1](#Update)
+- [TBG ETUR 1.2.9](#tbg-etur-129)
+- [Legacy Changelog](#legacy-changelog)
 
 ## Overview
 
@@ -39,14 +97,15 @@ Welcome to **ComfyUI-TBG-ETUR** repository! **TBG Enhanced Tiled Upscaler and Re
 We at **TBG Think. Build. Generate. AI upscaling & image enrichment** are
 excited to make our TBG Enhanced Tiled Upscaler and Refiner Pro available to you.
 
-# Beta Testing and brand New PRO Features Now Available
+# Current Release
 
-We’re excited to announce that beta testing of the PRO version is now live
-for our Patreon supporters and free community members!
+We’re excited to announce that TBG ETUR 1.2.9 is now available for member beta testing,
+with the latest workflow and node updates focused on PiD, Flux 2, and tile stabilization.
 
 Please help us to find all Bugs and open an issue here !!!
 
-You can download the latest version of our software [here]([https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR). 
+You can download the latest version of our software here:
+[https://github.com/Ltamann/ComfyUI-TBG-ETUR](https://github.com/Ltamann/ComfyUI-TBG-ETUR)
 !!! Note: This code is updated daily, so stay tuned for bug fixes !!!
 
 ## Early_Access
@@ -201,7 +260,9 @@ Thank you for your support and happy tiling!
 - tiled-upscaling
 
   
-## TBG_Magnific_Magnifier_Node PRO members Nodes (note: this node is no longer included in v1.1.0)."
+## Legacy PRO Members Nodes
+
+The old TBG_Magnific_Magnifier_Node PRO members nodes were removed after v1.1.0 and are kept here only as historical reference.
 
 ## Key Features
 
@@ -222,10 +283,10 @@ Thank you for your support and happy tiling!
 
 ---
 
-## Update
-Whast New in v1.1.0:
+## Legacy Changelog
+Historical notes from v1.1.0 and earlier:
 
-## 🔹 What’s New  1.1.0
+## 🔹 Historical Notes 1.1.0
 
 - **Up to ~90% Faster Upscaler and Refiner Nodes** – caches results from upscales, tiling, prompts, and tile refinements. Subsequent runs reuse this cached data, drastically reducing processing time while adjusting and fine-tuning settings.
 
