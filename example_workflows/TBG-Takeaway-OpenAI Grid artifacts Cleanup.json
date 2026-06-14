@@ -1,0 +1,234 @@
+{
+  "id": "af7253b3-2287-4b2f-8849-ff7792cb1fef",
+  "revision": 0,
+  "last_node_id": 5,
+  "last_link_id": 3,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        -750,
+        750
+      ],
+      "size": [
+        600,
+        700
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.24.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "ChatGPT Image Jun 13, 2026, 03_41_33 PM.png",
+        "image"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 2,
+      "type": "AISourcePatternCleanup",
+      "pos": [
+        50,
+        850
+      ],
+      "size": [
+        350,
+        150
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        },
+        {
+          "name": "difference_image",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AISourcePatternCleanup",
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
+      },
+      "widgets_values": [
+        0.63,
+        128,
+        "AI luma guard"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "Note",
+      "pos": [
+        50,
+        1050
+      ],
+      "size": [
+        400,
+        250
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "AI Cleanup, And Segment Mask",
+      "properties": {},
+      "widgets_values": [
+        "Load Image is the original source image. The same image feeds the tiler and the cleanup branch.\n\nAI Source Pattern Cleanup removes destructive grit patterns often found in AI-generated or reprocessed images. It is useful for OpenAI-generated image artifacts, hidden grids, checker texture, or repeated high-frequency luma noise. Good starting values are around 0.5 strength and 128 radius/scale. Too much cleanup can soften real texture.\n\nLoad Image (as Mask) creates user-directed special tile areas. Every marked area over the input image becomes a separate segment tile. Use this for faces, hands, logos, fabric patches, or any important element that normal square tiles might cut in half. Segment tiles keep one face or object as one structure, which prevents texture or identity differences between neighboring normal tiles. ( pluged into the refiner )"
+      ],
+      "color": "#243447",
+      "bgcolor": "rgba(21,28,38,.94)"
+    },
+    {
+      "id": 4,
+      "type": "PreviewImage",
+      "pos": [
+        500,
+        850
+      ],
+      "size": [
+        350,
+        300
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.24.0",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5,
+      "type": "PreviewImage",
+      "pos": [
+        950,
+        850
+      ],
+      "size": [
+        450,
+        450
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.22.0",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      1,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Open AI Input Image + Pattern Clean-up",
+      "bounding": [
+        0,
+        750,
+        1450,
+        600
+      ],
+      "color": "#8A8",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7627768444385891,
+      "offset": [
+        936.6336737930646,
+        -463.65504429549094
+      ]
+    },
+    "frontendVersion": "1.44.19"
+  },
+  "version": 0.4
+}

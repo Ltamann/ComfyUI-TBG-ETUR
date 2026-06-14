@@ -20,6 +20,44 @@ def sift_tensor_to_uint8_rgb(image):
     return (image.numpy() * 255.0 + 0.5).astype("uint8")
 
 
+def _resize_bhwc_like(reference_bhwc, sampled_bhwc):
+    if not torch.is_tensor(reference_bhwc) or not torch.is_tensor(sampled_bhwc):
+        return reference_bhwc
+    if reference_bhwc.ndim != 4 or sampled_bhwc.ndim != 4:
+        return reference_bhwc
+    ref_h = int(reference_bhwc.shape[1])
+    ref_w = int(reference_bhwc.shape[2])
+    sample_h = int(sampled_bhwc.shape[1])
+    sample_w = int(sampled_bhwc.shape[2])
+    if ref_h == sample_h and ref_w == sample_w:
+        return reference_bhwc
+    return torch.nn.functional.interpolate(
+        reference_bhwc.permute(0, 3, 1, 2).to(dtype=torch.float32),
+        size=(sample_h, sample_w),
+        mode="bilinear",
+        align_corners=False,
+    ).permute(0, 2, 3, 1).contiguous().to(device=reference_bhwc.device, dtype=reference_bhwc.dtype)
+
+
+def _resize_rgb_like(reference_rgb, sampled_rgb):
+    import cv2
+
+    if reference_rgb is None or sampled_rgb is None:
+        return reference_rgb
+    if not hasattr(reference_rgb, "shape") or not hasattr(sampled_rgb, "shape"):
+        return reference_rgb
+    if len(reference_rgb.shape) < 2 or len(sampled_rgb.shape) < 2:
+        return reference_rgb
+    ref_h = int(reference_rgb.shape[0])
+    ref_w = int(reference_rgb.shape[1])
+    sample_h = int(sampled_rgb.shape[0])
+    sample_w = int(sampled_rgb.shape[1])
+    if ref_h == sample_h and ref_w == sample_w:
+        return reference_rgb
+    interpolation = cv2.INTER_AREA if sample_h < ref_h or sample_w < ref_w else cv2.INTER_LINEAR
+    return cv2.resize(reference_rgb, (sample_w, sample_h), interpolation=interpolation)
+
+
 def _apply_sift_affine_correction(reference_tile, sampled_tile, index=None, enhanced=False, level=1):
     info = {
         "changed": False,
@@ -40,6 +78,13 @@ def _apply_sift_affine_correction(reference_tile, sampled_tile, index=None, enha
     if sampled_bhwc.ndim != 4 or reference_bhwc.ndim != 4:
         info["reason"] = "invalid_tensor_shape"
         return sampled_tile, info
+    if tuple(sampled_bhwc.shape[:2]) != tuple(reference_bhwc.shape[:2]) or tuple(sampled_bhwc.shape[3:]) != tuple(reference_bhwc.shape[3:]):
+        reference_bhwc = _resize_bhwc_like(reference_bhwc, sampled_bhwc)
+        info["reference_resized"] = True
+        _drift_log(
+            f"{'tile ' + str(index + 1) if isinstance(index, int) else 'standalone'}: "
+            f"resized reference from {tuple(reference_tile.shape)} to {tuple(reference_bhwc.shape)}"
+        )
     if tuple(sampled_bhwc.shape) != tuple(reference_bhwc.shape):
         info["reason"] = "shape_mismatch"
         return sampled_tile, info
@@ -761,6 +806,8 @@ def _luma_mad(a, b, mask=None):
     import cv2
     import numpy as np
 
+    if hasattr(a, "shape") and hasattr(b, "shape") and tuple(a.shape[:2]) != tuple(b.shape[:2]):
+        b = _resize_rgb_like(b, a)
     a_luma = cv2.cvtColor(a, cv2.COLOR_RGB2GRAY).astype(np.float32)
     b_luma = cv2.cvtColor(b, cv2.COLOR_RGB2GRAY).astype(np.float32)
     delta = np.abs(a_luma - b_luma)
@@ -772,6 +819,9 @@ def _luma_mad(a, b, mask=None):
 def _edge_mad(a, b, mask=None):
     import cv2
     import numpy as np
+
+    if hasattr(a, "shape") and hasattr(b, "shape") and tuple(a.shape[:2]) != tuple(b.shape[:2]):
+        b = _resize_rgb_like(b, a)
 
     def edge_mag(image):
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY).astype(np.float32)
@@ -806,6 +856,9 @@ def _border_masks(height, width, band=None):
 
 
 def _alignment_metrics(sample_rgb, ref_rgb, masks):
+    if hasattr(sample_rgb, "shape") and hasattr(ref_rgb, "shape"):
+        if tuple(sample_rgb.shape[:2]) != tuple(ref_rgb.shape[:2]):
+            ref_rgb = _resize_rgb_like(ref_rgb, sample_rgb)
     metrics = {
         "luma_all": _luma_mad(sample_rgb, ref_rgb),
         "edge_all": _edge_mad(sample_rgb, ref_rgb),
@@ -927,6 +980,7 @@ def _apply_reverse_flow_fallback(reference_tile, sampled_tile, level=2):
     for batch_index in range(int(sampled_np.shape[0])):
         ref_rgb = reference_np[batch_index]
         sample_rgb = sampled_np[batch_index]
+        ref_rgb = _resize_rgb_like(ref_rgb, sample_rgb)
         height, width = ref_rgb.shape[:2]
         if height < 32 or width < 32:
             corrected_images.append(sample_rgb)
