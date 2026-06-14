@@ -393,6 +393,10 @@ class TBG_Upscaler_v1():
             outer_mask_area = max(0, int(getattr(size, "Fusion_reference_margin", 0) or 0))
             overlay_between_tiles = (2 * outer_mask_area) + size.composite_blur_margin
             crop_margin = outer_mask_area
+        elif mode == "Soft Merge":
+            outer_mask_area = max(0, int(getattr(size, "Fusion_reference_margin", 0) or 0))
+            overlay_between_tiles = (2 * outer_mask_area) + size.composite_blur_margin
+            crop_margin = outer_mask_area
         else:
             outer_mask_area = size.composite_blur_margin
             overlay_between_tiles = size.composite_blur_margin

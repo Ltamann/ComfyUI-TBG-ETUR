@@ -94,8 +94,10 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_CE():
                                                 "default": "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic."}),
                 "VLM_seed": ("INT", {"label": "Seed", "default": 0, "min": 0, "max": 0xffffffffffffffff, "control_after_generate": True,"fixed": True  }),
 
+                "Fusion Reference Margin": ("INT",{"label": "Reference margin","default": 0,"min": 0, "max": 256, "step": 8,
+                                                     "tooltip": "Reference border content kept around each Soft Merge tile and cropped out when stitching the image back together."}),
                 "Feather Mask": ("INT",
-                                          {"label": "The Gradient Feather mask is used only when rebuilding the final image from tiles.", "default": 16, "min": 0,
+                                          {"tooltip": "Feather mask is a gradient used only in final image compositing to smoothly blend tiles together using Soft Merge.", "default": 16, "min": 0,
                                            "max": 128, "step": 8}),
 
             },
@@ -131,6 +133,7 @@ class TBG_ETUR_Upscaler_and_Tile_Generator_CE():
     def fn(self, **kwargs):
         kwargs["tile_size_w"] = kwargs.get("tile_size")
         kwargs["tile_size_h"] = kwargs.get("tile_size")
+        kwargs["Fusion Reference Margin"] = kwargs.get("Fusion Reference Margin", kwargs.get("Reference Margin", 0))
         TBG_Upscaler_v1i = TBG_Upscaler_v1()
         result =  TBG_Upscaler_v1i.fn(**kwargs)
         _,_,_,_,_,_,_,_,userinfo,_,_,infos= result[0]
