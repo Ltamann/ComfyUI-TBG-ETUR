@@ -1,15 +1,15 @@
 {
   "id": "9e3799e2-16c0-4853-8f0a-a4e45855ed51",
   "revision": 0,
-  "last_node_id": 798,
-  "last_link_id": 810,
+  "last_node_id": 812,
+  "last_link_id": 842,
   "nodes": [
     {
       "id": 510,
       "type": "Reroute",
       "pos": [
-        3662.180073278568,
-        -397.819876822753
+        3650,
+        -400
       ],
       "size": [
         75,
@@ -42,12 +42,12 @@
       "id": 719,
       "type": "LoraLoaderModelOnly",
       "pos": [
-        -360,
-        120
+        -290.7701860030814,
+        251.68589973988512
       ],
       "size": [
-        418,
-        82
+        450,
+        100
       ],
       "flags": {},
       "order": 5,
@@ -83,11 +83,11 @@
       "id": 720,
       "type": "CheckpointLoaderSimple",
       "pos": [
-        -360,
-        -20
+        -290.7701860030814,
+        151.68589973988512
       ],
       "size": [
-        420,
+        450,
         100
       ],
       "flags": {},
@@ -132,12 +132,12 @@
       "id": 721,
       "type": "ControlNetLoader",
       "pos": [
-        -338.51764021775824,
-        952.3616742998049
+        -290.7701860030814,
+        1101.6858997398851
       ],
       "size": [
-        360,
-        60
+        400,
+        100
       ],
       "flags": {},
       "order": 2,
@@ -163,390 +163,84 @@
       ]
     },
     {
-      "id": 777,
-      "type": "TBG ETUR Control Net Pipeline",
+      "id": 783,
+      "type": "LoadImage",
       "pos": [
-        108.02801238273254,
-        556.5657305871349
+        -290.7701860030814,
+        401.6858997398851
       ],
       "size": [
-        340.359375,
-        262
+        300,
+        350
       ],
       "flags": {},
-      "order": 6,
+      "order": 3,
       "mode": 0,
-      "inputs": [
-        {
-          "name": "controlnet",
-          "shape": 7,
-          "type": "CONTROL_NET",
-          "link": 739
-        },
-        {
-          "name": "model_patch",
-          "shape": 7,
-          "type": "MODEL_PATCH",
-          "link": null
-        },
-        {
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        },
-        {
-          "label": "custom_controlnet_image",
-          "name": "custom_controlnet_image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "name": "Controlnet_Pipe",
-          "type": "Controlnet_Pipe",
+          "name": "IMAGE",
+          "type": "IMAGE",
           "links": [
-            785
+            811,
+            837
           ]
         },
         {
-          "name": "INFO",
-          "type": "STRING",
+          "name": "MASK",
+          "type": "MASK",
           "links": null
         }
       ],
       "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Control Net Pipeline"
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        0.5,
-        0,
-        0.5,
-        100,
-        150,
-        "None",
-        "ControlNet"
+        "ChatGPT Image Jun 13, 2026, 03_41_33 PM.png",
+        "image"
       ]
     },
     {
-      "id": 789,
-      "type": "TBG ETUR Tile Overrides",
+      "id": 797,
+      "type": "PreviewImage",
       "pos": [
-        592.8613177047001,
-        165.47411142991496
+        713.2588567203561,
+        145.3295631673562
       ],
       "size": [
-        317.33526611328125,
-        346
+        334.1091221972895,
+        376.9018748161993
       ],
       "flags": {},
-      "order": 9,
+      "order": 10,
       "mode": 0,
       "inputs": [
         {
-          "label": "Tile Prompt Pipe",
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 779
-        },
-        {
-          "label": "model 1 override",
-          "name": "Model_1",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "model 2 override",
-          "name": "Model_2",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "model 3 override",
-          "name": "Model_3",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "cnetpipe 1 override",
-          "name": "CnetPipe_1",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        },
-        {
-          "label": "cnetpipe 2 override",
-          "name": "CnetPipe_2",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        },
-        {
-          "label": "cnetpipe 3 override",
-          "name": "CnetPipe_3",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            784
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
-        "Node name for S&R": "TBG ETUR Tile Overrides",
-        "Filter by Indexes": "",
-        "Prompt": "",
-        "Denoise": "unchanged",
-        "Seed": "",
-        "CNet Strength": "unchanged",
-        "Reset": false,
-        "tile_edits_json": "{\"prompts\":[],\"denoises\":[],\"seeds\":[],\"cnet_strength\":[],\"cfg_overrides\":[],\"model_overrides\":[],\"cnetpipe_overrides\":[],\"color_match_overrides\":[],\"ignore_general_prompts\":[],\"_tbg_tiler_context_key\":\"\"}"
-      },
-      "widgets_values": [
-        true,
-        0,
-        "",
-        "",
-        "unchanged",
-        "",
-        "unchanged",
-        false
-      ]
-    },
-    {
-      "id": 792,
-      "type": "TBG ETUR Refiner CE",
-      "pos": [
-        2452.863001484774,
-        -19.614073053123757
-      ],
-      "size": [
-        400,
-        690
-      ],
-      "flags": {},
-      "order": 14,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "Model",
-          "name": "model",
-          "type": "MODEL",
-          "link": 790
-        },
-        {
-          "label": "Clip",
-          "name": "clip",
-          "type": "CLIP",
-          "link": 791
-        },
-        {
-          "label": "VAE",
-          "name": "vae",
-          "type": "VAE",
-          "link": 792
-        },
-        {
-          "label": "TBG Pipe",
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 793
-        },
-        {
-          "label": "TBG ControlNet Pipe",
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": 797
-        },
-        {
-          "label": "TBG enrichment Pipe",
-          "name": "Enrichment_Pipe",
-          "shape": 7,
-          "type": "Enrichment_Pipe",
-          "link": null
-        },
-        {
-          "label": "Redux_Style_Model",
-          "name": "Redux_Style_Model",
-          "shape": 7,
-          "type": "STYLE_MODEL",
-          "link": null
-        },
-        {
-          "label": "Redux_Clip_Vision",
-          "name": "Redux_Clip_Vision",
-          "shape": 7,
-          "type": "CLIP_VISION",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Refined",
+          "name": "images",
           "type": "IMAGE",
-          "links": [
-            795
-          ]
+          "link": 839
         }
       ],
+      "outputs": [],
       "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
-        "Node name for S&R": "TBG ETUR Refiner CE"
+        "cnr_id": "comfy-core",
+        "ver": "0.24.0",
+        "Node name for S&R": "PreviewImage"
       },
-      "widgets_values": [
-        "SDXL",
-        6,
-        30,
-        15925272239551,
-        "randomize",
-        3.5,
-        "euler",
-        "simple",
-        true,
-        1024,
-        "",
-        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
-        0.27,
-        "TBG ETUR Detail-Preserving Tile Stabilizer",
-        true,
-        0,
-        false,
-        false,
-        ""
-      ]
-    },
-    {
-      "id": 790,
-      "type": "TBG ETUR Refiner CE",
-      "pos": [
-        980.908519651406,
-        -15.506645794735784
-      ],
-      "size": [
-        400,
-        690
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "Model",
-          "name": "model",
-          "type": "MODEL",
-          "link": 781
-        },
-        {
-          "label": "Clip",
-          "name": "clip",
-          "type": "CLIP",
-          "link": 782
-        },
-        {
-          "label": "VAE",
-          "name": "vae",
-          "type": "VAE",
-          "link": 783
-        },
-        {
-          "label": "TBG Pipe",
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 784
-        },
-        {
-          "label": "TBG ControlNet Pipe",
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": 785
-        },
-        {
-          "label": "TBG enrichment Pipe",
-          "name": "Enrichment_Pipe",
-          "shape": 7,
-          "type": "Enrichment_Pipe",
-          "link": null
-        },
-        {
-          "label": "Redux_Style_Model",
-          "name": "Redux_Style_Model",
-          "shape": 7,
-          "type": "STYLE_MODEL",
-          "link": null
-        },
-        {
-          "label": "Redux_Clip_Vision",
-          "name": "Redux_Clip_Vision",
-          "shape": 7,
-          "type": "CLIP_VISION",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Refined",
-          "type": "IMAGE",
-          "links": [
-            787,
-            788
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
-        "Node name for S&R": "TBG ETUR Refiner CE"
-      },
-      "widgets_values": [
-        "SDXL",
-        6,
-        30,
-        1074617078154288,
-        "randomize",
-        3.5,
-        "euler",
-        "simple",
-        true,
-        1024,
-        "",
-        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
-        0.27,
-        "TBG ETUR Detail-Preserving Tile Stabilizer",
-        true,
-        0,
-        false,
-        false,
-        ""
-      ]
+      "widgets_values": []
     },
     {
       "id": 793,
       "type": "TBG ETUR Control Net Pipeline",
       "pos": [
-        2001.5544329966597,
-        543.1061679295681
+        2087.1488576271363,
+        745.8911231561965
       ],
       "size": [
-        338.42578125,
-        262
+        350,
+        300
       ],
       "flags": {},
       "order": 7,
@@ -608,134 +302,120 @@
       ]
     },
     {
-      "id": 757,
-      "type": "PreviewImage",
+      "id": 790,
+      "type": "TBG ETUR Refiner CE",
       "pos": [
-        2939.359007878379,
-        -5.783885903436406
-      ],
-      "size": [
-        810.0099930050649,
-        953.1270271588912
-      ],
-      "flags": {},
-      "order": 16,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 795
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.50",
-        "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 788,
-      "type": "TBG ETUR Upscaler and Tile Generator CE",
-      "pos": [
-        90.54473119275066,
-        -11.938810085335938
+        1157.0590574518376,
+        143.28920313396105
       ],
       "size": [
         400,
-        494
+        900
       ],
       "flags": {},
-      "order": 8,
+      "order": 11,
       "mode": 0,
       "inputs": [
         {
-          "label": "Image",
-          "name": "image",
-          "type": "IMAGE",
-          "link": 777
+          "label": "Model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 781
         },
         {
-          "name": "Segment_Mask",
+          "label": "Clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 782
+        },
+        {
+          "label": "VAE",
+          "name": "vae",
+          "type": "VAE",
+          "link": 783
+        },
+        {
+          "label": "TBG Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 833
+        },
+        {
+          "label": "TBG ControlNet Pipe",
+          "name": "Controlnet_Pipe",
           "shape": 7,
-          "type": "MASK",
+          "type": "Controlnet_Pipe",
+          "link": 785
+        },
+        {
+          "label": "TBG enrichment Pipe",
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": null
+        },
+        {
+          "label": "Redux_Style_Model",
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": null
+        },
+        {
+          "label": "Redux_Clip_Vision",
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
           "link": null
         }
       ],
       "outputs": [
         {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            779
-          ]
-        },
-        {
-          "name": "Upscaled Image",
+          "name": "Refined",
           "type": "IMAGE",
           "links": [
-            809
+            787,
+            840
           ]
         }
       ],
       "properties": {
         "cnr_id": "tbg-etur",
         "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE"
+        "Node name for S&R": "TBG ETUR Refiner CE"
       },
       "widgets_values": [
-        1024,
-        "SuperResolution/Tiled-SeedVR2 Standard",
-        2,
+        "SDXL",
+        6,
+        30,
+        1074617078154288,
+        "randomize",
+        3.5,
+        "euler",
+        "simple",
         true,
-        "NONE",
-        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        1024,
+        "",
+        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        0.27,
+        "TBG ETUR Detail-Preserving Tile Stabilizer",
+        false,
         0,
-        "fixed",
-        16,
+        false,
+        false,
         ""
       ]
-    },
-    {
-      "id": 797,
-      "type": "PreviewImage",
-      "pos": [
-        591.055564120859,
-        605.5703182459758
-      ],
-      "size": [
-        345.5123850522572,
-        427.1799575206387
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 809
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.24.0",
-        "Node name for S&R": "PreviewImage"
-      }
     },
     {
       "id": 751,
       "type": "PreviewImage",
       "pos": [
-        1457.5472689018973,
-        -18.718299014860182
+        1588.290531274255,
+        143.60766935926029
       ],
       "size": [
-        418.12910461946035,
-        593.7492406618996
+        450,
+        600
       ],
       "flags": {},
       "order": 12,
@@ -756,15 +436,498 @@
       "widgets_values": []
     },
     {
-      "id": 791,
-      "type": "TBG ETUR Upscaler and Tile Generator CE",
+      "id": 798,
+      "type": "PreviewImage",
       "pos": [
-        1978.376771413788,
-        -11.778307431492065
+        2509.2298139969184,
+        151.68589973988512
+      ],
+      "size": [
+        450,
+        500
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 842
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.24.0",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 777,
+      "type": "TBG ETUR Control Net Pipeline",
+      "pos": [
+        190.5225162356329,
+        728.3761253906445
+      ],
+      "size": [
+        350,
+        300
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "shape": 7,
+          "type": "CONTROL_NET",
+          "link": 739
+        },
+        {
+          "name": "model_patch",
+          "shape": 7,
+          "type": "MODEL_PATCH",
+          "link": null
+        },
+        {
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "custom_controlnet_image",
+          "name": "custom_controlnet_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Controlnet_Pipe",
+          "type": "Controlnet_Pipe",
+          "links": [
+            785
+          ]
+        },
+        {
+          "name": "INFO",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
+      },
+      "widgets_values": [
+        1,
+        0,
+        0.7,
+        100,
+        150,
+        "None",
+        "ControlNet"
+      ]
+    },
+    {
+      "id": 758,
+      "type": "MarkdownNote",
+      "pos": [
+        139.22109473739334,
+        1142.6343639914735
       ],
       "size": [
         400,
-        494
+        250
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note from Shara !",
+      "properties": {},
+      "widgets_values": [
+        "Hi there, it’s Shara! We’ve finished updating TBG ETUR to version 1.1.0. For our Community Edition followers, we’ve decided not to repeat the old “dirty” SDXL 2-step upscaler workflow, since it’s not state-of-the-art anymore.\n\nInstead, we’ve added the new Super Resolution workflows for your convenience. Have fun experimenting with them, and feel free to give us a shout!"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 789,
+      "type": "TBG ETUR Tile Overrides",
+      "pos": [
+        618.9123879698802,
+        581.7180492152264
+      ],
+      "size": [
+        514.3119805448337,
+        2056
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Tile Prompt Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 838
+        },
+        {
+          "label": "model 1 override",
+          "name": "Model_1",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "model 2 override",
+          "name": "Model_2",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "model 3 override",
+          "name": "Model_3",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 1 override",
+          "name": "CnetPipe_1",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 2 override",
+          "name": "CnetPipe_2",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 3 override",
+          "name": "CnetPipe_3",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            833
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Tile Overrides",
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false,
+        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cfg_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"model_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnetpipe_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"color_match_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"ignore_general_prompts\":[false,false,false,false,false,false,false,false,false],\"_tbg_tiler_context_key\":\"d,f,4,9,7,2,7,a,e,5,4,d,9,7,4,d,2,d,7,c,4,b,d,b,5,4,d,a,8,a,0,5\"}",
+        "prompt_0": "",
+        "denoise_0": "",
+        "seed_0": "",
+        "cnet_strength_0": "",
+        "cfg_override_0": "",
+        "model_override_0": "",
+        "cnetpipe_override_0": "",
+        "color_match_override_0": "",
+        "ignore_general_prompt_0": "",
+        "prompt_1": "",
+        "denoise_1": "",
+        "seed_1": "",
+        "cnet_strength_1": "",
+        "cfg_override_1": "",
+        "model_override_1": "",
+        "cnetpipe_override_1": "",
+        "color_match_override_1": "",
+        "ignore_general_prompt_1": "",
+        "prompt_2": "",
+        "denoise_2": "",
+        "seed_2": "",
+        "cnet_strength_2": "",
+        "cfg_override_2": "",
+        "model_override_2": "",
+        "cnetpipe_override_2": "",
+        "color_match_override_2": "",
+        "ignore_general_prompt_2": "",
+        "prompt_3": "",
+        "denoise_3": "",
+        "seed_3": "",
+        "cnet_strength_3": "",
+        "cfg_override_3": "",
+        "model_override_3": "",
+        "cnetpipe_override_3": "",
+        "color_match_override_3": "",
+        "ignore_general_prompt_3": "",
+        "prompt_4": "",
+        "denoise_4": "",
+        "seed_4": "",
+        "cnet_strength_4": "",
+        "cfg_override_4": "",
+        "model_override_4": "",
+        "cnetpipe_override_4": "",
+        "color_match_override_4": "",
+        "ignore_general_prompt_4": "",
+        "prompt_5": "",
+        "denoise_5": "",
+        "seed_5": "",
+        "cnet_strength_5": "",
+        "cfg_override_5": "",
+        "model_override_5": "",
+        "cnetpipe_override_5": "",
+        "color_match_override_5": "",
+        "ignore_general_prompt_5": "",
+        "prompt_6": "",
+        "denoise_6": "",
+        "seed_6": "",
+        "cnet_strength_6": "",
+        "cfg_override_6": "",
+        "model_override_6": "",
+        "cnetpipe_override_6": "",
+        "color_match_override_6": "",
+        "ignore_general_prompt_6": "",
+        "prompt_7": "",
+        "denoise_7": "",
+        "seed_7": "",
+        "cnet_strength_7": "",
+        "cfg_override_7": "",
+        "model_override_7": "",
+        "cnetpipe_override_7": "",
+        "color_match_override_7": "",
+        "ignore_general_prompt_7": "",
+        "prompt_8": "",
+        "denoise_8": "",
+        "seed_8": "",
+        "cnet_strength_8": "",
+        "cfg_override_8": "",
+        "model_override_8": "",
+        "cnetpipe_override_8": "",
+        "color_match_override_8": "",
+        "ignore_general_prompt_8": ""
+      },
+      "widgets_values": [
+        true,
+        0,
+        "",
+        "",
+        "unchanged",
+        "",
+        "unchanged",
+        false
+      ]
+    },
+    {
+      "id": 792,
+      "type": "TBG ETUR Refiner CE",
+      "pos": [
+        2531.477173857712,
+        728.7003847302154
+      ],
+      "size": [
+        400,
+        900
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 790
+        },
+        {
+          "label": "Clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 791
+        },
+        {
+          "label": "VAE",
+          "name": "vae",
+          "type": "VAE",
+          "link": 792
+        },
+        {
+          "label": "TBG Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 841
+        },
+        {
+          "label": "TBG ControlNet Pipe",
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 797
+        },
+        {
+          "label": "TBG enrichment Pipe",
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": null
+        },
+        {
+          "label": "Redux_Style_Model",
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": null
+        },
+        {
+          "label": "Redux_Clip_Vision",
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Refined",
+          "type": "IMAGE",
+          "links": [
+            795,
+            813
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Refiner CE"
+      },
+      "widgets_values": [
+        "SDXL",
+        6,
+        30,
+        15925272239551,
+        "randomize",
+        3.5,
+        "euler",
+        "simple",
+        true,
+        1024,
+        "",
+        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        0.15,
+        "TBG ETUR Detail-Preserving Tile Stabilizer",
+        false,
+        0,
+        false,
+        false,
+        ""
+      ]
+    },
+    {
+      "id": 757,
+      "type": "PreviewImage",
+      "pos": [
+        3023.5316258421913,
+        161.2204409700669
+      ],
+      "size": [
+        652.4315609756259,
+        792.2123371002729
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 795
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.50",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 799,
+      "type": "Image Comparer (rgthree)",
+      "pos": [
+        3870.068994109212,
+        92.6401052698516
+      ],
+      "size": [
+        1850,
+        1550
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "dir": 3,
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 811
+        },
+        {
+          "dir": 3,
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 813
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "rgthree-comfy",
+        "ver": "1.0.2605082257",
+        "comparer_mode": "Slide"
+      },
+      "widgets_values": [
+        [
+          {
+            "name": "A",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_eebhm_00001_.png&type=temp&subfolder=&rand=0.9968850333989732"
+          },
+          {
+            "name": "B",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_eebhm_00002_.png&type=temp&subfolder=&rand=0.26857787219145024"
+          }
+        ]
+      ]
+    },
+    {
+      "id": 812,
+      "type": "TBG ETUR Upscaler and Tile Generator CE",
+      "pos": [
+        2059.2298139969184,
+        151.68589973988512
+      ],
+      "size": [
+        400,
+        518
       ],
       "flags": {},
       "order": 13,
@@ -774,7 +937,7 @@
           "label": "Image",
           "name": "image",
           "type": "IMAGE",
-          "link": 788
+          "link": 840
         },
         {
           "name": "Segment_Mask",
@@ -788,14 +951,14 @@
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
           "links": [
-            793
+            841
           ]
         },
         {
           "name": "Upscaled Image",
           "type": "IMAGE",
           "links": [
-            810
+            842
           ]
         }
       ],
@@ -806,106 +969,79 @@
       },
       "widgets_values": [
         1024,
-        "FAST/_bicubic",
+        "FAST/_bilinear",
         2,
         true,
         "NONE",
         "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
         0,
         "fixed",
-        16,
+        32,
+        64,
         ""
       ]
     },
     {
-      "id": 798,
-      "type": "PreviewImage",
+      "id": 811,
+      "type": "TBG ETUR Upscaler and Tile Generator CE",
       "pos": [
-        2447.185714685337,
-        738.560126610948
+        182.2064741203319,
+        152.57989421459342
       ],
       "size": [
-        433.7473142431245,
-        463.2369293529117
+        400,
+        518
       ],
       "flags": {},
-      "order": 15,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
-          "name": "images",
+          "label": "Image",
+          "name": "image",
           "type": "IMAGE",
-          "link": 810
+          "link": 837
+        },
+        {
+          "name": "Segment_Mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
         }
       ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.24.0",
-        "Node name for S&R": "PreviewImage"
-      }
-    },
-    {
-      "id": 758,
-      "type": "MarkdownNote",
-      "pos": [
-        95.11057786936104,
-        883.1495422398831
-      ],
-      "size": [
-        390.39311485467124,
-        204.6207969739528
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Note from Shara !",
-      "properties": {},
-      "widgets_values": [
-        "Hi there, it’s Shara! We’ve finished updating TBG ETUR to version 1.1.0. For our Community Edition followers, we’ve decided not to repeat the old “dirty” SDXL 2-step upscaler workflow, since it’s not state-of-the-art anymore.\n\nInstead, we’ve added the new Super Resolution workflows for your convenience. Have fun experimenting with them, and feel free to give us a shout!"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 783,
-      "type": "LoadImage",
-      "pos": [
-        -360,
-        260
-      ],
-      "size": [
-        282.798828125,
-        314
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
       "outputs": [
         {
-          "name": "IMAGE",
-          "type": "IMAGE",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
           "links": [
-            777
+            838
           ]
         },
         {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
+          "name": "Upscaled Image",
+          "type": "IMAGE",
+          "links": [
+            839
+          ]
         }
       ],
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1",
-        "Node name for S&R": "LoadImage"
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator CE"
       },
       "widgets_values": [
-        "ChatGPT Image Jun 13, 2026, 03_41_33 PM.png",
-        "image"
+        1024,
+        "SuperResolution/Tiled-SeedVR2 Standard",
+        2,
+        true,
+        "NONE",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        0,
+        "fixed",
+        32,
+        64,
+        ""
       ]
     }
   ],
@@ -925,22 +1061,6 @@
       777,
       0,
       "CONTROL_NET"
-    ],
-    [
-      777,
-      783,
-      0,
-      788,
-      0,
-      "IMAGE"
-    ],
-    [
-      779,
-      788,
-      0,
-      789,
-      0,
-      "TBG_Pipe"
     ],
     [
       781,
@@ -967,14 +1087,6 @@
       "VAE"
     ],
     [
-      784,
-      789,
-      0,
-      790,
-      3,
-      "TBG_Pipe"
-    ],
-    [
       785,
       777,
       0,
@@ -987,14 +1099,6 @@
       790,
       0,
       751,
-      0,
-      "IMAGE"
-    ],
-    [
-      788,
-      790,
-      0,
-      791,
       0,
       "IMAGE"
     ],
@@ -1023,14 +1127,6 @@
       "VAE"
     ],
     [
-      793,
-      791,
-      0,
-      792,
-      3,
-      "TBG_Pipe"
-    ],
-    [
       795,
       792,
       0,
@@ -1055,16 +1151,72 @@
       "Controlnet_Pipe"
     ],
     [
-      809,
-      788,
+      811,
+      783,
+      0,
+      799,
+      0,
+      "IMAGE"
+    ],
+    [
+      813,
+      792,
+      0,
+      799,
+      1,
+      "IMAGE"
+    ],
+    [
+      833,
+      789,
+      0,
+      790,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      837,
+      783,
+      0,
+      811,
+      0,
+      "IMAGE"
+    ],
+    [
+      838,
+      811,
+      0,
+      789,
+      0,
+      "TBG_Pipe"
+    ],
+    [
+      839,
+      811,
       1,
       797,
       0,
       "IMAGE"
     ],
     [
-      810,
-      791,
+      840,
+      790,
+      0,
+      812,
+      0,
+      "IMAGE"
+    ],
+    [
+      841,
+      812,
+      0,
+      792,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      842,
+      812,
       1,
       798,
       0,
@@ -1076,8 +1228,8 @@
       "id": 38,
       "title": "TBG",
       "bounding": [
-        -380,
-        -100,
+        -340.7701860030814,
+        51.6858997398851,
         4143.015000956012,
         1347.1362728635863
       ],
@@ -1088,10 +1240,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.505447028499297,
+      "scale": 0.4736244074476712,
       "offset": [
-        1087.792425861871,
-        795.5268972222135
+        780.7800481613102,
+        589.8336121195189
       ]
     },
     "frontendVersion": "1.45.15",
