@@ -16,6 +16,7 @@ import PIL
 from PIL import Image
 import copy
 import nodes
+from comfy_extras.nodes_custom_sampler import Noise_RandomNoise, SamplerCustomAdvanced
 from comfy_extras.nodes_mask import MaskToImage, ImageToMask
 from .inc.TBG_split_aware_lanpaint_sampler  import TBG_DualModelSampler_COPY as TBG_DualModelSampler_lanpaint, TBG_KSamplerAdvancedSplitAware_Copy as TBG_KSamplerAdvancedSplitAware_lanpaint
 from .inc.TBG_sampler_split_aware import TBG_DualModelSampler_COPY as TBG_DualModelSampler_normal, TBG_KSamplerAdvancedSplitAware_Copy as TBG_KSamplerAdvancedSplitAware_normal
@@ -171,6 +172,7 @@ class TBG_Refiner_v1():
     MODEL_TYPE_SIZES = {
         'FLUX1': 1024,
         'FLUX2': 2048,
+        'Ideogram4': 2048,
         'FLUX1 Kontext': 1024,
         'Qwen Image': 1328,
         'Qwen Image Edit': 1328,
@@ -189,6 +191,50 @@ class TBG_Refiner_v1():
         except Exception:
             parsed = 2048
         return max(256, min(4096, parsed))
+
+    @classmethod
+    def _sigma_trace_enabled(cls):
+        return bool(getattr(tbg.API, "dev_debug_enabled", getattr(tbg.API, "status", None) == "Dev"))
+
+    @classmethod
+    def _sigma_trace_text(cls, sigmas):
+        if sigmas is None:
+            return "count=0 min=None max=None head=[] tail=[] full=[]"
+        try:
+            if torch.is_tensor(sigmas):
+                sigma_tensor = sigmas.detach().float().cpu().view(-1)
+                sigma_values = sigma_tensor.tolist()
+            else:
+                sigma_values = [float(v) for v in list(sigmas)]
+        except Exception as exc:
+            return f"unavailable error={exc}"
+
+        count = len(sigma_values)
+        if count == 0:
+            return "count=0 min=None max=None head=[] tail=[] full=[]"
+
+        rounded = [round(v, 6) for v in sigma_values]
+        head = rounded[:6]
+        tail = rounded[-6:] if count > 6 else rounded[:]
+        full_values = rounded if count <= 64 else f"omitted(count={count})"
+        return (
+            f"count={count} min={min(rounded):.6f} max={max(rounded):.6f} "
+            f"head={head} tail={tail} full={full_values}"
+        )
+
+    @classmethod
+    def _log_sigma_trace(cls, stage, sigmas, **metadata):
+        if not cls._sigma_trace_enabled():
+            return
+        meta_parts = [f"stage={stage}"]
+        for key, value in metadata.items():
+            meta_parts.append(f"{key}={value}")
+        log(
+            f"[TBG SigmaTrace] {' '.join(meta_parts)} {cls._sigma_trace_text(sigmas)}",
+            None,
+            None,
+            f"Node {tbg.INFO.id}",
+        )
 
     DENOISE_METHODS = [
         'default',
@@ -564,6 +610,12 @@ class TBG_Refiner_v1():
             tbg.PARAMS.Segment_Background_Harmonization = labs_refiner_dict.get('Segment_Background_Harmonization', True)
             tbg.PARAMS.ColorMatch_Debug_Switches = labs_refiner_dict.get('ColorMatch_Debug', None)
             tbg.KSAMPLER.custom_sigmas = labs_refiner_dict.get('Custom_Sigmas_!DENOISE=1', None)
+            cls._log_sigma_trace(
+                "labs_refiner_input",
+                tbg.KSAMPLER.custom_sigmas,
+                source="labs_refiner",
+                model_type=kwargs.get('model_type', None),
+            )
             tbg.PARAMS.Alternative_Image = labs_refiner_dict.get('Resume_Tiled_Refinement_Image', None)
             # Requiered
             tbg.PARAMS.Tile_Fusion_Blend = labs_refiner_dict.get('Tile_Fusion_Blend', 0.5)
@@ -577,6 +629,7 @@ class TBG_Refiner_v1():
             if not bool(getattr(tbg.API, "dev_debug_enabled", getattr(tbg.API, "status", None) == "Dev")):
                 tbg.PARAMS.Preview_Tiles_in_Temp_Folder = False
             tbg.KSAMPLER.sampler_input = labs_refiner_dict.get('Sampler', None)
+            tbg.KSAMPLER.ideogram4_guider = labs_refiner_dict.get('Ideogram4_Guider', None)
             tbg.KSAMPLER.pid_model = labs_refiner_dict.get('PID_Model', None)
             tbg.KSAMPLER.cropped_positive = labs_refiner_dict.get('cropped_positive', None)
             tbg.KSAMPLER.cropped_negative = labs_refiner_dict.get('cropped_negative', None)
@@ -605,6 +658,7 @@ class TBG_Refiner_v1():
             tbg.PARAMS.Preview_Tiles_in_Temp_Folder = False
             inpaint_end = 0
             tbg.KSAMPLER.sampler_input = None
+            tbg.KSAMPLER.ideogram4_guider = None
             tbg.KSAMPLER.cropped_positive = None
             tbg.KSAMPLER.cropped_negative = None
             tbg.PARAMS.stitch_blending = "gpupyramid"
@@ -3004,6 +3058,14 @@ class TBG_Refiner_v1():
                 sigmas = tbg.KSAMPLER.custom_sigmas #* tbg.PROMPTER.output_denoises[index]
                 log(f"tile {index + 1}/{len(tbg.OUTPUTS.grid_images_all)}", None, None,
                     f"Node {tbg.INFO.id} - Custom Sigmas Loaded {iteration}")
+                cls._log_sigma_trace(
+                    "pre_denoise",
+                    sigmas,
+                    tile=index + 1,
+                    iteration=iteration,
+                    denoise_method=tbg.PARAMS.denoise_method,
+                    custom_sigmas=True,
+                )
             else:
                 # create full sigmas denoise 1
                 sigmas = get_sigmas(tbg.KSAMPLER.model, tbg.KSAMPLER.scheduler, tbg.KSAMPLER.steps, 1.0 , tbg.PARAMS.denoise_method)[0]
@@ -3034,9 +3096,21 @@ class TBG_Refiner_v1():
                 denoise = tbg.PROMPTER.output_denoises[index]
 
                 sigmas = denoise_sigmas_tgb(sigmas, tbg.PROMPTER.output_denoises[index], tbg.PARAMS.denoise_method, tbg.KSAMPLER.model, tbg.KSAMPLER.scheduler)
+                denoise_override = True
             else:
                 denoise = tbg.KSAMPLER.denoise
                 sigmas = denoise_sigmas_tgb(sigmas, tbg.KSAMPLER.denoise, tbg.PARAMS.denoise_method, tbg.KSAMPLER.model, tbg.KSAMPLER.scheduler)
+                denoise_override = False
+
+            cls._log_sigma_trace(
+                "post_denoise",
+                sigmas,
+                tile=index + 1,
+                iteration=iteration,
+                denoise=round(float(denoise), 6) if denoise is not None else None,
+                denoise_method=tbg.PARAMS.denoise_method,
+                tile_override=denoise_override,
+            )
 
             return  (denoise, sigmas)
     @classmethod
@@ -6262,6 +6336,30 @@ class TBG_Refiner_v1():
                                 sigmas=sigmas,
                                 denoise_method=tbg.PARAMS.denoise_method,
                             )
+
+                        elif (
+                                getattr(tbg.KSAMPLER, "model_type", None) == "Ideogram4"
+                                and getattr(tbg.KSAMPLER, "ideogram4_guider", None) is not None
+                        ):
+                            if tbg.API.status == "Dev":
+                                print(
+                                    f"[TBG Ideogram4] path=SamplerCustomAdvanced "
+                                    f"tile={index + 1} denoise={denoise}"
+                                )
+                            cls._log_sigma_trace(
+                                "custom_sampler_advanced_input",
+                                sigmas,
+                                tile=index + 1,
+                                model_type=getattr(tbg.KSAMPLER, "model_type", None),
+                                sampler=str(getattr(tbg.KSAMPLER, "sampler_name", None) or getattr(tbg.KSAMPLER, "sampler", None)),
+                            )
+                            latent_output = SamplerCustomAdvanced.execute(
+                                Noise_RandomNoise(tbg.PROMPTER.output_seeds_js[index]),
+                                tbg.KSAMPLER.ideogram4_guider,
+                                tbg.KSAMPLER.sampler,
+                                sigmas,
+                                latent_image
+                            )[0]
 
                         elif tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
 

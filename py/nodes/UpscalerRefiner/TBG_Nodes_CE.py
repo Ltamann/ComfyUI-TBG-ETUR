@@ -161,6 +161,7 @@ class TBG_ETUR_Refiner_CE():
     MODEL_TYPE_SIZES = {
         'FLUX1': 1024,
         'FLUX2': 2048,
+        'Ideogram4': 2048,
         'FLUX1 Kontext': 1024,
         'Qwen Image': 1328,
         'Qwen Image Edit': 1328,

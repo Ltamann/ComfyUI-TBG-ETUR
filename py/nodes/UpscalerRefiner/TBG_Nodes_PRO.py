@@ -354,6 +354,7 @@ class TBG_ETUR_Refiner_PRO():
     MODEL_TYPE_SIZES = {
         'FLUX1': 1024,
         'FLUX2': 2048,
+        'Ideogram4': 2048,
         'FLUX1 Kontext': 1024,
         'Qwen Image': 1328,
         'Qwen Image Edit': 1328,
@@ -1448,6 +1449,7 @@ class TBG_ETUR_Labs_Refiner():
                     "label": "Overwrites the Sampler Name field",
                     "tooltip": "Plug in a custom sampler or ClownSampler here to override the sampler selected in the refiner node."
                 }),
+                "Ideogram4_Guider": ("GUIDER", {"label": "Ideogram4 Guider"}),
                 "cropped_positive": ("CONDITIONING", {
                     "tooltip": "Optional full-image positive conditioning for crop-aware tile sampling. Provide conditioning for the full reference/source image; ETUR crops the matching region for each tile and appends it to the tile's normal positive prompt/reference conditioning. It does not overwrite the normal conditioning. If you do not want to use the ETUR ControlNet pipe, you can use cropped conditioning in a similar way to Ultimate SD Upscale, including conditioning that already contains ReferenceLatent inputs."
                 }),
