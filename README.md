@@ -1,5 +1,5 @@
 # TBG ETUR Version 1.2 dropped - What's New?
-**TBG_Enhanced Tiled Upscaler & Refiner PRO V1.2**
+**TBG_Enhanced Tiled Upscaler & Refiner V1.2**
 Ideogram4,Qwen,Z-Image,Flux1+2,Sdxl snd Sd3 and more model familys
   ![TBG ETUR 1.2 Patreon image](img/TBG_ETUR_1.2.9_Patreon.png)
 **Keep in mind this is still a beta version, and we're updating and fine-tuning it daily. So do the same**
