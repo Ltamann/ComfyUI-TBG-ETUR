@@ -1,7 +1,7 @@
 [project]
 name = "tbg-etur"
 description = "TBG Enhanced Tiled Upscaler and Refiner Pro (Flux1 / Flux2 / Ideogram4 / Z-Image/ Qwen / Qwen Edit / SDXL / SD and more ... )allows upscaling images up to 200MP with advanced control and precision. It features Super Resolution multi step processing (structure + detail) and per-pixel denoising to control where creativity is applied. Individual tiles and objects can be enhanced with their own prompts, denoise, seeds, and ControlNet. Fast per-tile previews speed up interaction, and per-tile/object seeds ensure consistent results. TBG’s generative tile fusion ensures seamless tile joining, even at high denoise. SAM3 integration simplifies selection and refinement. Available in Pro and CE versions; Pro requires a membership: https://www.patreon.com/TB_LAAR"
-version = "1.2.11"
+version = "1.2.12"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dynamic = ["dependencies"]
