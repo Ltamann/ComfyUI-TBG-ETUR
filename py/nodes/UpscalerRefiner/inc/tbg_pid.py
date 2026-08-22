@@ -226,6 +226,28 @@ def pid_model_name_for_model_type(model_type):
     return "SuperResolution/PID Flux1 1K to 4K BF16"
 
 
+def pid_model_type_for_upscale_model(upscale_model_name, fallback="FLUX1"):
+    spec = PID_UPSCALE_SPECS.get(upscale_model_name) or refresh_pid_upscale_specs_from_hf().get(upscale_model_name)
+    if spec is None:
+        return fallback
+
+    model_name = str(spec.diffusion_model or "").lower()
+    vae_names = " ".join(str(v).lower() for v in (spec.source_vae_candidates or ()))
+    if "flux2" in model_name or "flux2" in vae_names:
+        return "FLUX2"
+    if "qwenimage" in model_name or "qwen_image" in vae_names or "qwen" in vae_names:
+        return "Qwen Image"
+    if "sdxl" in model_name or "sdxl" in vae_names:
+        return "SDXL"
+    if "sd3" in model_name or "sd3" in vae_names:
+        return "SD3"
+    if "z_image" in model_name or "z-image" in model_name or "zimage" in model_name:
+        return "Z-Image"
+    if "flux1" in model_name or "flux1" in vae_names:
+        return "FLUX1"
+    return fallback
+
+
 def is_pid_upscale_model(upscale_model_name):
     return upscale_model_name in PID_UPSCALE_SPECS or upscale_model_name in refresh_pid_upscale_specs_from_hf()
 
@@ -407,21 +429,26 @@ def _to_pid_device(tensor, device, dtype=None):
     return tensor.to(device=device, dtype=dtype or tensor.dtype)
 
 
-def _pid_output_base_latent(tile, output_vae, label="source tile", output_size=PID_OUTPUT_SIZE):
+def _pid_debug_log(enabled, message):
+    if bool(enabled):
+        print(message)
+
+
+def _pid_output_base_latent(tile, output_vae, label="source tile", output_size=PID_OUTPUT_SIZE, debug_enabled=False):
     if tile is None or not torch.is_tensor(tile):
-        print("[TBG PID] output latent: empty pixel-space latent (missing base tile)")
+        _pid_debug_log(debug_enabled, "[TBG PID] output latent: empty pixel-space latent (missing base tile)")
         return _empty_pid_latent(output_size, output_size)
     output_size = int(output_size or PID_OUTPUT_SIZE)
     base_image = nodes.ImageScale().upscale(tile, "bilinear", output_size, output_size, False)[0]
-    print(f"[TBG PID] output latent: 4x pixel-space base from {label}")
+    _pid_debug_log(debug_enabled, f"[TBG PID] output latent: 4x pixel-space base from {label}")
     return nodes.VAEEncode().encode(output_vae, base_image)[0]
 
 
-def _pid_output_context_latent(context_4x, output_vae, label="4x context tile"):
+def _pid_output_context_latent(context_4x, output_vae, label="4x context tile", debug_enabled=False):
     if context_4x is None or not torch.is_tensor(context_4x):
-        print("[TBG PID] output latent: empty pixel-space latent (missing 4x context)")
+        _pid_debug_log(debug_enabled, "[TBG PID] output latent: empty pixel-space latent (missing 4x context)")
         return _empty_pid_latent()
-    print(f"[TBG PID] output latent: pixel-space base from {label}")
+    _pid_debug_log(debug_enabled, f"[TBG PID] output latent: pixel-space base from {label}")
     return nodes.VAEEncode().encode(output_vae, context_4x)[0]
 
 
@@ -587,10 +614,11 @@ def select_pid_refiner_model(latent, model_type=None):
     return _pid_model_for_latent(latent, model_type=model_type)
 
 
-def _load_pid_model_and_clip(upscale_model_name, clip=None, pid_model=None, allow_hf_download=True):
+def _load_pid_model_and_clip(upscale_model_name, clip=None, pid_model=None, allow_hf_download=True, debug_enabled=False):
     spec = _pid_spec_or_refresh(upscale_model_name, force_refresh=False)
 
-    print(
+    _pid_debug_log(
+        debug_enabled,
         f"[TBG PID] loading {upscale_model_name}: "
         f"model={spec.diffusion_model} text_encoder={spec.text_encoder} latent_format={spec.latent_format}"
     )
@@ -608,29 +636,38 @@ def _load_pid_model_and_clip(upscale_model_name, clip=None, pid_model=None, allo
     )
     if pid_model is not None:
         model = pid_model
-        print(f"[TBG PID] using connected PID diffusion model override for {upscale_model_name}")
+        _pid_debug_log(debug_enabled, f"[TBG PID] using connected PID diffusion model override for {upscale_model_name}")
     else:
-        print(f"[TBG PID] local diffusion path: {_local_hf_model_path('diffusion_models', 'diffusion_models', spec.diffusion_model)}")
+        _pid_debug_log(
+            debug_enabled,
+            f"[TBG PID] local diffusion path: {_local_hf_model_path('diffusion_models', 'diffusion_models', spec.diffusion_model)}",
+        )
         model = nodes.UNETLoader().load_unet(diffusion_model, "default")[0]
     clip = clip if clip is not None else nodes.CLIPLoader().load_clip(text_encoder, type="pixeldit")[0]
     return spec, model, clip
 
 
-def _load_pid_runtime(upscale_model_name, clip=None, source_vae=None, sampler=None, sampler_name="lcm", scheduler="simple", steps=4, denoise=1.0, load_source_vae=True, pid_model=None, allow_hf_download=True):
-    spec, model, clip = _load_pid_model_and_clip(upscale_model_name, clip=clip, pid_model=pid_model, allow_hf_download=allow_hf_download)
+def _load_pid_runtime(upscale_model_name, clip=None, source_vae=None, sampler=None, sampler_name="lcm", scheduler="simple", steps=4, denoise=1.0, load_source_vae=True, pid_model=None, allow_hf_download=True, debug_enabled=False):
+    spec, model, clip = _load_pid_model_and_clip(
+        upscale_model_name,
+        clip=clip,
+        pid_model=pid_model,
+        allow_hf_download=allow_hf_download,
+        debug_enabled=debug_enabled,
+    )
     source_vae = source_vae if source_vae is not None else (_load_source_vae(spec) if load_source_vae else None)
     output_vae = nodes.VAELoader().load_vae("pixel_space")[0]
     sampler_source = "override input" if sampler is not None else f"dropdown '{sampler_name}'"
     sampler = sampler if sampler is not None else _load_pid_sampler(sampler_name)
-    print(f"[TBG PID] using sampler from {sampler_source}: {_sampler_debug_name(sampler)}")
+    _pid_debug_log(debug_enabled, f"[TBG PID] using sampler from {sampler_source}: {_sampler_debug_name(sampler)}")
     denoise = max(0.01, min(1.0, float(denoise)))
     sigmas = BasicScheduler.execute(model, scheduler, int(steps), denoise)[0]
     try:
         sigma_head = float(sigmas[0]) if len(sigmas) else 0.0
     except Exception:
         sigma_head = 0.0
-    print(f"[TBG PID] schedule steps={int(steps)} denoise={denoise:.2f} first_sigma={sigma_head:.4f}")
-    return SimpleNamespace(model=model, clip=clip, source_vae=source_vae, output_vae=output_vae, sampler=sampler, sigmas=sigmas, spec=spec)
+    _pid_debug_log(debug_enabled, f"[TBG PID] schedule steps={int(steps)} denoise={denoise:.2f} first_sigma={sigma_head:.4f}")
+    return SimpleNamespace(model=model, clip=clip, source_vae=source_vae, output_vae=output_vae, sampler=sampler, sigmas=sigmas, spec=spec, debug_enabled=bool(debug_enabled))
 
 
 def load_pid_refiner_runtime(latent, model_type=None, sampler_name=PID_DEFAULT_SAMPLER, scheduler="simple", steps=4, denoise=1.0, clip=None, pid_model=None, allow_hf_download=True):
@@ -686,7 +723,12 @@ def upscale_pid_tile_1024(tile, runtime, positive, negative, seed=0, degrade_sig
     output_base_latent = (
         _empty_pid_latent(runtime.spec.output_size, runtime.spec.output_size)
         if tile is None
-        else _pid_output_base_latent(tile, runtime.output_vae, output_size=runtime.spec.output_size)
+        else _pid_output_base_latent(
+            tile,
+            runtime.output_vae,
+            output_size=runtime.spec.output_size,
+            debug_enabled=getattr(runtime, "debug_enabled", False),
+        )
     )
     sampled = SamplerCustom.execute(
         runtime.model,
@@ -867,6 +909,7 @@ def run_pid_refiner_latent_decode(
             denoise=1.0,
         )
     runtime.cfg = float(cfg)
+    refiner_debug_enabled = bool(getattr(runtime, "debug_enabled", False))
     positive = nodes.CLIPTextEncode().encode(runtime.clip, prompt_text or "")[0]
     negative = nodes.ConditioningZeroOut().zero_out(positive)[0]
 
@@ -924,7 +967,8 @@ def run_pid_refiner_latent_decode(
     stitch_feather = int(PID_DEFAULT_STITCH_FEATHER * PID_SCALE)
     tile_specs = _pid_tile_specs(source_width, source_height, overlap=tile_overlap)
     if len(tile_specs) > 1:
-        print(
+        _pid_debug_log(
+            refiner_debug_enabled,
             "[TBG PID Refiner] tiled latent decode "
             f"source={source_width}x{source_height} "
             f"tiles={len(tile_specs)} overlap={tile_overlap}px "
@@ -933,7 +977,8 @@ def run_pid_refiner_latent_decode(
         )
     allow_region_color_lock = color_match_fn is not None and len(tile_specs) == 1
     if color_match_fn is not None and not allow_region_color_lock:
-        print(
+        _pid_debug_log(
+            refiner_debug_enabled,
             "[TBG PID Refiner] color lock deferred until stitched ETUR tile; "
             f"internal_regions={len(tile_specs)}"
         )
@@ -961,11 +1006,21 @@ def run_pid_refiner_latent_decode(
         if context_image_4x is not None:
             context_region = context_image_4x[:, out_y:out_y + out_h, out_x:out_x + out_w, :]
             context_region = _pad_tile_to_pid_output_size(context_region)
-            output_base_latent = _pid_output_context_latent(context_region, runtime.output_vae, "4x inpaint context tile")
+            output_base_latent = _pid_output_context_latent(
+                context_region,
+                runtime.output_vae,
+                "4x inpaint context tile",
+                debug_enabled=getattr(runtime, "debug_enabled", False),
+            )
         elif base_tile_image is not None:
             base_region = base_tile_image[:, y:y + tile_h, x:x + tile_w, :]
             base_region = _pad_tile_to_pid_size(base_region)
-            output_base_latent = _pid_output_base_latent(base_region, runtime.output_vae, "refiner sampled tile")
+            output_base_latent = _pid_output_base_latent(
+                base_region,
+                runtime.output_vae,
+                "refiner sampled tile",
+                debug_enabled=getattr(runtime, "debug_enabled", False),
+            )
         if torch.is_tensor(output_base_latent.get("samples")):
             output_base_latent["samples"] = output_base_latent["samples"].to(device=pid_device)
         if inpaint_mask_4x is not None:
@@ -1005,7 +1060,8 @@ def run_pid_refiner_latent_decode(
                 shift_y=int(shift_y_4x or 0),
                 fill_image=context_region[:, :out_h, :out_w, :] if context_region is not None else None,
             )
-            print(
+            _pid_debug_log(
+                refiner_debug_enabled,
                 "[TBG PID Refiner] decode spatial correction "
                 f"region {index + 1}/{len(tile_specs)} shift=({int(shift_x_4x or 0)},{int(shift_y_4x or 0)})px"
             )
@@ -1036,14 +1092,15 @@ def run_pid_refiner_latent_decode(
                     after_shift = _rgb_mean_shift_255(color_reference_4x, pid_tile)
                     debug_color_reference = color_reference_4x
                     debug_color_matched = pid_tile
-                    print(
+                    _pid_debug_log(
+                        refiner_debug_enabled,
                         "[TBG PID Refiner] color lock "
                         f"region {index + 1}/{len(tile_specs)} "
                         f"mean_shift_before={_format_rgb_shift(before_shift)} "
                         f"mean_shift_after={_format_rgb_shift(after_shift)}"
                     )
             except Exception as exc:
-                print(f"[TBG PID Refiner] color lock failed on region {index + 1}, using raw PiD tile: {exc}")
+                _pid_debug_log(refiner_debug_enabled, f"[TBG PID Refiner] color lock failed on region {index + 1}, using raw PiD tile: {exc}")
         if context_region is not None and mask_region is not None:
             context_crop = context_region[:, :out_h, :out_w, :]
             blend_mask = post_context_mask_region if post_context_mask_region is not None else mask_region
@@ -1051,7 +1108,8 @@ def run_pid_refiner_latent_decode(
             if segment_post_context_preserve:
                 mask_crop = mask_crop.clamp(0.0, 1.0)
                 debug_post_context_mask = mask_crop
-                print(
+                _pid_debug_log(
+                    refiner_debug_enabled,
                     "[TBG PID Refiner] segment post-context blend uses feathered segment mask "
                     f"region {index + 1}/{len(tile_specs)}"
                 )
@@ -1069,14 +1127,15 @@ def run_pid_refiner_latent_decode(
                         pid_tile = matched[:, :out_h, :out_w, :].to(device=pid_tile.device, dtype=pid_tile.dtype).clamp(0.0, 1.0)
                         after_shift = _rgb_mean_shift_255(color_reference_4x, pid_tile)
                         debug_post_context_matched = pid_tile
-                        print(
+                        _pid_debug_log(
+                            refiner_debug_enabled,
                             "[TBG PID Refiner] post-context color lock "
                             f"region {index + 1}/{len(tile_specs)} "
                             f"mean_shift_before={_format_rgb_shift(before_shift)} "
                             f"mean_shift_after={_format_rgb_shift(after_shift)}"
                         )
                 except Exception as exc:
-                    print(f"[TBG PID Refiner] post-context color lock failed on region {index + 1}: {exc}")
+                    _pid_debug_log(refiner_debug_enabled, f"[TBG PID Refiner] post-context color lock failed on region {index + 1}: {exc}")
         if debug_callback is not None:
             debug_callback(
                 index,
@@ -1089,7 +1148,7 @@ def run_pid_refiner_latent_decode(
             )
         pid_tiles.append(pid_tile)
         grid_specs.append((row, col, index, out_x, out_y, out_w, out_h))
-        print(f"[TBG PID Refiner] tile region {index + 1}/{len(tile_specs)} decoded with {sampler_name}")
+        _pid_debug_log(refiner_debug_enabled, f"[TBG PID Refiner] tile region {index + 1}/{len(tile_specs)} decoded with {sampler_name}")
 
     return _local_rebuild(
         pid_tiles,
@@ -1097,6 +1156,7 @@ def run_pid_refiner_latent_decode(
         output_width,
         output_height,
         stitch_feather=stitch_feather,
+        debug_enabled=refiner_debug_enabled,
     )
 
 
@@ -1329,7 +1389,35 @@ def _stabilize_pid_tile_from_reference(pid_tile, reference_tile, x, y, width, he
         pid_crop.device,
         pid_crop.dtype,
     )
-    blended = ref_crop * (1.0 - mask) + pid_crop * mask
+
+    # Preserve PiD high-frequency detail after VAE decode: only transfer a
+    # low-frequency color/luma field from the reference near tile borders.
+    pid_f = pid_crop.to(torch.float32).clamp(0.0, 1.0)
+    ref_f = ref_crop.to(torch.float32).clamp(0.0, 1.0)
+    height_i = int(pid_f.shape[1])
+    width_i = int(pid_f.shape[2])
+    low_h = max(32, min(192, int(round(height_i / 24.0))))
+    low_w = max(32, min(192, int(round(width_i / 24.0))))
+
+    pid_bchw = pid_f.permute(0, 3, 1, 2).contiguous()
+    ref_bchw = ref_f.permute(0, 3, 1, 2).contiguous()
+    low_pid = torch.nn.functional.interpolate(
+        torch.nn.functional.interpolate(pid_bchw, size=(low_h, low_w), mode="area"),
+        size=(height_i, width_i),
+        mode="bicubic",
+        align_corners=False,
+    )
+    low_ref = torch.nn.functional.interpolate(
+        torch.nn.functional.interpolate(ref_bchw, size=(low_h, low_w), mode="area"),
+        size=(height_i, width_i),
+        mode="bicubic",
+        align_corners=False,
+    )
+    border_authority = (1.0 - mask.to(torch.float32)).clamp(0.0, 1.0)
+    low_field = (low_ref - low_pid).clamp(-160.0 / 255.0, 160.0 / 255.0)
+    corrected = (pid_bchw + low_field * border_authority.permute(0, 3, 1, 2)).clamp(0.0, 1.0)
+    blended = corrected.permute(0, 2, 3, 1).contiguous().to(device=pid_crop.device, dtype=pid_crop.dtype)
+
     if tile_h == int(pid_tile.shape[1]) and tile_w == int(pid_tile.shape[2]):
         return blended
 
@@ -1350,7 +1438,7 @@ def _pid_rebuild_device(pid_tiles):
     return mm.intermediate_device()
 
 
-def gpu_pid_tile_rebuild(pid_tiles, grid_specs, width, height, stitch_feather=PID_DEFAULT_STITCH_FEATHER * PID_SCALE, label="TBG PID"):
+def gpu_pid_tile_rebuild(pid_tiles, grid_specs, width, height, stitch_feather=PID_DEFAULT_STITCH_FEATHER * PID_SCALE, label="TBG PID", debug_enabled=False):
     if not pid_tiles:
         raise ValueError("TBG PID tiled upscale did not produce any tiles.")
 
@@ -1361,31 +1449,53 @@ def gpu_pid_tile_rebuild(pid_tiles, grid_specs, width, height, stitch_feather=PI
     device = _pid_rebuild_device(pid_tiles)
     dtype = first_tile.dtype
     channels = first_tile.shape[-1]
-    result = torch.zeros((1, height, width, channels), dtype=dtype, device=device)
-    weight = torch.zeros((1, height, width, 1), dtype=dtype, device=device)
     feather = int(max(0, stitch_feather))
 
-    for tile, spec in zip(pid_tiles, grid_specs):
-        if tile is None:
-            continue
-        if not torch.is_tensor(tile):
-            raise ValueError(f"TBG PID tiled upscale expected tensor tile for rebuild, got {type(tile).__name__}.")
-        if tile.ndim == 3:
-            tile = tile.unsqueeze(0)
-        _, _, _, x, y, tile_w, tile_h = spec[:7]
-        x, y, tile_w, tile_h = int(x), int(y), int(tile_w), int(tile_h)
-        crop = tile[:, :tile_h, :tile_w, :].to(device=device, dtype=dtype, non_blocking=True)
-        blend = _tile_ownership_feather_mask(tile_w, tile_h, x, y, width, height, grid_specs, feather, device, dtype)
-        result[:, y:y + tile_h, x:x + tile_w, :] += crop * blend
-        weight[:, y:y + tile_h, x:x + tile_w, :] += blend
+    def rebuild_on_device(target_device):
+        result = torch.zeros((1, height, width, channels), dtype=dtype, device=target_device)
+        weight = torch.zeros((1, height, width, 1), dtype=dtype, device=target_device)
 
-    rebuilt = result / weight.clamp_min(1e-4)
-    print(f"[{label}] GPU/local feathered rebuild device={device} feather={feather}px canvas={width}x{height}")
-    return rebuilt
+        for tile, spec in zip(pid_tiles, grid_specs):
+            if tile is None:
+                continue
+            if not torch.is_tensor(tile):
+                raise ValueError(f"TBG PID tiled upscale expected tensor tile for rebuild, got {type(tile).__name__}.")
+            if tile.ndim == 3:
+                tile = tile.unsqueeze(0)
+            _, _, _, x, y, tile_w, tile_h = spec[:7]
+            x, y, tile_w, tile_h = int(x), int(y), int(tile_w), int(tile_h)
+            crop = tile[:, :tile_h, :tile_w, :].to(device=target_device, dtype=dtype, non_blocking=(target_device.type == "cuda"))
+            blend = _tile_ownership_feather_mask(tile_w, tile_h, x, y, width, height, grid_specs, feather, target_device, dtype)
+            result[:, y:y + tile_h, x:x + tile_w, :] += crop * blend
+            weight[:, y:y + tile_h, x:x + tile_w, :] += blend
+
+        return result / weight.clamp_min(1e-4)
+
+    try:
+        rebuilt = rebuild_on_device(device)
+        _pid_debug_log(debug_enabled, f"[{label}] GPU/local feathered rebuild device={device} feather={feather}px canvas={width}x{height}")
+        return rebuilt
+    except Exception as exc:
+        if device.type == "cuda" and mm.is_oom(exc):
+            mm.soft_empty_cache()
+            cpu_device = torch.device("cpu")
+            print(f"[{label}] GPU rebuild OOM on {device}; retrying on CPU RAM canvas={width}x{height}")
+            rebuilt = rebuild_on_device(cpu_device)
+            print(f"[{label}] CPU RAM feathered rebuild device={cpu_device} feather={feather}px canvas={width}x{height}")
+            return rebuilt
+        raise
 
 
-def _local_rebuild(pid_tiles, grid_specs, width, height, stitch_feather=PID_DEFAULT_STITCH_FEATHER * PID_SCALE):
-    return gpu_pid_tile_rebuild(pid_tiles, grid_specs, width, height, stitch_feather=stitch_feather, label="TBG PID")
+def _local_rebuild(pid_tiles, grid_specs, width, height, stitch_feather=PID_DEFAULT_STITCH_FEATHER * PID_SCALE, debug_enabled=False):
+    return gpu_pid_tile_rebuild(
+        pid_tiles,
+        grid_specs,
+        width,
+        height,
+        stitch_feather=stitch_feather,
+        label="TBG PID",
+        debug_enabled=debug_enabled,
+    )
 
 
 def _cpu_image(image):
@@ -1410,7 +1520,10 @@ def run_pid_tiled_upscale(
     stitch_feather=PID_DEFAULT_STITCH_FEATHER * PID_SCALE,
     degrade_sigma=0.1,
     color_match_fn=None,
+    pre_color_drift_fn=None,
+    post_decode_tile_fn=None,
     color_match_method=PID_DEFAULT_COLOR_MATCH,
+    defer_multi_tile_color_match=True,
     prompt_fn=None,
     sampler=None,
     sampler_name=PID_DEFAULT_SAMPLER,
@@ -1424,6 +1537,8 @@ def run_pid_tiled_upscale(
     pid_model_info=None,
     pid_model_type=None,
     allow_hf_download=True,
+    debug_tile_stage_fn=None,
+    debug_enabled=False,
 ):
     has_image = image is not None and torch.is_tensor(image)
     if image is not None and not torch.is_tensor(image):
@@ -1453,7 +1568,8 @@ def run_pid_tiled_upscale(
         if latent_source_size is not None:
             latent_width, latent_height = latent_source_size
             if original_width != latent_width or original_height != latent_height:
-                print(
+                _pid_debug_log(
+                    debug_enabled,
                     "[TBG PID] image/latent source size mismatch; "
                     f"resizing image {original_width}x{original_height} to latent source {latent_width}x{latent_height}"
                 )
@@ -1477,7 +1593,8 @@ def run_pid_tiled_upscale(
     overlap = PID_DEFAULT_OVERLAP
     stitch_feather = int(round(PID_DEFAULT_STITCH_FEATHER * pid_scale))
     tile_specs = _pid_tile_specs(norm_width, norm_height, overlap=overlap, input_size=pid_input_size)
-    print(
+    _pid_debug_log(
+        debug_enabled,
         "[TBG PID] fusion defaults "
         f"reference_margin={PID_DEFAULT_OVERLAP}px, "
         f"fusion_blur={PID_DEFAULT_STITCH_BLUR}px, "
@@ -1485,6 +1602,7 @@ def run_pid_tiled_upscale(
         f"color_match='{PID_DEFAULT_COLOR_MATCH}'"
     )
 
+    needs_latent_reference_decode = source_latent is not None and not has_image
     runtime = _load_pid_runtime(
         upscale_model_name,
         clip=clip,
@@ -1494,11 +1612,34 @@ def run_pid_tiled_upscale(
         steps=steps,
         denoise=denoise,
         sampler=sampler,
-        load_source_vae=source_latent is None,
+        load_source_vae=(source_latent is None) or needs_latent_reference_decode,
         pid_model=pid_model,
         allow_hf_download=allow_hf_download,
+        debug_enabled=debug_enabled,
     )
     runtime.cfg = float(cfg)
+    if needs_latent_reference_decode and normalized is None:
+        try:
+            decoded_reference = nodes.VAEDecode().decode(runtime.source_vae, source_latent)[0]
+            if torch.is_tensor(decoded_reference):
+                decoded_width = int(decoded_reference.shape[2])
+                decoded_height = int(decoded_reference.shape[1])
+                if decoded_width != original_width or decoded_height != original_height:
+                    decoded_reference = nodes.ImageScale().upscale(
+                        decoded_reference,
+                        "lanczos",
+                        original_width,
+                        original_height,
+                        False,
+                    )[0]
+                normalized, pre_scale = _resize_for_pid_minimum(decoded_reference, input_size=pid_input_size)
+                norm_height, norm_width = int(normalized.shape[1]), int(normalized.shape[2])
+                target_width = int(round(norm_width * pid_scale))
+                target_height = int(round(norm_height * pid_scale))
+                tile_specs = _pid_tile_specs(norm_width, norm_height, overlap=overlap, input_size=pid_input_size)
+                _pid_debug_log(debug_enabled, "[TBG PID] latent-only reference image decoded from source latent for color and drift correction")
+        except Exception as exc:
+            _pid_debug_log(debug_enabled, f"[TBG PID] latent-only reference decode failed, continuing without reference correction: {exc}")
     conditioning_cache = {}
 
     def get_conditioning(tile, index):
@@ -1509,7 +1650,7 @@ def run_pid_tiled_upscale(
                 if generated:
                     tile_prompt = "\n".join(p for p in (prompt_text or "", generated) if p)
             except Exception as exc:
-                print(f"[TBG PID VLM] Prompt generation failed on tile {index}, using base prompt: {exc}")
+                _pid_debug_log(debug_enabled, f"[TBG PID VLM] Prompt generation failed on tile {index}, using base prompt: {exc}")
         if tile_prompt not in conditioning_cache:
             positive = nodes.CLIPTextEncode().encode(runtime.clip, tile_prompt)[0]
             negative = nodes.ConditioningZeroOut().zero_out(positive)[0]
@@ -1519,16 +1660,36 @@ def run_pid_tiled_upscale(
     pid_tiles = []
     output_grid_specs = []
     stabilized_tiles = 0
-    allow_region_color_lock = color_match_fn is not None and len(tile_specs) == 1
-    if color_match_fn is not None and not allow_region_color_lock:
-        print(
+    drift_corrected_tiles = 0
+    color_corrected_tiles = 0
+    refiner_post_corrected_tiles = 0
+    has_reference_image = normalized is not None
+    has_tile_correction = color_match_fn is not None or pre_color_drift_fn is not None or post_decode_tile_fn is not None
+    allow_region_color_lock = has_reference_image and has_tile_correction and (
+        len(tile_specs) == 1 or not bool(defer_multi_tile_color_match)
+    )
+    if has_reference_image and has_tile_correction and not allow_region_color_lock:
+        _pid_debug_log(
+            debug_enabled,
             "[TBG PID] color correction deferred until stitched ETUR tile; "
             f"internal_regions={len(tile_specs)}"
         )
     for index, (row, col, x, y, tile_w, tile_h) in enumerate(tile_specs):
         tile_start = time.perf_counter()
-        tile = None if normalized is None else normalized[:, y:y + tile_h, x:x + tile_w, :]
-        pid_input = None if tile is None else _pad_tile_to_pid_size(tile, input_size=pid_input_size)
+        reference_tile_1x = None if normalized is None else normalized[:, y:y + tile_h, x:x + tile_w, :]
+        pid_input = None
+        if source_latent is None and reference_tile_1x is not None:
+            pid_input = _pad_tile_to_pid_size(reference_tile_1x, input_size=pid_input_size)
+        if debug_tile_stage_fn is not None:
+            try:
+                debug_tile_stage_fn("reference_tile_1x", index, reference_tile_1x, {
+                    "row": int(row), "col": int(col), "x": int(x), "y": int(y), "tile_w": int(tile_w), "tile_h": int(tile_h),
+                })
+                debug_tile_stage_fn("pid_input_padded_1x", index, pid_input, {
+                    "row": int(row), "col": int(col), "x": int(x), "y": int(y), "tile_w": int(tile_w), "tile_h": int(tile_h),
+                })
+            except Exception as exc:
+                _pid_debug_log(debug_enabled, f"[TBG PID] debug tile stage save failed before sampling on tile {index}: {exc}")
         positive, negative = get_conditioning(pid_input, index)
         pid_source_latent = _latent_tile_from_image_region(
             source_latent,
@@ -1553,14 +1714,74 @@ def run_pid_tiled_upscale(
         out_w = int(round(tile_w * pid_scale))
         out_h = int(round(tile_h * pid_scale))
         pid_tile = pid_tile[:, :out_h, :out_w, :]
+        if debug_tile_stage_fn is not None:
+            try:
+                debug_tile_stage_fn("raw_pid_tile_4x", index, pid_tile, {
+                    "row": int(row), "col": int(col), "out_x": int(round(x * pid_scale)), "out_y": int(round(y * pid_scale)),
+                    "out_w": int(out_w), "out_h": int(out_h),
+                })
+            except Exception as exc:
+                _pid_debug_log(debug_enabled, f"[TBG PID] debug tile stage save failed after sampling on tile {index}: {exc}")
         reference_tile = None
-        if tile is not None:
-            reference_tile = nodes.ImageScale().upscale(tile, "bilinear", out_w, out_h, False)[0]
-        if tile is not None and allow_region_color_lock and color_match_method and color_match_method != "none":
+        if reference_tile_1x is not None:
+            reference_tile = nodes.ImageScale().upscale(reference_tile_1x, "bilinear", out_w, out_h, False)[0]
+        if debug_tile_stage_fn is not None:
+            try:
+                debug_tile_stage_fn("reference_tile_4x", index, reference_tile, {
+                    "row": int(row), "col": int(col), "out_x": int(round(x * pid_scale)), "out_y": int(round(y * pid_scale)),
+                    "out_w": int(out_w), "out_h": int(out_h),
+                })
+            except Exception as exc:
+                _pid_debug_log(debug_enabled, f"[TBG PID] debug tile stage save failed for reference tile on tile {index}: {exc}")
+        if reference_tile is not None and allow_region_color_lock and post_decode_tile_fn is not None:
+            try:
+                post_result = post_decode_tile_fn(
+                    reference_tile,
+                    pid_tile,
+                    index,
+                    int(round(x * pid_scale)),
+                    int(round(y * pid_scale)),
+                    target_width,
+                    target_height,
+                    int(round(PID_DEFAULT_OVERLAP * pid_scale)),
+                )
+                if isinstance(post_result, tuple):
+                    pid_tile = post_result[0]
+                else:
+                    pid_tile = post_result
+                refiner_post_corrected_tiles += 1
+                if debug_tile_stage_fn is not None:
+                    try:
+                        debug_tile_stage_fn("post_decode_corrected_tile_4x", index, pid_tile, {
+                            "row": int(row), "col": int(col), "out_x": int(round(x * pid_scale)), "out_y": int(round(y * pid_scale)),
+                            "out_w": int(out_w), "out_h": int(out_h),
+                        })
+                    except Exception as exc:
+                        _pid_debug_log(debug_enabled, f"[TBG PID] debug tile stage save failed after post-decode correction on tile {index}: {exc}")
+            except Exception as exc:
+                _pid_debug_log(debug_enabled, f"[TBG PID] Refiner-style post PiD tile correction failed on tile {index}, using raw PID tile: {exc}")
+        elif reference_tile is not None and allow_region_color_lock and pre_color_drift_fn is not None:
+            try:
+                drift_result = pre_color_drift_fn(reference_tile, pid_tile, index)
+                if isinstance(drift_result, tuple):
+                    pid_tile = drift_result[0]
+                else:
+                    pid_tile = drift_result
+                drift_corrected_tiles += 1
+            except Exception as exc:
+                _pid_debug_log(debug_enabled, f"[TBG PID] Tile SIFT drift correction failed on tile {index}, using unaligned PID tile: {exc}")
+        if (
+            reference_tile is not None
+            and allow_region_color_lock
+            and color_match_fn is not None
+            and color_match_method
+            and color_match_method != "none"
+        ):
             try:
                 pid_tile = color_match_fn(reference_tile, pid_tile, color_match_method)
+                color_corrected_tiles += 1
             except Exception as exc:
-                print(f"[TBG PID] Tile color correction failed on tile {index}, using raw PID tile: {exc}")
+                _pid_debug_log(debug_enabled, f"[TBG PID] Tile color correction failed on tile {index}, using raw PID tile: {exc}")
         if reference_tile is not None:
             try:
                 pid_tile = _stabilize_pid_tile_from_reference(
@@ -1573,35 +1794,54 @@ def run_pid_tiled_upscale(
                     int(round(PID_DEFAULT_OVERLAP * pid_scale)),
                 )
                 stabilized_tiles += 1
+                if debug_tile_stage_fn is not None:
+                    try:
+                        debug_tile_stage_fn("border_stabilized_tile_4x", index, pid_tile, {
+                            "row": int(row), "col": int(col), "out_x": int(round(x * pid_scale)), "out_y": int(round(y * pid_scale)),
+                            "out_w": int(out_w), "out_h": int(out_h),
+                        })
+                    except Exception as exc:
+                        _pid_debug_log(debug_enabled, f"[TBG PID] debug tile stage save failed after border stabilization on tile {index}: {exc}")
             except Exception as exc:
-                print(f"[TBG PID] Tile reference border stabilization failed on tile {index}, keeping color-matched tile: {exc}")
+                _pid_debug_log(debug_enabled, f"[TBG PID] Tile reference border stabilization failed on tile {index}, keeping color-matched tile: {exc}")
         pid_tiles.append(pid_tile)
         output_grid_specs.append((row, col, index, int(round(x * pid_scale)), int(round(y * pid_scale)), out_w, out_h))
-        print(f"[TBG PID] tile {index + 1}/{len(tile_specs)} PID sample+decode complete ({time.perf_counter() - tile_start:.2f}s)")
+        _pid_debug_log(debug_enabled, f"[TBG PID] tile {index + 1}/{len(tile_specs)} PID sample+decode complete ({time.perf_counter() - tile_start:.2f}s)")
 
     if stabilized_tiles:
-        print(f"[TBG PID] reference border stabilization applied to {stabilized_tiles}/{len(tile_specs)} tiles")
+        _pid_debug_log(debug_enabled, f"[TBG PID] reference border stabilization applied to {stabilized_tiles}/{len(tile_specs)} tiles")
     elif normalized is None:
-        print("[TBG PID] reference border stabilization skipped for latent-only input")
+        _pid_debug_log(debug_enabled, "[TBG PID] reference border stabilization skipped for latent-only input")
+    if drift_corrected_tiles:
+        _pid_debug_log(debug_enabled, f"[TBG PID] per-tile SIFT drift correction applied to {drift_corrected_tiles}/{len(tile_specs)} tiles")
+    if color_corrected_tiles:
+        _pid_debug_log(debug_enabled, f"[TBG PID] per-tile color correction applied to {color_corrected_tiles}/{len(tile_specs)} tiles")
+    if refiner_post_corrected_tiles:
+        _pid_debug_log(debug_enabled, f"[TBG PID] refiner-style post PiD tile correction applied to {refiner_post_corrected_tiles}/{len(tile_specs)} tiles")
 
     reference_image = None
     if normalized is not None:
         reference_image = nodes.ImageScale().upscale(normalized, "bilinear", target_width, target_height, False)[0]
     rebuilt = None
-    if rebuild_fn is not None and reference_image is not None and not pid_gpu_final_rebuild_enabled():
+    if rebuild_fn is not None and reference_image is not None:
         try:
             rebuild_start = time.perf_counter()
-            rebuilt = rebuild_fn(_cpu_images(pid_tiles), output_grid_specs, _cpu_image(reference_image), target_width, target_height)
-            print(f"[TBG PID] worker pyramid rebuild complete ({time.perf_counter() - rebuild_start:.2f}s)")
+            rebuilt = rebuild_fn(pid_tiles, output_grid_specs, reference_image, target_width, target_height)
+            _pid_debug_log(debug_enabled, f"[TBG PID] refiner-style rebuild callback complete ({time.perf_counter() - rebuild_start:.2f}s)")
         except Exception as exc:
-            print(f"[TBG PID] Worker gpupyramid pre-upscale stitch failed, using local rebuild: {exc}")
-    elif rebuild_fn is not None and reference_image is not None:
-        print("[TBG PID] GPU final rebuild enabled; skipping CPU worker pyramid rebuild callback.")
+            _pid_debug_log(debug_enabled, f"[TBG PID] Refiner-style rebuild callback failed, using local rebuild: {exc}")
 
     if rebuilt is None:
         rebuild_start = time.perf_counter()
-        rebuilt = _local_rebuild(pid_tiles, output_grid_specs, target_width, target_height, stitch_feather=stitch_feather)
-        print(f"[TBG PID] local feathered rebuild complete feather={stitch_feather}px ({time.perf_counter() - rebuild_start:.2f}s)")
+        rebuilt = _local_rebuild(
+            pid_tiles,
+            output_grid_specs,
+            target_width,
+            target_height,
+            stitch_feather=stitch_feather,
+            debug_enabled=debug_enabled,
+        )
+        _pid_debug_log(debug_enabled, f"[TBG PID] local feathered rebuild complete feather={stitch_feather}px ({time.perf_counter() - rebuild_start:.2f}s)")
 
     if torch.is_tensor(rebuilt) and rebuilt.ndim == 3:
         rebuilt = rebuilt.unsqueeze(0)
@@ -1610,7 +1850,7 @@ def run_pid_tiled_upscale(
 
     cache_start = time.perf_counter()
     mm.soft_empty_cache()
-    print(f"[TBG PID] soft cache cleanup complete ({time.perf_counter() - cache_start:.2f}s)")
+    _pid_debug_log(debug_enabled, f"[TBG PID] soft cache cleanup complete ({time.perf_counter() - cache_start:.2f}s)")
     meta = {
         "pre_scale": pre_scale,
         "source_width": original_width,
@@ -1622,6 +1862,9 @@ def run_pid_tiled_upscale(
         "target_width": target_width,
         "target_height": target_height,
         "reference_border_stabilized_tiles": stabilized_tiles,
+        "tile_drift_corrected_tiles": drift_corrected_tiles,
+        "tile_color_corrected_tiles": color_corrected_tiles,
+        "refiner_post_corrected_tiles": refiner_post_corrected_tiles,
         "tile_count": len(pid_tiles),
         "grid_specs": output_grid_specs,
         "overlap": overlap,
@@ -1633,5 +1876,5 @@ def run_pid_tiled_upscale(
     if include_pid_tiles:
         copy_start = time.perf_counter()
         meta["pid_tiles"] = _cpu_images(pid_tiles)
-        print(f"[TBG PID] copied PID preview tiles to CPU ({time.perf_counter() - copy_start:.2f}s)")
+        _pid_debug_log(debug_enabled, f"[TBG PID] copied PID preview tiles to CPU ({time.perf_counter() - copy_start:.2f}s)")
     return rebuilt, meta

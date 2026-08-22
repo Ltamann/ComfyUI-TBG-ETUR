@@ -1,4 +1,6 @@
 import torch
+import torch.nn.functional as F
+import time
 
 
 def _drift_log(message):
@@ -6,6 +8,111 @@ def _drift_log(message):
         print(f"[TBG Drift Correction] {message}")
     except Exception:
         pass
+
+
+def _gpu_apply_supported(tensor):
+    return torch.is_tensor(tensor) and tensor.ndim in (3, 4) and tensor.device.type != "cpu"
+
+
+def _handle_gpu_apply_failure(exc):
+    if isinstance(exc, torch.OutOfMemoryError):
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        return
+    if "out of memory" in str(exc).lower() and torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+def _ensure_bhwc(tensor):
+    if tensor.ndim == 3:
+        return tensor.unsqueeze(0), True
+    return tensor, False
+
+
+def _normalize_identity_grid(height, width, device, dtype):
+    ys = torch.linspace(-1.0, 1.0, int(height), device=device, dtype=dtype)
+    xs = torch.linspace(-1.0, 1.0, int(width), device=device, dtype=dtype)
+    yy, xx = torch.meshgrid(ys, xs, indexing="ij")
+    return xx, yy
+
+
+def _gpu_apply_affine_to_tensor(sampled_tile, affine):
+    if not _gpu_apply_supported(sampled_tile):
+        raise RuntimeError("GPU affine apply requires a CUDA tensor.")
+
+    sampled_bhwc, squeeze = _ensure_bhwc(sampled_tile)
+    batch, height, width, channels = sampled_bhwc.shape
+    work = sampled_bhwc.permute(0, 3, 1, 2).contiguous()
+    dtype = work.dtype if work.dtype in (torch.float16, torch.float32, torch.float64) else torch.float32
+    work = work.to(dtype=dtype)
+    affine_t = torch.as_tensor(affine, device=work.device, dtype=work.dtype).view(2, 3)
+
+    xx, yy = _normalize_identity_grid(height, width, work.device, work.dtype)
+    px = ((xx + 1.0) * 0.5) * max(width - 1, 1)
+    py = ((yy + 1.0) * 0.5) * max(height - 1, 1)
+
+    src_x = affine_t[0, 0] * px + affine_t[0, 1] * py + affine_t[0, 2]
+    src_y = affine_t[1, 0] * px + affine_t[1, 1] * py + affine_t[1, 2]
+
+    if width > 1:
+        grid_x = (src_x / float(width - 1)) * 2.0 - 1.0
+    else:
+        grid_x = torch.zeros_like(src_x)
+    if height > 1:
+        grid_y = (src_y / float(height - 1)) * 2.0 - 1.0
+    else:
+        grid_y = torch.zeros_like(src_y)
+
+    grid = torch.stack((grid_x, grid_y), dim=-1).unsqueeze(0).expand(batch, -1, -1, -1)
+    warped = F.grid_sample(
+        work,
+        grid,
+        mode="bilinear",
+        padding_mode="reflection",
+        align_corners=True,
+    ).permute(0, 2, 3, 1).contiguous()
+    warped = warped.to(dtype=sampled_bhwc.dtype)
+    return warped[0] if squeeze else warped
+
+
+def _gpu_apply_flow_to_tensor(sampled_tile, flow):
+    if not _gpu_apply_supported(sampled_tile):
+        raise RuntimeError("GPU flow apply requires a CUDA tensor.")
+
+    sampled_bhwc, squeeze = _ensure_bhwc(sampled_tile)
+    batch, height, width, channels = sampled_bhwc.shape
+    work = sampled_bhwc.permute(0, 3, 1, 2).contiguous()
+    dtype = work.dtype if work.dtype in (torch.float16, torch.float32, torch.float64) else torch.float32
+    work = work.to(dtype=dtype)
+    flow_t = torch.as_tensor(flow, device=work.device, dtype=work.dtype)
+    if flow_t.ndim != 3 or tuple(flow_t.shape[:2]) != (height, width) or int(flow_t.shape[2]) != 2:
+        raise RuntimeError("GPU flow apply received an invalid flow shape.")
+
+    xx, yy = _normalize_identity_grid(height, width, work.device, work.dtype)
+    px = ((xx + 1.0) * 0.5) * max(width - 1, 1)
+    py = ((yy + 1.0) * 0.5) * max(height - 1, 1)
+    src_x = px + flow_t[..., 0]
+    src_y = py + flow_t[..., 1]
+
+    if width > 1:
+        grid_x = (src_x / float(width - 1)) * 2.0 - 1.0
+    else:
+        grid_x = torch.zeros_like(src_x)
+    if height > 1:
+        grid_y = (src_y / float(height - 1)) * 2.0 - 1.0
+    else:
+        grid_y = torch.zeros_like(src_y)
+
+    grid = torch.stack((grid_x, grid_y), dim=-1).unsqueeze(0).expand(batch, -1, -1, -1)
+    warped = F.grid_sample(
+        work,
+        grid,
+        mode="bilinear",
+        padding_mode="reflection",
+        align_corners=True,
+    ).permute(0, 2, 3, 1).contiguous()
+    warped = warped.to(dtype=sampled_bhwc.dtype)
+    return warped[0] if squeeze else warped
 
 
 def sift_tensor_to_uint8_rgb(image):
@@ -109,10 +216,12 @@ def _apply_sift_affine_correction(reference_tile, sampled_tile, index=None, enha
         return sampled_tile, info
 
     corrected_images = []
+    accepted_ops = []
     any_changed = False
     total_matches = 0
     total_inliers = 0
     last_reason = "no_batches"
+    apply_mode = "cpu_fallback"
     def make_attempts():
         attempts = [
             {
@@ -546,24 +655,25 @@ def _apply_sift_affine_correction(reference_tile, sampled_tile, index=None, enha
             except Exception:
                 pass
 
-            accepted = (
-                corrected,
-                (
+            accepted = {
+                "corrected": corrected,
+                "reason": (
                     f"corrected_affine estimator={estimator_name} attempt={attempt_name} inlier_ratio={inlier_ratio:.4f} "
                     f"spread={spread_x:.1f}x{spread_y:.1f} "
                     f"scale={scale_x:.4f},{scale_y:.4f} "
                     f"rot={rotation_deg:.3f} shear={shear:.4f} shift={translation:.2f} corner={corner_shift:.2f}"
                 ),
-                len(good_matches),
-                inliers,
-            )
+                "matches": len(good_matches),
+                "inliers": inliers,
+                "affine": affine.copy(),
+            }
             break
 
         total_matches += batch_matches
         total_inliers += batch_inliers
         if accepted is None:
             if enhanced:
-                corrected, phase_info = _repeat_translation_alignment(ref_rgb, sample_rgb)
+                corrected, phase_info = _bounded_full_resolution_translation_alignment(ref_rgb, sample_rgb)
                 corrected_images.append(corrected)
                 any_changed = any_changed or bool(phase_info.get("changed", False))
                 last_reason = f"{phase_info.get('reason', 'phase_translation')} after sift:{batch_last_reason}"
@@ -572,9 +682,10 @@ def _apply_sift_affine_correction(reference_tile, sampled_tile, index=None, enha
                 last_reason = batch_last_reason
             continue
 
-        corrected_images.append(accepted[0])
+        corrected_images.append(accepted["corrected"])
+        accepted_ops.append(("affine", accepted["affine"]))
         any_changed = True
-        last_reason = accepted[1]
+        last_reason = accepted["reason"]
 
     if not any_changed:
         info.update({
@@ -584,14 +695,37 @@ def _apply_sift_affine_correction(reference_tile, sampled_tile, index=None, enha
         })
         return sampled_tile, info
 
-    corrected_np = np.stack(corrected_images, axis=0)
-    corrected_tensor = torch.from_numpy(corrected_np).to(
-        device=sampled_bhwc.device,
-        dtype=torch.float32,
-    ) / 255.0
-    corrected_tensor = corrected_tensor.to(dtype=sampled_bhwc.dtype)
-    if int(sampled_bhwc.shape[-1]) > 3:
-        corrected_tensor = torch.cat([corrected_tensor, sampled_bhwc[..., 3:]], dim=-1)
+    corrected_tensor = None
+    if _gpu_apply_supported(sampled_bhwc) and len(accepted_ops) == int(sampled_bhwc.shape[0]):
+        try:
+            gpu_batches = []
+            for batch_index, (op_name, op_value) in enumerate(accepted_ops):
+                sample_tensor = sampled_bhwc[batch_index:batch_index + 1]
+                if op_name == "affine":
+                    gpu_batches.append(_gpu_apply_affine_to_tensor(sample_tensor, op_value))
+                else:
+                    raise RuntimeError(f"Unsupported drift op '{op_name}' for GPU apply.")
+            corrected_tensor = torch.cat(gpu_batches, dim=0).to(dtype=sampled_bhwc.dtype)
+            apply_mode = "gpu"
+        except Exception as exc:
+            _handle_gpu_apply_failure(exc)
+            _drift_log(
+                f"{'tile ' + str(index + 1) if isinstance(index, int) else 'standalone'}: "
+                f"solve=cpu apply=cpu_fallback reason=gpu_affine_apply_failed:{type(exc).__name__}"
+            )
+            corrected_tensor = None
+
+    if corrected_tensor is None:
+        corrected_np = np.stack(corrected_images, axis=0)
+        corrected_tensor = torch.from_numpy(corrected_np).to(
+            device=sampled_bhwc.device,
+            dtype=torch.float32,
+        ) / 255.0
+        corrected_tensor = corrected_tensor.to(dtype=sampled_bhwc.dtype)
+        if int(sampled_bhwc.shape[-1]) > 3:
+            corrected_tensor = torch.cat([corrected_tensor, sampled_bhwc[..., 3:]], dim=-1)
+        apply_mode = "cpu_fallback"
+
     if sampled_original_ndim == 3:
         corrected_tensor = corrected_tensor[0]
     info.update({
@@ -599,6 +733,8 @@ def _apply_sift_affine_correction(reference_tile, sampled_tile, index=None, enha
         "reason": last_reason,
         "matches": total_matches,
         "inliers": total_inliers,
+        "solve": "cpu",
+        "apply": apply_mode,
     })
     return corrected_tensor.clamp(0.0, 1.0), info
 
@@ -745,6 +881,10 @@ def _weighted_translation_search(reference_rgb, sample_rgb, border_priority=True
         label = "global_translation_search"
     max_shift = int(max(8, min(48, round(float(min(height, width)) * 0.047))))
     best = None
+    candidate_count = 0
+    started_at = time.perf_counter()
+    deadline = started_at + 2.0
+    timed_out = False
     for step in (4, 2, 1):
         if best is None:
             x_values = range(-max_shift, max_shift + 1, step)
@@ -757,6 +897,10 @@ def _weighted_translation_search(reference_rgb, sample_rgb, border_priority=True
             for dy in y_values:
                 if abs(dx) > max_shift or abs(dy) > max_shift:
                     continue
+                candidate_count += 1
+                if time.perf_counter() >= deadline:
+                    timed_out = True
+                    break
                 affine = np.float32([[1.0, 0.0, float(dx)], [0.0, 1.0, float(dy)]])
                 warped_high = cv2.warpAffine(sample_high, affine, (width, height), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
                 warped_edge = cv2.warpAffine(sample_edge, affine, (width, height), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
@@ -769,6 +913,10 @@ def _weighted_translation_search(reference_rgb, sample_rgb, border_priority=True
                 score += float((dx * dx + dy * dy) ** 0.5) * 0.0008
                 if best is None or score < best[0]:
                     best = (score, int(dx), int(dy))
+            if timed_out:
+                break
+        if timed_out:
+            break
 
     _, dx, dy = best or (0.0, 0, 0)
     affine = np.float32([[1.0, 0.0, float(dx)], [0.0, 1.0, float(dy)]])
@@ -781,7 +929,15 @@ def _weighted_translation_search(reference_rgb, sample_rgb, border_priority=True
     )
     return corrected, {
         "changed": True,
-        "reason": f"{label} dx={dx:.2f} dy={dy:.2f} max={max_shift}",
+        "reason": (
+            f"{label} dx={dx:.2f} dy={dy:.2f} max={max_shift} "
+            f"candidates={candidate_count} timed_out={timed_out}"
+        ),
+        "dx": float(dx),
+        "dy": float(dy),
+        "candidate_count": candidate_count,
+        "timed_out": timed_out,
+        "elapsed_ms": (time.perf_counter() - started_at) * 1000.0,
     }
 
 
@@ -800,6 +956,62 @@ def _repeat_translation_alignment(reference_rgb, sample_rgb):
         if best is None or score < best[0]:
             best = (score, corrected, info)
     return best[1], best[2]
+
+
+def _bounded_full_resolution_translation_alignment(reference_rgb, sample_rgb, max_dimension=384):
+    import cv2
+    import numpy as np
+
+    height, width = reference_rgb.shape[:2]
+    preview_scale = min(1.0, float(max_dimension) / float(max(height, width)))
+    if preview_scale < 1.0:
+        preview_width = max(16, int(round(width * preview_scale)))
+        preview_height = max(16, int(round(height * preview_scale)))
+        reference_preview = cv2.resize(
+            reference_rgb,
+            (preview_width, preview_height),
+            interpolation=cv2.INTER_AREA,
+        )
+        sample_preview = cv2.resize(
+            sample_rgb,
+            (preview_width, preview_height),
+            interpolation=cv2.INTER_AREA,
+        )
+    else:
+        preview_width = width
+        preview_height = height
+        reference_preview = reference_rgb
+        sample_preview = sample_rgb
+
+    _, estimate_info = _repeat_translation_alignment(reference_preview, sample_preview)
+    preview_dx = float(estimate_info.get("dx", 0.0))
+    preview_dy = float(estimate_info.get("dy", 0.0))
+    dx = preview_dx * float(width) / float(preview_width)
+    dy = preview_dy * float(height) / float(preview_height)
+    affine = np.float32([[1.0, 0.0, dx], [0.0, 1.0, dy]])
+    corrected = cv2.warpAffine(
+        sample_rgb,
+        affine,
+        (width, height),
+        flags=cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_REFLECT_101,
+    )
+    estimate_reason = str(estimate_info.get("reason", "translation_search"))
+    estimate_info.update({
+        "changed": True,
+        "reason": (
+            f"{estimate_reason} preview={preview_width}x{preview_height} "
+            f"full_shift dx={dx:.2f} dy={dy:.2f}"
+        ),
+        "preview_width": preview_width,
+        "preview_height": preview_height,
+        "preview_dx": preview_dx,
+        "preview_dy": preview_dy,
+        "dx": dx,
+        "dy": dy,
+        "full_resolution_apply": True,
+    })
+    return corrected, estimate_info
 
 
 def _luma_mad(a, b, mask=None):
@@ -974,9 +1186,11 @@ def _apply_reverse_flow_fallback(reference_tile, sampled_tile, level=2):
         return sampled_tile, info
 
     corrected_images = []
+    accepted_ops = []
     any_changed = False
     last_reason = "no_accepted_flow"
     accepted_count = 0
+    apply_mode = "cpu_fallback"
     for batch_index in range(int(sampled_np.shape[0])):
         ref_rgb = reference_np[batch_index]
         sample_rgb = sampled_np[batch_index]
@@ -988,7 +1202,7 @@ def _apply_reverse_flow_fallback(reference_tile, sampled_tile, level=2):
             continue
         masks = _border_masks(height, width)
         baseline = _alignment_metrics(sample_rgb, ref_rgb, masks)
-        include_deepflow = int(level) >= 4
+        include_deepflow = False
         candidates = []
         rgb_features = [
             ("gray", _gray_feature(ref_rgb, "gray"), _gray_feature(sample_rgb, "gray")),
@@ -1038,7 +1252,7 @@ def _apply_reverse_flow_fallback(reference_tile, sampled_tile, level=2):
                             score = _candidate_score(metrics, baseline) + metrics.get("flow_deform_p95", 0.0) * 0.35
                             improves = score < 6.0
                             if strict or aggregate or improves:
-                                candidates.append((strict, aggregate, score, corrected, metrics))
+                                candidates.append((strict, aggregate, score, corrected, metrics, flow.copy()))
             if any(candidate[0] for candidate in candidates):
                 break
 
@@ -1048,8 +1262,9 @@ def _apply_reverse_flow_fallback(reference_tile, sampled_tile, level=2):
             continue
 
         candidates.sort(key=lambda item: (not item[0], not item[1], item[2]))
-        _, _, _, best_image, best_metrics = candidates[0]
+        _, _, _, best_image, best_metrics, best_flow = candidates[0]
         corrected_images.append(best_image)
+        accepted_ops.append(("flow", best_flow))
         any_changed = True
         accepted_count += 1
         last_reason = (
@@ -1066,20 +1281,45 @@ def _apply_reverse_flow_fallback(reference_tile, sampled_tile, level=2):
         info["reason"] = last_reason
         return sampled_tile, info
 
-    corrected_np = np.stack(corrected_images, axis=0)
-    corrected_tensor = torch.from_numpy(corrected_np).to(
-        device=sampled_bhwc.device,
-        dtype=torch.float32,
-    ) / 255.0
-    corrected_tensor = corrected_tensor.to(dtype=sampled_bhwc.dtype)
-    if int(sampled_bhwc.shape[-1]) > 3:
-        corrected_tensor = torch.cat([corrected_tensor, sampled_bhwc[..., 3:]], dim=-1)
+    corrected_tensor = None
+    if _gpu_apply_supported(sampled_bhwc) and len(accepted_ops) == int(sampled_bhwc.shape[0]):
+        try:
+            gpu_batches = []
+            for batch_index, (op_name, op_value) in enumerate(accepted_ops):
+                sample_tensor = sampled_bhwc[batch_index:batch_index + 1]
+                if op_name == "flow":
+                    gpu_batches.append(_gpu_apply_flow_to_tensor(sample_tensor, op_value))
+                else:
+                    raise RuntimeError(f"Unsupported drift op '{op_name}' for GPU apply.")
+            corrected_tensor = torch.cat(gpu_batches, dim=0).to(dtype=sampled_bhwc.dtype)
+            apply_mode = "gpu"
+        except Exception as exc:
+            corrected_tensor = None
+            _handle_gpu_apply_failure(exc)
+            _drift_log(
+                f"{'tile ' + str(index + 1) if isinstance(index, int) else 'standalone'}: "
+                f"solve=cpu apply=cpu_fallback reason=gpu_flow_apply_failed:{type(exc).__name__}"
+            )
+
+    if corrected_tensor is None:
+        corrected_np = np.stack(corrected_images, axis=0)
+        corrected_tensor = torch.from_numpy(corrected_np).to(
+            device=sampled_bhwc.device,
+            dtype=torch.float32,
+        ) / 255.0
+        corrected_tensor = corrected_tensor.to(dtype=sampled_bhwc.dtype)
+        if int(sampled_bhwc.shape[-1]) > 3:
+            corrected_tensor = torch.cat([corrected_tensor, sampled_bhwc[..., 3:]], dim=-1)
+        apply_mode = "cpu_fallback"
+
     if sampled_original_ndim == 3:
         corrected_tensor = corrected_tensor[0]
     info.update({
         "changed": True,
         "reason": last_reason,
         "accepted": accepted_count,
+        "solve": "cpu",
+        "apply": apply_mode,
     })
     return corrected_tensor.clamp(0.0, 1.0), info
 
@@ -1106,7 +1346,8 @@ def apply_sift_drift_correction(reference_tile, sampled_tile, index=None, mode="
         _drift_log(
             f"{label}: done changed={bool(sift_info.get('changed', False))} "
             f"stage=SIFT reason={sift_info.get('reason', 'unknown')} "
-            f"matches={sift_info.get('matches', 0)} inliers={sift_info.get('inliers', 0)}"
+            f"matches={sift_info.get('matches', 0)} inliers={sift_info.get('inliers', 0)} "
+            f"solve={sift_info.get('solve', 'cpu')} apply={sift_info.get('apply', 'cpu_fallback')}"
         )
         return corrected, sift_info
 
@@ -1120,7 +1361,10 @@ def apply_sift_drift_correction(reference_tile, sampled_tile, index=None, mode="
     flow_info["matches"] = sift_info.get("matches", 0)
     flow_info["inliers"] = sift_info.get("inliers", 0)
     if bool(flow_info.get("changed", False)):
-        _drift_log(f"{label}: done changed=True stage=fallback reason={flow_info.get('reason', 'unknown')}")
+        _drift_log(
+            f"{label}: done changed=True stage=fallback reason={flow_info.get('reason', 'unknown')} "
+            f"solve={flow_info.get('solve', 'cpu')} apply={flow_info.get('apply', 'cpu_fallback')}"
+        )
         return flow_corrected, flow_info
     flow_info["reason"] = f"{flow_info.get('reason', 'flow_failed')} after sift:{sift_info.get('reason', 'unknown')}"
     _drift_log(f"{label}: done changed=False reason={flow_info.get('reason', 'unknown')}")

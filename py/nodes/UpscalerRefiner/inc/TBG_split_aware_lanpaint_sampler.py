@@ -33,7 +33,6 @@ import latent_preview
 import math
 import comfy.utils
 from ....vendor.LanPaint.lanpaint import LanPaint
-from comfy.model_base import ModelType
 
 from .TBG_sampler_split_aware import TBGKSampler as TBGKSampler_Normal
 from . import flux2_differential
@@ -86,6 +85,34 @@ class TBGKSampler():
         # Hardcoded LanPaint settings
         self.lanpaint_lambda = 16.0
         self.lanpaint_prompt_mode = "Image First"
+        self.lanpaint_steps = 5
+
+    def create_denoise_mask_wrapper(self, original_denoise_mask_fn):
+        def wrapper(sigma, denoise_mask, extra_options):
+            original_sigmas = extra_options.get("sigmas")
+            extra_options["sigmas"] = self.full_sigmas
+            if original_denoise_mask_fn is not None:
+                result = original_denoise_mask_fn(sigma, denoise_mask, extra_options)
+            else:
+                result = denoise_mask
+            if original_sigmas is not None:
+                extra_options["sigmas"] = original_sigmas
+            return result
+
+        return wrapper
+
+    def _run_lanpaint(self, self_x0, x, sigma, latent_mask, model_options, seed):
+        flow_t = sigma
+        abt = (1 - flow_t) ** 2 / ((1 - flow_t) ** 2 + flow_t ** 2)
+        ve_sigma = flow_t / (1 - flow_t)
+        paint = LanPaint(
+            self_x0.inner_model, self.lanpaint_steps, 15.0,
+            self.lanpaint_lambda, 1.0, 0.2, IS_FLOW=True,
+        )
+        return paint(
+            x, self_x0.latent_image, self_x0.noise, sigma, latent_mask,
+            (ve_sigma, abt, flow_t), model_options, seed,
+        )
 
 
 
@@ -113,7 +140,7 @@ class TBGKSampler():
             else:
                 return sigma_interpolated, sigma
 
-        def model_call(self_x0, x, sigma, model_options, seed, *args, **kwargs):
+        def model_call(self_x0, x, sigma, model_options, seed, *args, lanpaint_mask=None, **kwargs):
             step_divisor = max(1, int(math.ceil(self.steps / 3)))
             if detail_enhancer != 0 and self.total_step_count % step_divisor == 0 and self.total_step_count > 2:
                 sigma_1, sigma_2 = get_interpolated_sigmas(sigma, detail_enhancer)
@@ -125,6 +152,10 @@ class TBGKSampler():
                     out = out1 * 0.3 + out2 * 0.7
                 return out
             else:
+                if lanpaint_mask is not None:
+                    return self._run_lanpaint(
+                        self_x0, x, sigma, lanpaint_mask, model_options, seed
+                    )
                 out = self._call_model_function(self_x0, x, sigma, model_options, seed, *args, **kwargs)
                 return out
 
@@ -142,6 +173,7 @@ class TBGKSampler():
 
         def patched_inpaint_call_tbg(self_x0, x, sigma, denoise_mask,
                                  model_options={}, seed=None, *args, **kwargs):
+            latent_mask = None
             if self.step_count == 0 and self._state is not None:
                 if "noise" in self._state:
                     self_x0.noise = self._state["noise"]
@@ -218,38 +250,13 @@ class TBGKSampler():
 
             # MODEL CALL SECTION - Hardcoded LanPaint bidirectional guidance
             if latent_mask is not None:
-                # Get CFG scales (hardcoded logic)
-                cfg = getattr(self_x0.inner_model, 'cfg', 1.0)
-                cfg_big = cfg  # Hardcoded: Image First mode
-
-                # First prediction with normal CFG
-                out_normal = model_call(self_x0, x, sigma, model_options, seed, args, kwargs)
-
-                # Second prediction with cfg_big
-                # Temporarily modify the inner model's CFG
-                if hasattr(self_x0.inner_model, 'cfg'):
-                    original_cfg = self_x0.inner_model.cfg
-                    self_x0.inner_model.cfg = cfg_big
-
-                out_big = model_call(self_x0, x, sigma, model_options, seed, args, kwargs)
-
-                # Restore original CFG
-                if hasattr(self_x0.inner_model, 'cfg'):
-                    self_x0.inner_model.cfg = original_cfg
-
-                # Hardcoded bidirectional guidance blending
-                lamb = 16.0  # LanPaint_Lambda
-                y = self_x0.latent_image
-
-                # Blended output for masked region
-                blended_masked = (1 - lamb) * y + lamb * out_big
-
-                # Final output combines unmasked and masked regions
-                out = out_normal * (1 - latent_mask) + blended_masked * latent_mask
+                out = self._run_lanpaint(
+                    self_x0, x, sigma, latent_mask, model_options, seed
+                )
 
             else:
                 # Original TBG behavior
-                out = model_call(self_x0, x, sigma, model_options, seed, args, kwargs)
+                out = model_call(self_x0, x, sigma, model_options, seed, args, kwargs, lanpaint_mask=latent_mask)
 
             # Apply mask blending if inpainting
             if flux2_active:
@@ -315,38 +322,13 @@ class TBGKSampler():
 
             # MODEL CALL SECTION - Hardcoded LanPaint bidirectional guidance
             if latent_mask is not None:
-                # Get CFG scales (hardcoded logic)
-                cfg = getattr(self_x0.inner_model, 'cfg', 1.0)
-                cfg_big = cfg  # Hardcoded: Image First mode
-
-                # First prediction with normal CFG
-                out_normal = model_call(self_x0, x, sigma, model_options, seed, args, kwargs)
-
-                # Second prediction with cfg_big
-                # Temporarily modify the inner model's CFG
-                if hasattr(self_x0.inner_model, 'cfg'):
-                    original_cfg = self_x0.inner_model.cfg
-                    self_x0.inner_model.cfg = cfg_big
-
-                out_big = model_call(self_x0, x, sigma, model_options, seed, args, kwargs)
-
-                # Restore original CFG
-                if hasattr(self_x0.inner_model, 'cfg'):
-                    self_x0.inner_model.cfg = original_cfg
-
-                # Hardcoded bidirectional guidance blending
-                lamb = 16.0  # LanPaint_Lambda
-                y = self_x0.latent_image
-
-                # Blended output for masked region
-                blended_masked = (1 - lamb) * y + lamb * out_big
-
-                # Final output combines unmasked and masked regions
-                out = out_normal * (1 - latent_mask) + blended_masked * latent_mask
+                out = self._run_lanpaint(
+                    self_x0, x, sigma, latent_mask, model_options, seed
+                )
 
             else:
                 # Original TBG behavior
-                out = model_call(self_x0, x, sigma, model_options, seed, args, kwargs)
+                out = model_call(self_x0, x, sigma, model_options, seed, args, kwargs, lanpaint_mask=latent_mask)
 
             # Apply mask blending if inpainting
             if flux2_active:
@@ -371,19 +353,21 @@ class TBGKSampler():
             flux2_active, x, denoise_mask, flux2_post_mask = flux2_differential.begin_step(
                 self, self_x0, x, sigma, denoise_mask, model_options
             )
+            latent_mask = None
             if (
                 not flux2_active
                 and inpaint_start <= self.total_step_count <= inpaint_end
                 and denoise_mask is not None
             ):
-                denoise_mask = self._apply_denoise_mask(model_options, sigma, denoise_mask, self_x0.inner_model)
+                if "denoise_mask_function" in model_options:
+                    denoise_mask = self._apply_denoise_mask(model_options, sigma, denoise_mask, self_x0.inner_model)
                 latent_mask, denoise_mask = _apply_inpaint_blending_where(denoise_mask, sigma, better_inpainting)
                 x = x * denoise_mask + self_x0.inner_model.inner_model.scale_latent_inpaint(
                     x=x, sigma=sigma, noise=self_x0.noise, latent_image=self_x0.latent_image
                 ) * latent_mask
             if sharpener != 0 and self.total_step_count < self.steps - 3:
                 x_anterior = x
-            out = model_call(self_x0, x, sigma, model_options, seed,*args, **kwargs)
+            out = model_call(self_x0, x, sigma, model_options, seed,*args, **kwargs, lanpaint_mask=latent_mask)
             if flux2_active:
                 out = flux2_differential.finish_step(self, self_x0, out, flux2_post_mask)
             elif denoise_mask is not None and inpaint_start <= self.total_step_count <= inpaint_end:
@@ -473,7 +457,7 @@ class TBGKSampler():
             )
         sample_denoise = denoise
         print(f"[TBG Differential Diffusion] lanpaint_sampler_hook_present={self.original_denoise_mask_fn is not None}")
-        mask_wrapper = TBGKSampler_Normal.create_denoise_mask_wrapper(self.original_denoise_mask_fn)
+        mask_wrapper = self.create_denoise_mask_wrapper(self.original_denoise_mask_fn)
         self.model.set_model_denoise_mask_function(mask_wrapper)
         is_split_pass = start_at_step > 0 or self._state is not None
         original_call = KSamplerX0Inpaint.__call__
@@ -483,8 +467,12 @@ class TBGKSampler():
         KSamplerX0Inpaint.__call__ = inpaint_patch
 
         try:
-            if self._flux2_diff_config is not None and hasattr(sampler_name, "sample"):
-                print("[TBG Flux2 Differential] lanpaint sampler using SAMPLER object path")
+            if hasattr(sampler_name, "sample"):
+                print(
+                    "[TBG LanPaint] using SAMPLER object path "
+                    f"sigma_max={float(self.full_sigmas[0]):.6f} "
+                    f"sigma_count={len(self.full_sigmas)}"
+                )
                 samples = comfy.sample.sample_custom(
                     self.model,
                     noise=noise,
@@ -582,7 +570,7 @@ class TBG_KSamplerAdvancedSplitAware_Copy:
     def sample(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler,
                positive, negative, latent_image, start_at_step, end_at_step, denoise,
                return_with_leftover_noise, inpaint_end, inpaint_start,smoother_sharper,detail_enhancer,
-               sampler_state=None):
+               sampler_state=None, sigmas=None, lanpaint_steps=5):
         better_inpainting = False
         device = model.load_device
         _debug_sampler_conditioning("lanpaint_split_aware", positive, negative)
@@ -604,6 +592,7 @@ class TBG_KSamplerAdvancedSplitAware_Copy:
             device=device,
             initial_state=sampler_state,
         )
+        sampler.lanpaint_steps = max(0, int(lanpaint_steps))
 
         batch_inds = latent_image.get("batch_index")
         noise = sampler.prepare_noise(latent_samples, noise_seed, disable_noise, batch_inds)
@@ -631,7 +620,7 @@ class TBG_KSamplerAdvancedSplitAware_Copy:
             disable_noise=disable_noise,
             sharpener=smoother_sharper,
             detail_enhancer=detail_enhancer,
-            sigmas=None,
+            sigmas=sigmas,
             better_inpainting = better_inpainting,
         )
 
@@ -710,7 +699,8 @@ class TBG_DualModelSampler_COPY:
 
         return out
     def _run_custom(self,inpaint_end, better_inpainting, smoother_sharper,detail_enhancer,start_step,end_step,sigmas_full, model, add_noise, noise_seed, cfg,
-                    positive, negative, sampler_name, scheduler, sigmas, latent_image, label, sampler_state=None):
+                    positive, negative, sampler_name, scheduler, sigmas, latent_image, label, sampler_state=None,
+                    ):
         device = model.load_device
         _debug_sampler_conditioning(f"lanpaint_dual_{label}", positive, negative)
         if not add_noise:
@@ -934,7 +924,7 @@ class TBG_DualModelSampler_COPY:
             start_step_high, end_step_high, s_h,
             model_high, True, noise_seed, cfg_high,
             positive_high, negative_high,
-            sampler_name, scheduler, s_h[:end_step_high + 1], latent_image, "HIGH_part"
+            sampler_name, scheduler, s_h[:end_step_high + 1], latent_image, "HIGH_part",
         )
 
         # 6) LOW segment sampling - use INTERPOLATED low sigmas
@@ -944,7 +934,7 @@ class TBG_DualModelSampler_COPY:
             start_step_low, end_step_low, sigmas_low_modified,
             model_low, False, noise_seed, cfg_low,
             positive_low, negative_low,
-            sampler_name, scheduler, sigmas_low_modified[start_step_low:], out_high, "LOW_part", state
+            sampler_name, scheduler, sigmas_low_modified[start_step_low:], out_high, "LOW_part", state,
         )
 
         return (out_low,)

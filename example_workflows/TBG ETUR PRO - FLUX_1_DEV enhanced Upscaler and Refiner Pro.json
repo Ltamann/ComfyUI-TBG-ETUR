@@ -1,8 +1,8 @@
 {
   "id": "78e117ed-0d9a-411f-880a-200fe0e75ce9",
   "revision": 0,
-  "last_node_id": 63,
-  "last_link_id": 97,
+  "last_node_id": 77,
+  "last_link_id": 139,
   "nodes": [
     {
       "id": 1,
@@ -72,7 +72,7 @@
       "id": 6,
       "type": "Reroute",
       "pos": [
-        5959.376413269561,
+        5960.570329369356,
         276.30239137114995
       ],
       "size": [
@@ -103,389 +103,6 @@
       }
     },
     {
-      "id": 7,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        1454.1212953970578,
-        1648.4236418891846
-      ],
-      "size": [
-        270,
-        82
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 2,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            3
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.50",
-        "Node name for S&R": "LoraLoaderModelOnly",
-        "models": [
-          {
-            "name": "Qwen-Image-Lightning-4steps-V1.0.safetensors",
-            "url": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/resolve/main/Qwen-Image-Lightning-4steps-V1.0.safetensors",
-            "directory": "loras"
-          }
-        ],
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "ue_properties": {
-          "version": "7.0.1",
-          "widget_ue_connectable": {
-            "lora_name": true,
-            "strength_model": true
-          }
-        },
-        "ttNbgOverride": {
-          "color": "#222",
-          "bgcolor": "#000",
-          "groupcolor": "#444"
-        }
-      },
-      "widgets_values": [
-        "QWEN\\Qwen-Image-Lightning-8steps-V1.0.safetensors",
-        1.02
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 8,
-      "type": "ModelSamplingAuraFlow",
-      "pos": [
-        1754.1212953970573,
-        1508.4236418891842
-      ],
-      "size": [
-        290,
-        60
-      ],
-      "flags": {},
-      "order": 24,
-      "mode": 2,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 3
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            4
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.48",
-        "Node name for S&R": "ModelSamplingAuraFlow",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "ue_properties": {
-          "version": "7.0.1",
-          "widget_ue_connectable": {}
-        },
-        "ttNbgOverride": {
-          "color": "#222",
-          "bgcolor": "#000",
-          "groupcolor": "#444"
-        }
-      },
-      "widgets_values": [
-        3
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 10,
-      "type": "CFGNorm",
-      "pos": [
-        1754.1212953970573,
-        1608.4236418891846
-      ],
-      "size": [
-        290,
-        60
-      ],
-      "flags": {},
-      "order": 32,
-      "mode": 2,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 4
-        }
-      ],
-      "outputs": [
-        {
-          "name": "patched_model",
-          "type": "MODEL",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.50",
-        "Node name for S&R": "CFGNorm",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "ue_properties": {
-          "version": "7.0.1",
-          "widget_ue_connectable": {
-            "strength": true
-          }
-        },
-        "ttNbgOverride": {
-          "color": "#222",
-          "bgcolor": "#000",
-          "groupcolor": "#444"
-        }
-      },
-      "widgets_values": [
-        1
-      ],
-      "color": "#223",
-      "bgcolor": "#335"
-    },
-    {
-      "id": 18,
-      "type": "CheckpointLoaderSimple",
-      "pos": [
-        1074.1212953970578,
-        1508.4236418891842
-      ],
-      "size": [
-        270,
-        98
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 2,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            15
-          ]
-        },
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": []
-        },
-        {
-          "name": "VAE",
-          "type": "VAE",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.50",
-        "Node name for S&R": "CheckpointLoaderSimple"
-      },
-      "widgets_values": [
-        "SDXL\\SDXL-Juggernaut-XI-byRunDiffusion.safetensors"
-      ]
-    },
-    {
-      "id": 19,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        1074.1212953970578,
-        1668.4236418891846
-      ],
-      "size": [
-        270,
-        82
-      ],
-      "flags": {},
-      "order": 25,
-      "mode": 2,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 15
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.50",
-        "Node name for S&R": "LoraLoaderModelOnly"
-      },
-      "widgets_values": [
-        "SDXL\\sdxl_lightning_8step_lora.safetensors",
-        1
-      ]
-    },
-    {
-      "id": 20,
-      "type": "CLIPLoader",
-      "pos": [
-        2054.1212953970576,
-        1508.4236418891842
-      ],
-      "size": [
-        330,
-        110
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 5,
-      "mode": 2,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "slot_index": 0,
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.48",
-        "Node name for S&R": "CLIPLoader",
-        "models": [
-          {
-            "name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-            "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
-            "directory": "text_encoders"
-          }
-        ],
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "ue_properties": {
-          "version": "7.0.1",
-          "widget_ue_connectable": {}
-        },
-        "ttNbgOverride": {
-          "color": "#222",
-          "bgcolor": "#000",
-          "groupcolor": "#444"
-        }
-      },
-      "widgets_values": [
-        "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-        "qwen_image",
-        "default"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 21,
-      "type": "VAELoader",
-      "pos": [
-        2054.1212953970576,
-        1688.4236418891846
-      ],
-      "size": [
-        330,
-        60
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 6,
-      "mode": 2,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "VAE",
-          "type": "VAE",
-          "slot_index": 0,
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.48",
-        "Node name for S&R": "VAELoader",
-        "models": [
-          {
-            "name": "qwen_image_vae.safetensors",
-            "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors",
-            "directory": "vae"
-          }
-        ],
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "ue_properties": {
-          "version": "7.0.1",
-          "widget_ue_connectable": {}
-        },
-        "ttNbgOverride": {
-          "color": "#222",
-          "bgcolor": "#000",
-          "groupcolor": "#444"
-        }
-      },
-      "widgets_values": [
-        "qwen_image_vae.safetensors"
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
-    },
-    {
       "id": 27,
       "type": "ControlNetLoader",
       "pos": [
@@ -499,7 +116,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 7,
+      "order": 3,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -534,7 +151,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 27,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -562,153 +179,6 @@
       ]
     },
     {
-      "id": 30,
-      "type": "ControlNetLoader",
-      "pos": [
-        1948.1114032628243,
-        3032.2317301571197
-      ],
-      "size": [
-        315,
-        58
-      ],
-      "flags": {
-        "collapsed": true
-      },
-      "order": 8,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "CONTROL_NET",
-          "type": "CONTROL_NET",
-          "links": [
-            23,
-            24
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "ControlNetLoader"
-      },
-      "widgets_values": [
-        "Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro-2.safetensors"
-      ]
-    },
-    {
-      "id": 31,
-      "type": "SetUnionControlNetType",
-      "pos": [
-        1727.1818566985487,
-        2700.5549251810876
-      ],
-      "size": [
-        334.72272338867197,
-        58
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 28,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "control_net",
-          "type": "CONTROL_NET",
-          "link": 24
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONTROL_NET",
-          "type": "CONTROL_NET",
-          "links": [
-            68
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "SetUnionControlNetType"
-      },
-      "widgets_values": [
-        "depth"
-      ]
-    },
-    {
-      "id": 34,
-      "type": "ControlNetLoader",
-      "pos": [
-        1873.1112190476263,
-        2152.464002773419
-      ],
-      "size": [
-        280,
-        60
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 4,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "CONTROL_NET",
-          "type": "CONTROL_NET",
-          "links": [
-            39
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "ControlNetLoader"
-      },
-      "widgets_values": [
-        "FLUX_upscale_diffusion_pytorch_model.safetensors"
-      ]
-    },
-    {
-      "id": 35,
-      "type": "ConditioningZeroOut",
-      "pos": [
-        1586.0404626555808,
-        1991.6559527911727
-      ],
-      "size": [
-        284.525390625,
-        26
-      ],
-      "flags": {},
-      "order": 29,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "link": 27
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            38
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "ConditioningZeroOut"
-      },
-      "widgets_values": []
-    },
-    {
       "id": 39,
       "type": "Note",
       "pos": [
@@ -720,7 +190,7 @@
         220
       ],
       "flags": {},
-      "order": 10,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -744,7 +214,7 @@
         276.93293800038737
       ],
       "flags": {},
-      "order": 11,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -770,7 +240,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 12,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -797,75 +267,6 @@
       "bgcolor": "#653"
     },
     {
-      "id": 47,
-      "type": "ControlNetApplyAdvanced",
-      "pos": [
-        1875.8082627266024,
-        1909.8377815154277
-      ],
-      "size": [
-        270,
-        186
-      ],
-      "flags": {},
-      "order": 36,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "positive",
-          "type": "CONDITIONING",
-          "link": 37
-        },
-        {
-          "name": "negative",
-          "type": "CONDITIONING",
-          "link": 38
-        },
-        {
-          "name": "control_net",
-          "type": "CONTROL_NET",
-          "link": 39
-        },
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 40
-        },
-        {
-          "name": "vae",
-          "shape": 7,
-          "type": "VAE",
-          "link": 58
-        }
-      ],
-      "outputs": [
-        {
-          "name": "positive",
-          "type": "CONDITIONING",
-          "links": [
-            91
-          ]
-        },
-        {
-          "name": "negative",
-          "type": "CONDITIONING",
-          "links": [
-            92
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "ControlNetApplyAdvanced"
-      },
-      "widgets_values": [
-        1,
-        0,
-        1
-      ]
-    },
-    {
       "id": 53,
       "type": "PreviewImage",
       "pos": [
@@ -879,16 +280,22 @@
       "flags": {
         "collapsed": false
       },
-      "order": 44,
+      "order": 34,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 82
+          "link": 139
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "title": "TILES",
       "properties": {
         "cnr_id": "comfy-core",
@@ -911,16 +318,22 @@
       "flags": {
         "collapsed": true
       },
-      "order": 43,
+      "order": 33,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 81
+          "link": 138
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.44",
@@ -942,7 +355,7 @@
         126
       ],
       "flags": {},
-      "order": 30,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
@@ -968,7 +381,7 @@
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            72
+            128
           ]
         }
       ],
@@ -999,7 +412,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 13,
+      "order": 7,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1008,8 +421,7 @@
           "type": "VAE",
           "slot_index": 0,
           "links": [
-            58,
-            73
+            129
           ]
         }
       ],
@@ -1025,174 +437,6 @@
       "bgcolor": "#533"
     },
     {
-      "id": 33,
-      "type": "CLIPTextEncodeFlux",
-      "pos": [
-        1114.8990358755734,
-        1902.6458678413333
-      ],
-      "size": [
-        400,
-        340
-      ],
-      "flags": {},
-      "order": 14,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            27,
-            37
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "CLIPTextEncodeFlux"
-      },
-      "widgets_values": [
-        "",
-        "",
-        3.5
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
-      "id": 52,
-      "type": "StyleModelLoader",
-      "pos": [
-        2230.5545332298566,
-        1936.495766784666
-      ],
-      "size": [
-        315,
-        58
-      ],
-      "flags": {},
-      "order": 15,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "STYLE_MODEL",
-          "type": "STYLE_MODEL",
-          "links": [
-            77
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "StyleModelLoader"
-      },
-      "widgets_values": [
-        "flex1_redux_siglip2_512.safetensors"
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
-      "id": 51,
-      "type": "CLIPVisionLoader",
-      "pos": [
-        2230.3384436230317,
-        2098.865246451932
-      ],
-      "size": [
-        315,
-        58
-      ],
-      "flags": {},
-      "order": 16,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "CLIP_VISION",
-          "type": "CLIP_VISION",
-          "links": [
-            78
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "CLIPVisionLoader"
-      },
-      "widgets_values": [
-        "siglip2-so400m-patch16-512.safetensors"
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
-      "id": 40,
-      "type": "TBG ETUR Labs Upscaler",
-      "pos": [
-        694.8330168655447,
-        2370.6944904451207
-      ],
-      "size": [
-        345.013671875,
-        246
-      ],
-      "flags": {},
-      "order": 17,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "SEEDVR2_DIT",
-          "shape": 7,
-          "type": "SEEDVR2_DIT",
-          "link": null
-        },
-        {
-          "name": "SEEDVR2_VAE",
-          "shape": 7,
-          "type": "SEEDVR2_VAE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output_1",
-          "type": "labs_upscaler",
-          "links": [
-            30
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Labs Upscaler",
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
-      },
-      "widgets_values": [
-        "Close with Comfyui",
-        true,
-        true,
-        0,
-        0,
-        16,
-        0,
-        16
-      ]
-    },
-    {
       "id": 4,
       "type": "PreviewImage",
       "pos": [
@@ -1206,16 +450,22 @@
       "flags": {
         "collapsed": false
       },
-      "order": 42,
+      "order": 32,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 80
+          "link": 137
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "title": "Refined Image",
       "properties": {
         "cnr_id": "comfy-core",
@@ -1236,7 +486,7 @@
         571.6408474701262
       ],
       "flags": {},
-      "order": 35,
+      "order": 27,
       "mode": 0,
       "inputs": [
         {
@@ -1245,7 +495,13 @@
           "link": 28
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.7.0",
@@ -1265,7 +521,7 @@
         82
       ],
       "flags": {},
-      "order": 18,
+      "order": 8,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1302,7 +558,7 @@
         130
       ],
       "flags": {},
-      "order": 34,
+      "order": 25,
       "mode": 0,
       "inputs": [
         {
@@ -1316,7 +572,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            71
+            127
           ]
         }
       ],
@@ -1346,7 +602,7 @@
         262
       ],
       "flags": {},
-      "order": 26,
+      "order": 20,
       "mode": 0,
       "inputs": [
         {
@@ -1417,7 +673,7 @@
         262
       ],
       "flags": {},
-      "order": 33,
+      "order": 26,
       "mode": 0,
       "inputs": [
         {
@@ -1488,7 +744,7 @@
         262
       ],
       "flags": {},
-      "order": 38,
+      "order": 29,
       "mode": 0,
       "inputs": [
         {
@@ -1522,7 +778,7 @@
           "name": "Controlnet_Pipe",
           "type": "Controlnet_Pipe",
           "links": [
-            75
+            131
           ]
         },
         {
@@ -1548,30 +804,376 @@
       ]
     },
     {
-      "id": 37,
-      "type": "TBG ETUR Upscaler and Tile Generator PRO",
+      "id": 23,
+      "type": "Note",
       "pos": [
-        401.8428498566191,
-        1512.6718231021632
+        1154.1212953970578,
+        2408.4236418891855
       ],
       "size": [
-        568.2088440661621,
-        744
+        590,
+        140
       ],
       "flags": {},
-      "order": 31,
-      "mode": 4,
+      "order": 9,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why use Redux?",
+      "properties": {},
+      "widgets_values": [
+        "Why use Redux?\nRedux regenerates the image while preserving its overall composition and style.\nA value of 1 means full reconstruction with strict adherence to the original\nLower values allow more creative freedom in the output\nA value of 0 disables Redux entirely\nIf neither a Redux Clip nor a Style Model is connected, Redux will automatically be disabled\nRedux is particularly useful for preserving fine materials, textures, and structural composition. In many cases, it can serve as a lightweight alternative to ControlNets.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 46,
+      "type": "TBG ETUR Tile Overrides",
+      "pos": [
+        2754.6962892403817,
+        1774.1020612409382
+      ],
+      "size": [
+        708.1223892040512,
+        15736
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
       "inputs": [
         {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 106
+        },
+        {
+          "label": "model 1 override",
+          "name": "Model_1",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "model 2 override",
+          "name": "Model_2",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "model 3 override",
+          "name": "Model_3",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 1 override",
+          "name": "CnetPipe_1",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 2 override",
+          "name": "CnetPipe_2",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 3 override",
+          "name": "CnetPipe_3",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            130
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Tile Overrides",
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false,
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cfg_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"model_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnetpipe_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"color_match_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"ignore_general_prompts\":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],\"_tbg_tiler_context_key\":\"6,0,d,5,f,2,3,c,e,3,a,e,a,8,c,a,8,0,b,9,4,c,5,c,c,b,a,5,2,e,e,1\"}",
+        "prompt_0": "",
+        "denoise_0": "",
+        "seed_0": "",
+        "cnet_strength_0": "",
+        "cfg_override_0": "",
+        "model_override_0": "",
+        "cnetpipe_override_0": "",
+        "color_match_override_0": "",
+        "ignore_general_prompt_0": "",
+        "prompt_1": "",
+        "denoise_1": "",
+        "seed_1": "",
+        "cnet_strength_1": "",
+        "cfg_override_1": "",
+        "model_override_1": "",
+        "cnetpipe_override_1": "",
+        "color_match_override_1": "",
+        "ignore_general_prompt_1": "",
+        "prompt_2": "",
+        "denoise_2": "",
+        "seed_2": "",
+        "cnet_strength_2": "",
+        "cfg_override_2": "",
+        "model_override_2": "",
+        "cnetpipe_override_2": "",
+        "color_match_override_2": "",
+        "ignore_general_prompt_2": "",
+        "prompt_3": "",
+        "denoise_3": "",
+        "seed_3": "",
+        "cnet_strength_3": "",
+        "cfg_override_3": "",
+        "model_override_3": "",
+        "cnetpipe_override_3": "",
+        "color_match_override_3": "",
+        "ignore_general_prompt_3": "",
+        "prompt_4": "",
+        "denoise_4": "",
+        "seed_4": "",
+        "cnet_strength_4": "",
+        "cfg_override_4": "",
+        "model_override_4": "",
+        "cnetpipe_override_4": "",
+        "color_match_override_4": "",
+        "ignore_general_prompt_4": "",
+        "prompt_5": "",
+        "denoise_5": "",
+        "seed_5": "",
+        "cnet_strength_5": "",
+        "cfg_override_5": "",
+        "model_override_5": "",
+        "cnetpipe_override_5": "",
+        "color_match_override_5": "",
+        "ignore_general_prompt_5": "",
+        "prompt_6": "",
+        "denoise_6": "",
+        "seed_6": "",
+        "cnet_strength_6": "",
+        "cfg_override_6": "",
+        "model_override_6": "",
+        "cnetpipe_override_6": "",
+        "color_match_override_6": "",
+        "ignore_general_prompt_6": "",
+        "prompt_7": "",
+        "denoise_7": "",
+        "seed_7": "",
+        "cnet_strength_7": "",
+        "cfg_override_7": "",
+        "model_override_7": "",
+        "cnetpipe_override_7": "",
+        "color_match_override_7": "",
+        "ignore_general_prompt_7": "",
+        "prompt_8": "",
+        "denoise_8": "",
+        "seed_8": "",
+        "cnet_strength_8": "",
+        "cfg_override_8": "",
+        "model_override_8": "",
+        "cnetpipe_override_8": "",
+        "color_match_override_8": "",
+        "ignore_general_prompt_8": "",
+        "prompt_9": "",
+        "denoise_9": "",
+        "seed_9": "",
+        "cnet_strength_9": "",
+        "cfg_override_9": "",
+        "model_override_9": "",
+        "cnetpipe_override_9": "",
+        "color_match_override_9": "",
+        "ignore_general_prompt_9": "",
+        "prompt_10": "",
+        "denoise_10": "",
+        "seed_10": "",
+        "cnet_strength_10": "",
+        "cfg_override_10": "",
+        "model_override_10": "",
+        "cnetpipe_override_10": "",
+        "color_match_override_10": "",
+        "ignore_general_prompt_10": "",
+        "prompt_11": "",
+        "denoise_11": "",
+        "seed_11": "",
+        "cnet_strength_11": "",
+        "cfg_override_11": "",
+        "model_override_11": "",
+        "cnetpipe_override_11": "",
+        "color_match_override_11": "",
+        "ignore_general_prompt_11": "",
+        "prompt_12": "",
+        "denoise_12": "",
+        "seed_12": "",
+        "cnet_strength_12": "",
+        "cfg_override_12": "",
+        "model_override_12": "",
+        "cnetpipe_override_12": "",
+        "color_match_override_12": "",
+        "ignore_general_prompt_12": "",
+        "prompt_13": "",
+        "denoise_13": "",
+        "seed_13": "",
+        "cnet_strength_13": "",
+        "cfg_override_13": "",
+        "model_override_13": "",
+        "cnetpipe_override_13": "",
+        "color_match_override_13": "",
+        "ignore_general_prompt_13": "",
+        "prompt_14": "",
+        "denoise_14": "",
+        "seed_14": "",
+        "cnet_strength_14": "",
+        "cfg_override_14": "",
+        "model_override_14": "",
+        "cnetpipe_override_14": "",
+        "color_match_override_14": "",
+        "ignore_general_prompt_14": "",
+        "prompt_15": "",
+        "denoise_15": "",
+        "seed_15": "",
+        "cnet_strength_15": "",
+        "cfg_override_15": "",
+        "model_override_15": "",
+        "cnetpipe_override_15": "",
+        "color_match_override_15": "",
+        "ignore_general_prompt_15": "",
+        "prompt_16": "",
+        "denoise_16": "",
+        "seed_16": "",
+        "cnet_strength_16": "",
+        "cfg_override_16": "",
+        "model_override_16": "",
+        "cnetpipe_override_16": "",
+        "color_match_override_16": "",
+        "ignore_general_prompt_16": "",
+        "prompt_17": "",
+        "denoise_17": "",
+        "seed_17": "",
+        "cnet_strength_17": "",
+        "cfg_override_17": "",
+        "model_override_17": "",
+        "cnetpipe_override_17": "",
+        "color_match_override_17": "",
+        "ignore_general_prompt_17": "",
+        "prompt_18": "",
+        "denoise_18": "",
+        "seed_18": "",
+        "cnet_strength_18": "",
+        "cfg_override_18": "",
+        "model_override_18": "",
+        "cnetpipe_override_18": "",
+        "color_match_override_18": "",
+        "ignore_general_prompt_18": "",
+        "prompt_19": "",
+        "denoise_19": "",
+        "seed_19": "",
+        "cnet_strength_19": "",
+        "cfg_override_19": "",
+        "model_override_19": "",
+        "cnetpipe_override_19": "",
+        "color_match_override_19": "",
+        "ignore_general_prompt_19": "",
+        "prompt_20": "",
+        "denoise_20": "",
+        "seed_20": "",
+        "cnet_strength_20": "",
+        "cfg_override_20": "",
+        "model_override_20": "",
+        "cnetpipe_override_20": "",
+        "color_match_override_20": "",
+        "ignore_general_prompt_20": "",
+        "prompt_21": "",
+        "denoise_21": "",
+        "seed_21": "",
+        "cnet_strength_21": "",
+        "cfg_override_21": "",
+        "model_override_21": "",
+        "cnetpipe_override_21": "",
+        "color_match_override_21": "",
+        "ignore_general_prompt_21": "",
+        "prompt_22": "",
+        "denoise_22": "",
+        "seed_22": "",
+        "cnet_strength_22": "",
+        "cfg_override_22": "",
+        "model_override_22": "",
+        "cnetpipe_override_22": "",
+        "color_match_override_22": "",
+        "ignore_general_prompt_22": "",
+        "prompt_23": "",
+        "denoise_23": "",
+        "seed_23": "",
+        "cnet_strength_23": "",
+        "cfg_override_23": "",
+        "model_override_23": "",
+        "cnetpipe_override_23": "",
+        "color_match_override_23": "",
+        "ignore_general_prompt_23": "",
+        "prompt_24": "",
+        "denoise_24": "",
+        "seed_24": "",
+        "cnet_strength_24": "",
+        "cfg_override_24": "",
+        "model_override_24": "",
+        "cnetpipe_override_24": "",
+        "color_match_override_24": "",
+        "ignore_general_prompt_24": ""
+      },
+      "widgets_values": [
+        true,
+        0,
+        "",
+        "",
+        "unchanged",
+        "",
+        "unchanged",
+        false
+      ]
+    },
+    {
+      "id": 67,
+      "type": "TBG ETUR Upscaler and Tile Generator PRO",
+      "pos": [
+        2763.45649676543,
+        745.3889310055957
+      ],
+      "size": [
+        691.1238085149948,
+        798
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Image",
           "name": "image",
           "type": "IMAGE",
-          "link": 85
+          "link": 103
         },
         {
           "name": "Segment_Mask",
           "shape": 7,
           "type": "MASK",
-          "link": null
+          "link": 104
         },
         {
           "name": "PRO_segs",
@@ -1580,41 +1182,40 @@
           "link": null
         },
         {
+          "label": "TBG ETUR Labs",
           "name": "labs_upscaler",
           "shape": 7,
           "type": "labs_upscaler",
-          "link": 30
+          "link": 119
         }
       ],
       "outputs": [
         {
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
-          "links": []
+          "links": [
+            106
+          ]
         },
         {
           "name": "Upscaled Image",
           "type": "IMAGE",
-          "links": [
-            28,
-            40,
-            94
-          ]
+          "links": null
         }
       ],
       "properties": {
         "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO",
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
+        "ver": "1.1.17",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO"
       },
       "widgets_values": [
         "NONE",
         1,
         1024,
         1024,
-        "SuperResolution/Tiled-SeedVR2 Standard",
+        "FAST/_lanczos",
         2,
+        false,
         "NONE",
         "None (FP16)",
         "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
@@ -1623,27 +1224,251 @@
         0,
         "fixed",
         "Neuro_Generative_Tile_Fusion",
-        64,
+        32,
+        128,
         0.95,
         16,
         "",
-        "",
         ""
+      ]
+    },
+    {
+      "id": 69,
+      "type": "TBG ETUR Labs Upscaler",
+      "pos": [
+        2146.7166759317315,
+        793.2518833229453
+      ],
+      "size": [
+        532.4184718749993,
+        354
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "SEEDVR2_DIT",
+          "shape": 7,
+          "type": "SEEDVR2_DIT",
+          "link": null
+        },
+        {
+          "name": "SEEDVR2_VAE",
+          "shape": 7,
+          "type": "SEEDVR2_VAE",
+          "link": null
+        },
+        {
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "PID CLIP",
+          "name": "PID_CLIP",
+          "shape": 7,
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "label": "PID Source VAE",
+          "name": "PID_Source_VAE",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output_1",
+          "type": "labs_upscaler",
+          "links": [
+            119
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Labs Upscaler",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
+      },
+      "widgets_values": [
+        "Close with Comfyui",
+        "dev debug on",
+        true,
+        false,
+        "http://127.0.0.1:8080/v1",
+        "",
+        "FLUX1",
+        0.1,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 51,
+      "type": "CLIPVisionLoader",
+      "pos": [
+        2211.9523160401886,
+        2499.421031915106
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": [
+            135
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "CLIPVisionLoader"
+      },
+      "widgets_values": [
+        "siglip2-so400m-patch16-512.safetensors"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 52,
+      "type": "StyleModelLoader",
+      "pos": [
+        2209.541850345463,
+        2397.463256012463
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STYLE_MODEL",
+          "type": "STYLE_MODEL",
+          "links": [
+            134
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "StyleModelLoader"
+      },
+      "widgets_values": [
+        "flex1_redux_siglip2_512.safetensors"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 31,
+      "type": "SetUnionControlNetType",
+      "pos": [
+        2199.969025137313,
+        3005.2400293647333
+      ],
+      "size": [
+        334.72272338867197,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            68
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "SetUnionControlNetType"
+      },
+      "widgets_values": [
+        "depth"
+      ]
+    },
+    {
+      "id": 30,
+      "type": "ControlNetLoader",
+      "pos": [
+        1977.003992523858,
+        3029.605174855569
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            23,
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "ControlNetLoader"
+      },
+      "widgets_values": [
+        "Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro-2.safetensors"
       ]
     },
     {
       "id": 48,
       "type": "TBG ETUR enrichment pipe",
       "pos": [
-        3743.6382763459437,
-        2818.381454290233
+        3748.119199375165,
+        2906.7970873117124
       ],
       "size": [
         700.9769779346179,
         632.9232045354411
       ],
       "flags": {},
-      "order": 19,
+      "order": 14,
       "mode": 4,
       "inputs": [],
       "outputs": [
@@ -1651,7 +1476,7 @@
           "name": "Enrichment_Pipe",
           "type": "Enrichment_Pipe",
           "links": [
-            76
+            132
           ]
         },
         {
@@ -1693,163 +1518,118 @@
       ]
     },
     {
-      "id": 23,
-      "type": "Note",
+      "id": 37,
+      "type": "TBG ETUR Upscaler and Tile Generator PRO",
       "pos": [
-        1154.1212953970578,
-        2408.4236418891855
+        401.8428498566191,
+        1512.6718231021632
       ],
       "size": [
-        590,
-        140
+        568.2088440661621,
+        798
       ],
       "flags": {},
-      "order": 20,
-      "mode": 2,
-      "inputs": [],
-      "outputs": [],
-      "title": "Why use Redux?",
-      "properties": {},
-      "widgets_values": [
-        "Why use Redux?\nRedux regenerates the image while preserving its overall composition and style.\nA value of 1 means full reconstruction with strict adherence to the original\nLower values allow more creative freedom in the output\nA value of 0 disables Redux entirely\nIf neither a Redux Clip nor a Style Model is connected, Redux will automatically be disabled\nRedux is particularly useful for preserving fine materials, textures, and structural composition. In many cases, it can serve as a lightweight alternative to ControlNets.\n"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 59,
-      "type": "Note",
-      "pos": [
-        2135.0713524787384,
-        1174.1519938906233
-      ],
-      "size": [
-        538.7564999999995,
-        183.923
-      ],
-      "flags": {},
-      "order": 21,
-      "mode": 2,
-      "inputs": [],
-      "outputs": [],
-      "title": "VLM",
-      "properties": {},
-      "widgets_values": [
-        "We have three ways to load VLMs:\n\n1. **Standard** – Fully automatic setup. Supports all models except GGUF.\n\n2. **GGUF** – Often requires a manual llama.cpp server installation, which can be complicated for some configurations. We provide prebuilt wheels, and installation is only required if you select the GGUF option.\n\n3. **Fastest and Best Option: OpenAI-Compatible (Labs Server)** – Connect the Labs_upscaler node and enter the URL, port, and model name of your local or API-based Ollama or llama.cpp server with the Qwen GGUF model loaded.\n\n4. Florence has now been fixed to run on Transformer versions 5 and above.\n"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 60,
-      "type": "LoadImage",
-      "pos": [
-        -465.87870460294204,
-        928.4236418891841
-      ],
-      "size": [
-        282.798828125,
-        314
-      ],
-      "flags": {},
-      "order": 22,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            85
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": [
-            95
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "Flyx2klein-denoise1-refimage-softmerge.png",
-        "image"
-      ]
-    },
-    {
-      "id": 58,
-      "type": "TBG ETUR Labs Upscaler",
-      "pos": [
-        2128.824803982074,
-        874.1092130563094
-      ],
-      "size": [
-        532.4184718749993,
-        246
-      ],
-      "flags": {},
-      "order": 23,
+      "order": 24,
       "mode": 4,
       "inputs": [
         {
-          "name": "SEEDVR2_DIT",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 85
+        },
+        {
+          "name": "Segment_Mask",
           "shape": 7,
-          "type": "SEEDVR2_DIT",
+          "type": "MASK",
           "link": null
         },
         {
-          "name": "SEEDVR2_VAE",
+          "name": "PRO_segs",
           "shape": 7,
-          "type": "SEEDVR2_VAE",
+          "type": "SEGS",
+          "link": null
+        },
+        {
+          "name": "labs_upscaler",
+          "shape": 7,
+          "type": "labs_upscaler",
           "link": null
         }
       ],
       "outputs": [
         {
-          "name": "output_1",
-          "type": "labs_upscaler",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": []
+        },
+        {
+          "name": "Upscaled Image",
+          "type": "IMAGE",
           "links": [
-            96
+            28,
+            103
           ]
         }
       ],
       "properties": {
         "cnr_id": "tbg-etur",
         "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Labs Upscaler",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO",
         "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
       },
       "widgets_values": [
-        "Close with Comfyui",
-        true,
+        "NONE",
+        1,
+        1024,
+        1024,
+        "SuperResolution/Tiled-SeedVR2 Standard",
+        2,
+        "NONE",
+        "None (FP16)",
+        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
         false,
-        "http://127.0.0.1:8080/v1",
         "",
         0,
-        0,
-        16
+        "fixed",
+        "Neuro_Generative_Tile_Fusion",
+        64,
+        0.95,
+        16,
+        "",
+        "",
+        "",
+        ""
       ]
     },
     {
-      "id": 62,
+      "id": 71,
       "type": "TBG ETUR Labs for Refiner",
       "pos": [
-        3738.0494754528677,
-        2374.288525721991
+        3743.302706291963,
+        2357.2156757899243
       ],
       "size": [
-        348.5625,
-        334
+        703.7744973243907,
+        470.4849725919498
       ],
       "flags": {},
-      "order": 39,
+      "order": 15,
       "mode": 4,
       "inputs": [
+        {
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "ColorMatch Debug Gates",
+          "name": "ColorMatch_Debug",
+          "shape": 7,
+          "type": "tbg_colormatch_debug",
+          "link": null
+        },
         {
           "label": "Sigmas with denoise 1",
           "name": "Custom_Sigmas_!DENOISE=1",
@@ -1865,16 +1645,23 @@
           "link": null
         },
         {
+          "label": "Ideogram4 Guider",
+          "name": "Ideogram4_Guider",
+          "shape": 7,
+          "type": "GUIDER",
+          "link": null
+        },
+        {
           "name": "cropped_positive",
           "shape": 7,
           "type": "CONDITIONING",
-          "link": 91
+          "link": null
         },
         {
           "name": "cropped_negative",
           "shape": 7,
           "type": "CONDITIONING",
-          "link": 92
+          "link": null
         }
       ],
       "outputs": [
@@ -1882,7 +1669,7 @@
           "name": "output_1",
           "type": "labs_refiner",
           "links": [
-            93
+            136
           ]
         }
       ],
@@ -1892,97 +1679,232 @@
         "Node name for S&R": "TBG ETUR Labs for Refiner"
       },
       "widgets_values": [
-        0.5,
+        1,
         0,
+        "Inpainting On with Noise Mask and Conditioning",
         true,
         true,
-        true,
-        true,
+        false,
         0,
         false,
         "gpupyramid",
-        2048
+        true,
+        "Inner Tile + Global Embedding",
+        2048,
+        true
       ]
     },
     {
-      "id": 57,
+      "id": 60,
+      "type": "LoadImage",
+      "pos": [
+        -465.87870460294204,
+        928.4236418891841
+      ],
+      "size": [
+        282.798828125,
+        314
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            85
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            104
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "Flyx2klein-denoise1-refimage-softmerge.png",
+        "image"
+      ]
+    },
+    {
+      "id": 59,
+      "type": "Note",
+      "pos": [
+        2147.7840256237964,
+        1209.1119541536975
+      ],
+      "size": [
+        538.7564999999995,
+        183.923
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "VLM",
+      "properties": {},
+      "widgets_values": [
+        "We have three ways to load VLMs:\n\n1. **Standard** – Fully automatic setup. Supports all models except GGUF.\n\n2. **GGUF** – Often requires a manual llama.cpp server installation, which can be complicated for some configurations. We provide prebuilt wheels, and installation is only required if you select the GGUF option.\n\n3. **Fastest and Best Option: OpenAI-Compatible (Labs Server)** – Connect the Labs_upscaler node and enter the URL, port, and model name of your local or API-based Ollama or llama.cpp server with the Qwen GGUF model loaded.\n\n4. Florence has now been fixed to run on Transformer versions 5 and above.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 73,
+      "type": "LoadImageMask",
+      "pos": [
+        1092.9994608768745,
+        1553.4121196084686
+      ],
+      "size": [
+        533.2795917238686,
+        587.1918540597799
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            133
+          ]
+        }
+      ],
+      "title": "Denoise Mask",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.31.1",
+        "Node name for S&R": "LoadImageMask"
+      },
+      "widgets_values": [
+        "0_PID_raw_decode_4x_temp_xumnq_00001_.png",
+        "alpha",
+        "image"
+      ]
+    },
+    {
+      "id": 75,
+      "type": "Note",
+      "pos": [
+        1686.5114480883994,
+        1565.0300858388762
+      ],
+      "size": [
+        538.7564999999995,
+        183.923
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Denoise Mask",
+      "properties": {},
+      "widgets_values": [
+        "We have three ways to load VLMs:\n\n1. **Standard** – Fully automatic setup. Supports all models except GGUF.\n\n2. **GGUF** – Often requires a manual llama.cpp server installation, which can be complicated for some configurations. We provide prebuilt wheels, and installation is only required if you select the GGUF option.\n\n3. **Fastest and Best Option: OpenAI-Compatible (Labs Server)** – Connect the Labs_upscaler node and enter the URL, port, and model name of your local or API-based Ollama or llama.cpp server with the Qwen GGUF model loaded.\n\n4. Florence has now been fixed to run on Transformer versions 5 and above.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 77,
       "type": "TBG ETUR Refiner PRO",
       "pos": [
-        3750.2431751497834,
-        845.4557109579908
+        3753.339815154071,
+        715.3948462066196
       ],
       "size": [
         700.1962368750001,
         1443.8972025000005
       ],
       "flags": {},
-      "order": 41,
+      "order": 31,
       "mode": 0,
       "inputs": [
         {
           "label": "Model",
           "name": "model",
           "type": "MODEL",
-          "link": 71
+          "link": 127
         },
         {
           "label": "Clip",
           "name": "clip",
           "type": "CLIP",
-          "link": 72
+          "link": 128
         },
         {
           "label": "VAE",
           "name": "vae",
           "type": "VAE",
-          "link": 73
+          "link": 129
         },
         {
           "label": "TBG Pipe",
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
-          "link": 74
+          "link": 130
         },
         {
           "label": "TBG ControlNet Pipe",
           "name": "Controlnet_Pipe",
           "shape": 7,
           "type": "Controlnet_Pipe",
-          "link": 75
+          "link": 131
         },
         {
           "label": "TBG enrichment Pipe",
           "name": "Enrichment_Pipe",
           "shape": 7,
           "type": "Enrichment_Pipe",
-          "link": 76
+          "link": 132
+        },
+        {
+          "label": "TBG RF UntwistingRoPE",
+          "name": "RF_UntwistingRoPE",
+          "shape": 7,
+          "type": "RF_UntwistingRoPE_Pipe",
+          "link": null
         },
         {
           "name": "denoise_mask",
           "shape": 7,
           "type": "MASK",
-          "link": null
+          "link": 133
         },
         {
           "label": "Redux_Style_Model",
           "name": "Redux_Style_Model",
           "shape": 7,
           "type": "STYLE_MODEL",
-          "link": 77
+          "link": 134
         },
         {
           "label": "Redux_Clip_Vision",
           "name": "Redux_Clip_Vision",
           "shape": 7,
           "type": "CLIP_VISION",
-          "link": 78
+          "link": 135
         },
         {
           "label": "TBG ETUR Labs",
           "name": "labs_refiner",
           "shape": 7,
           "type": "labs_refiner",
-          "link": 93
+          "link": 136
         }
       ],
       "outputs": [
@@ -1990,8 +1912,8 @@
           "name": "Refined",
           "type": "IMAGE",
           "links": [
-            80,
-            81
+            137,
+            138
           ]
         },
         {
@@ -2018,7 +1940,7 @@
           "name": "Tiles",
           "type": "IMAGE",
           "links": [
-            82
+            139
           ]
         }
       ],
@@ -2037,7 +1959,7 @@
         3.5,
         "euler",
         "simple",
-        true,
+        "tiled slow",
         1024,
         "",
         "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
@@ -2047,179 +1969,20 @@
         0,
         0,
         0,
-        0,
+        0.5,
         1,
-        "none",
+        "TBG ETUR Detail-Preserving Tile Stabilizer",
+        false,
+        0,
         false,
         false,
         "",
-        "Fast Cache (Max Speed)",
-        ""
-      ]
-    },
-    {
-      "id": 46,
-      "type": "TBG ETUR Tile Overrides",
-      "pos": [
-        2754.6962892403817,
-        1774.1020612409382
-      ],
-      "size": [
-        708.1223892040512,
-        4430
-      ],
-      "flags": {},
-      "order": 40,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 97
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            74
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Tile Overrides",
-        "Filter by Indexes": "",
-        "Prompt": "",
-        "Denoise": "unchanged",
-        "Seed": "",
-        "CNet Strength": "unchanged",
-        "Reset": false,
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
-        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}"
-      },
-      "widgets_values": [
-        true,
-        0,
-        "",
-        "",
-        "unchanged",
-        "",
-        "unchanged",
-        false
-      ]
-    },
-    {
-      "id": 63,
-      "type": "TBG ETUR Upscaler and Tile Generator PRO",
-      "pos": [
-        2746.120967256009,
-        808.9525281851745
-      ],
-      "size": [
-        691.1238085149948,
-        754.9994393011741
-      ],
-      "flags": {},
-      "order": 37,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "Image",
-          "name": "image",
-          "type": "IMAGE",
-          "link": 94
-        },
-        {
-          "name": "Segment_Mask",
-          "shape": 7,
-          "type": "MASK",
-          "link": 95
-        },
-        {
-          "name": "PRO_segs",
-          "shape": 7,
-          "type": "SEGS",
-          "link": null
-        },
-        {
-          "label": "TBG ETUR Labs",
-          "name": "labs_upscaler",
-          "shape": 7,
-          "type": "labs_upscaler",
-          "link": 96
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            97
-          ]
-        },
-        {
-          "name": "Upscaled Image",
-          "type": "IMAGE",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "1.1.17",
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO"
-      },
-      "widgets_values": [
-        "NONE",
-        1,
-        1024,
-        1024,
-        "NONE",
-        2,
-        "NONE",
-        "None (FP16)",
-        "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
-        false,
-        "",
-        0,
-        "fixed",
-        "Neuro_Generative_Tile_Fusion",
-        0,
-        64,
-        0.95,
-        16,
-        "",
+        "Low VRAM Cache (Unload Models)",
         ""
       ]
     }
   ],
   "links": [
-    [
-      3,
-      7,
-      0,
-      8,
-      0,
-      "MODEL"
-    ],
-    [
-      4,
-      8,
-      0,
-      10,
-      0,
-      "MODEL"
-    ],
-    [
-      15,
-      18,
-      0,
-      19,
-      0,
-      "MODEL"
-    ],
     [
       23,
       30,
@@ -2237,28 +2000,12 @@
       "CONTROL_NET"
     ],
     [
-      27,
-      33,
-      0,
-      35,
-      0,
-      "CONDITIONING"
-    ],
-    [
       28,
       37,
       1,
       36,
       0,
       "IMAGE"
-    ],
-    [
-      30,
-      40,
-      0,
-      37,
-      3,
-      "labs_upscaler"
     ],
     [
       31,
@@ -2283,46 +2030,6 @@
       43,
       1,
       "CLIP"
-    ],
-    [
-      37,
-      33,
-      0,
-      47,
-      0,
-      "CONDITIONING"
-    ],
-    [
-      38,
-      35,
-      0,
-      47,
-      1,
-      "CONDITIONING"
-    ],
-    [
-      39,
-      34,
-      0,
-      47,
-      2,
-      "CONTROL_NET"
-    ],
-    [
-      40,
-      37,
-      1,
-      47,
-      3,
-      "IMAGE"
-    ],
-    [
-      58,
-      11,
-      0,
-      47,
-      4,
-      "VAE"
     ],
     [
       63,
@@ -2365,94 +2072,6 @@
       "Controlnet_Pipe"
     ],
     [
-      71,
-      42,
-      0,
-      57,
-      0,
-      "MODEL"
-    ],
-    [
-      72,
-      43,
-      1,
-      57,
-      1,
-      "CLIP"
-    ],
-    [
-      73,
-      11,
-      0,
-      57,
-      2,
-      "VAE"
-    ],
-    [
-      74,
-      46,
-      0,
-      57,
-      3,
-      "TBG_Pipe"
-    ],
-    [
-      75,
-      56,
-      0,
-      57,
-      4,
-      "Controlnet_Pipe"
-    ],
-    [
-      76,
-      48,
-      0,
-      57,
-      5,
-      "Enrichment_Pipe"
-    ],
-    [
-      77,
-      52,
-      0,
-      57,
-      7,
-      "STYLE_MODEL"
-    ],
-    [
-      78,
-      51,
-      0,
-      57,
-      8,
-      "CLIP_VISION"
-    ],
-    [
-      80,
-      57,
-      0,
-      4,
-      0,
-      "IMAGE"
-    ],
-    [
-      81,
-      57,
-      0,
-      2,
-      0,
-      "IMAGE"
-    ],
-    [
-      82,
-      57,
-      5,
-      53,
-      0,
-      "IMAGE"
-    ],
-    [
       85,
       60,
       0,
@@ -2461,60 +2080,140 @@
       "IMAGE"
     ],
     [
-      91,
-      47,
-      0,
-      62,
-      2,
-      "CONDITIONING"
-    ],
-    [
-      92,
-      47,
-      1,
-      62,
-      3,
-      "CONDITIONING"
-    ],
-    [
-      93,
-      62,
-      0,
-      57,
-      9,
-      "labs_refiner"
-    ],
-    [
-      94,
+      103,
       37,
       1,
-      63,
+      67,
       0,
       "IMAGE"
     ],
     [
-      95,
+      104,
       60,
       1,
-      63,
+      67,
       1,
       "MASK"
     ],
     [
-      96,
-      58,
-      0,
-      63,
-      3,
-      "labs_upscaler"
-    ],
-    [
-      97,
-      63,
+      106,
+      67,
       0,
       46,
       0,
       "TBG_Pipe"
+    ],
+    [
+      119,
+      69,
+      0,
+      67,
+      3,
+      "labs_upscaler"
+    ],
+    [
+      127,
+      42,
+      0,
+      77,
+      0,
+      "MODEL"
+    ],
+    [
+      128,
+      43,
+      1,
+      77,
+      1,
+      "CLIP"
+    ],
+    [
+      129,
+      11,
+      0,
+      77,
+      2,
+      "VAE"
+    ],
+    [
+      130,
+      46,
+      0,
+      77,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      131,
+      56,
+      0,
+      77,
+      4,
+      "Controlnet_Pipe"
+    ],
+    [
+      132,
+      48,
+      0,
+      77,
+      5,
+      "Enrichment_Pipe"
+    ],
+    [
+      133,
+      73,
+      0,
+      77,
+      7,
+      "MASK"
+    ],
+    [
+      134,
+      52,
+      0,
+      77,
+      8,
+      "STYLE_MODEL"
+    ],
+    [
+      135,
+      51,
+      0,
+      77,
+      9,
+      "CLIP_VISION"
+    ],
+    [
+      136,
+      71,
+      0,
+      77,
+      10,
+      "labs_refiner"
+    ],
+    [
+      137,
+      77,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      138,
+      77,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      139,
+      77,
+      5,
+      53,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [
@@ -2640,9 +2339,9 @@
     },
     {
       "id": 11,
-      "title": "TBG_ETUR PRO  V 1.1.0  – More Muscle, More Speed, Less VRAM",
+      "title": "TBG_ETUR PRO  V 1.2.12",
       "bounding": [
-        -480.62358673042957,
+        -479.42967063063514,
         256.30239137114995,
         6673.378742991753,
         127.14528513047685
@@ -2668,22 +2367,10 @@
       "bounding": [
         1054.1212953970578,
         768.4236418891841,
-        700,
-        640
+        1075.6030952842643,
+        622.6644704905785
       ],
       "color": "#3f789e",
-      "flags": {}
-    },
-    {
-      "id": 14,
-      "title": "Cropped or tiled ControlNet. The ControlNet input is based on the full image and then cropped to the tile space -ideal for pose",
-      "bounding": [
-        1074.1212953970578,
-        1788.4236418891846,
-        1540,
-        520
-      ],
-      "color": "#8A8",
       "flags": {}
     },
     {
@@ -2696,30 +2383,6 @@
         2440
       ],
       "color": "#8AA",
-      "flags": {}
-    },
-    {
-      "id": 16,
-      "title": "QWEN IMAGE EDIT",
-      "bounding": [
-        1434.1212953970578,
-        1428.4236418891842,
-        980,
-        340
-      ],
-      "color": "#3f789e",
-      "flags": {}
-    },
-    {
-      "id": 18,
-      "title": "SDXL",
-      "bounding": [
-        1054.1212953970578,
-        1428.4236418891842,
-        360,
-        340
-      ],
-      "color": "#3f789e",
       "flags": {}
     },
     {
@@ -2745,19 +2408,31 @@
       ],
       "color": "#b58b2a",
       "flags": {}
+    },
+    {
+      "id": 22,
+      "title": "Group",
+      "bounding": [
+        1082.9994608768745,
+        1483.4121196084686,
+        1177.3405340226711,
+        667.1918540597799
+      ],
+      "color": "#3f789e",
+      "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.2940834937055162,
+      "scale": 0.18260271200148778,
       "offset": [
-        1253.0863335402025,
-        620.2308365375188
+        2886.4661429339485,
+        1498.2128900938121
       ]
     },
     "workflowRendererVersion": "LG",
-    "frontendVersion": "1.43.18",
+    "frontendVersion": "1.48.7",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,

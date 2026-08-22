@@ -29,6 +29,7 @@ import nodes
 import hashlib
 import json
 from functools import wraps
+from types import SimpleNamespace
 from PIL import Image
 from comfy_extras import nodes_upscale_model
 from ...utils.log import log
@@ -41,7 +42,7 @@ from .inc.tbg_pid import (
     PID_DEFAULT_STITCH_FEATHER,
     PID_SCALE,
     is_pid_upscale_model,
-    run_pid_tiled_upscale,
+    pid_model_type_for_upscale_model,
 )
 from .inc.pid_vlm import PID_VLM_MODEL, make_pid_vlm_prompt_fn
 from .inc.prosegs import TBG_Segms
@@ -481,15 +482,16 @@ class TBG_Upscaler_v1():
             int(round(source_h * optimized)),
         )
 
-        log(
-            "Optimized upscale factor for tile use: "
-            f"requested={requested:.4f} effective={optimized:.4f} "
-            f"grid={cols}x{rows} target={tbg.PARAMS.optimized_upscale_target_size[0]}x{tbg.PARAMS.optimized_upscale_target_size[1]} "
-            f"mode={mode} step={step_w}x{step_h}",
-            "BRIGHT_BLUE",
-            "BRIGHT_CYAN",
-            f"Node {tbg.INFO.id}",
-        )
+        if cls._dev_debug_enabled():
+            log(
+                "Optimized upscale factor for tile use: "
+                f"requested={requested:.4f} effective={optimized:.4f} "
+                f"grid={cols}x{rows} target={tbg.PARAMS.optimized_upscale_target_size[0]}x{tbg.PARAMS.optimized_upscale_target_size[1]} "
+                f"mode={mode} step={step_w}x{step_h}",
+                "BRIGHT_BLUE",
+                "BRIGHT_CYAN",
+                f"Node {tbg.INFO.id}",
+            )
 
 
     @classmethod
@@ -839,12 +841,21 @@ class TBG_Upscaler_v1():
         )
         tbg.PARAMS.upscale_by = tbg.PARAMS.effective_upscale_by
 
-        tbg.SIZE.fullH = kwargs.get('tile_size_h', 1024)
-        tbg.SIZE.fullW = kwargs.get('tile_size_w', 1024)
-
-        if tbg.PARAMS.fragmentation and tbg.PARAMS.fragmentation != 0 or tbg.PARAMS.fragmentation != 1:
-            tbg.SIZE.fullW =tbg.SIZE.fullH * tbg.PARAMS.fragmentation
-            tbg.SIZE.fullH =tbg.SIZE.fullW * tbg.PARAMS.fragmentation
+        requested_tile_h = int(kwargs.get('tile_size_h', 1024))
+        requested_tile_w = int(kwargs.get('tile_size_w', 1024))
+        fragmentation = float(tbg.PARAMS.fragmentation or 1)
+        # The PRO node's serialized inputs use the historical opposite
+        # orientation: tile_size_w carries the requested height and
+        # tile_size_h carries the requested width.
+        tbg.SIZE.fullH = int(round(requested_tile_w * fragmentation))
+        tbg.SIZE.fullW = int(round(requested_tile_h * fragmentation))
+        tbg.PARAMS.requested_tile_size = (requested_tile_h, requested_tile_w)
+        tbg.PARAMS.fragmentation = fragmentation
+        if cls._dev_debug_enabled():
+            print(
+                f"[TBG TileGeometry] requested={requested_tile_h}x{requested_tile_w} "
+                f"fragmentation={fragmentation:g} configured={tbg.SIZE.fullW}x{tbg.SIZE.fullH}"
+            )
 
 
         tbg.SIZE.Fusion_reference_margin = kwargs.get('Fusion Reference Margin', 0)
@@ -879,102 +890,92 @@ class TBG_Upscaler_v1():
         log("TBG Enhanced Tiled Generator is starting", None, None, f"Node {tbg.INFO.id}")
         # log(f"Starting Upscaling  upscale_type", None, None, f"Node {tbg.INFO.id}")
 
+        labs_upscaler_dict = kwargs.get('labs_upscaler', None)
         is_pid_upscale = is_pid_upscale_model(tbg.PARAMS.upscale_model_name)
         if tbg.PARAMS.upscale_model_name != "NONE" and (tbg.PARAMS.upscale_by not in (0,1) or is_pid_upscale):
             upscaled_image = copy.copy(input_image)
 
             if is_pid_upscale:
+                from .TBG_PID_Upscale import TBG_ETUR_PID_Tile_Upscale_Rebuild, run_tbg_pid_upscale_pipeline
+
                 requested_upscale_by = float(tbg.PARAMS.upscale_by or 1.0)
-                pid_overlap = PID_DEFAULT_OVERLAP
-                pid_prompt_fn = None
-                pid_prompt_cleanup = None
-                if tbg.LLM.model == PID_VLM_MODEL:
-                    print(f"TBG[Node {tbg.INFO.id}] PID VLM prompt generation explicitly enabled by VLM_Model={tbg.LLM.model}")
-                    pid_prompt_fn, pid_prompt_cleanup = make_pid_vlm_prompt_fn(
-                        seed=getattr(tbg.PARAMS, "Prompt_seed", 0),
-                        prompt_text=getattr(tbg.LLM, "prompt", ""),
-                        model_name=PID_VLM_MODEL,
-                        quantization=getattr(tbg.LLM, "quantization", "None (FP16)"),
+                pid_debug_enabled = cls._dev_debug_enabled()
+                if pid_debug_enabled and tbg.LLM.model == PID_VLM_MODEL:
+                    print(
+                        f"TBG[Node {tbg.INFO.id}] PID VLM is ignored in tiler PiD mode; "
+                        "routing through standalone PiD pipeline."
+                )
+                pid_model = labs_upscaler_dict.get("PID_Model", None) if labs_upscaler_dict else None
+                pid_model_type = pid_model_type_for_upscale_model(
+                    tbg.PARAMS.upscale_model_name,
+                    labs_upscaler_dict.get("PID_VAE_Compatible_Model", "FLUX1") if labs_upscaler_dict else "FLUX1",
+                )
+                pid_clip = labs_upscaler_dict.get("PID_CLIP", None) if labs_upscaler_dict else None
+                pid_source_vae = labs_upscaler_dict.get("PID_Source_VAE", None) if labs_upscaler_dict else None
+                auto_loaded_pid = pid_model is None
+                pid_seed = 1
+                if pid_debug_enabled:
+                    print(
+                        f"TBG[Node {tbg.INFO.id}] Tiler PiD route: "
+                        f"selected='{tbg.PARAMS.upscale_model_name}' compatible_model={pid_model_type} "
+                        f"connected_model={pid_model is not None} connected_clip={pid_clip is not None} "
+                        f"connected_vae={pid_source_vae is not None} "
+                        f"clip_route={'auto PiD text encoder' if auto_loaded_pid else 'connected override'} "
+                        f"seed={pid_seed}"
+                    )
+                    if auto_loaded_pid and pid_clip is not None:
+                        print(
+                            f"TBG[Node {tbg.INFO.id}] Tiler PiD auto-load: ignoring connected PID_CLIP "
+                            "because no PID_Model is connected; loading the selected PiD model text encoder."
+                        )
+                if pid_model is not None:
+                    upscaled_image, pid_tiles = TBG_ETUR_PID_Tile_Upscale_Rebuild().fn(
+                        PID_Model=pid_model,
+                        PID_VAE_Compatible_Model=pid_model_type,
+                        image=upscaled_image,
+                        upscale_by=requested_upscale_by,
+                        seed=pid_seed,
+                        steps=4,
+                        cfg=1.0,
+                        sampler_name="pid_sde",
+                        scheduler="simple",
+                        denoise=1.0,
+                        degrade_sigma=getattr(tbg.PARAMS, "PID_degrade_sigma", 0.1),
+                        Color_Match=TBG_Refiner_v1.COLOR_STABILIZER_METHOD,
+                        Geometry_Drift_Correction=True,
+                        Color_Match_Str=1.0,
+                        prompt=getattr(tbg.LLM, "prompt", ""),
+                        Sampler=None,
+                        PID_CLIP=pid_clip,
+                        PID_Source_VAE=pid_source_vae,
+                        latent=None,
+                        debug_enabled=pid_debug_enabled,
                     )
                 else:
-                    print(f"TBG[Node {tbg.INFO.id}] PID VLM disabled by user")
-                def rebuild_pid_tiles(pid_tiles, grid_specs, reference_image, target_width, target_height):
-                    pid_tiles = [tile.detach().to("cpu", copy=True).contiguous() if torch.is_tensor(tile) else tile for tile in pid_tiles]
-                    if torch.is_tensor(reference_image):
-                        reference_image = reference_image.detach().to("cpu", copy=True).contiguous()
-                    previous_grid_specs = getattr(tbg.PARAMS, "grid_specs", None)
-                    previous_grid_prompts = getattr(tbg.PARAMS, "grid_prompts", None)
-                    previous_output_prompts = getattr(tbg.PROMPTER, "output_prompts", None)
-                    previous_stitch_blending = getattr(tbg.PARAMS, "stitch_blending", None)
-                    previous_overlay_between_tiles = getattr(tbg.SIZE, "overlay_between_tiles", None)
-                    previous_composite_blur_margin = getattr(tbg.SIZE, "composite_blur_margin", None)
-                    previous_inpaint_blur_margin = getattr(tbg.SIZE, "inpaint_blur_margin", None)
-                    previous_inpaint_border_margin = getattr(tbg.SIZE, "inpaint_border_margin", None)
-                    try:
-                        tbg.PARAMS.grid_specs = grid_specs
-                        tbg.PARAMS.grid_prompts = [""] * len(grid_specs)
-                        tbg.PROMPTER.output_prompts = [""] * len(grid_specs)
-                        tbg.PARAMS.stitch_blending = "gpupyramid"
-                        tbg.SIZE.overlay_between_tiles = pid_overlap * PID_SCALE
-                        tbg.SIZE.inpaint_blur_margin = PID_DEFAULT_STITCH_BLUR
-                        tbg.SIZE.composite_blur_margin = PID_DEFAULT_STITCH_FEATHER
-                        tbg.SIZE.inpaint_border_margin = pid_overlap * PID_SCALE
-                        worker_image = WORKER.id(tiler_id).TBG_Image
-                        rebuilt, _, _ = worker_image.rebuild_final_image(
-                            list(pid_tiles),
-                            reference_image,
-                            [],
-                            [],
-                            True,
-                            None,
-                            _tbg_send_images=False,
-                        )
-                        if torch.is_tensor(rebuilt) and rebuilt.ndim == 3:
-                            rebuilt = rebuilt.unsqueeze(0)
-                        if torch.is_tensor(rebuilt):
-                            rebuilt = rebuilt[:, :target_height, :target_width, :]
-                        return rebuilt
-                    finally:
-                        tbg.PARAMS.grid_specs = previous_grid_specs
-                        tbg.PARAMS.grid_prompts = previous_grid_prompts
-                        tbg.PROMPTER.output_prompts = previous_output_prompts
-                        tbg.PARAMS.stitch_blending = previous_stitch_blending
-                        tbg.SIZE.overlay_between_tiles = previous_overlay_between_tiles
-                        tbg.SIZE.composite_blur_margin = previous_composite_blur_margin
-                        tbg.SIZE.inpaint_blur_margin = previous_inpaint_blur_margin
-                        tbg.SIZE.inpaint_border_margin = previous_inpaint_border_margin
-
-                def color_match_pid_tile(reference_tile, pid_tile, method):
-                    if hasattr(TBG_Image, "detail_preserving_colormatch"):
-                        return TBG_Image.detail_preserving_colormatch(
-                            reference_tile,
-                            pid_tile,
-                            method,
-                            1.0,
-                            label="tiler_pid_tile_color",
-                        )[0]
-                    return TBG_Image.colormatch(reference_tile, pid_tile, method, 1.0)[0]
-
-                try:
-                    upscaled_image, pid_meta = run_pid_tiled_upscale(
-                        upscaled_image,
-                        tbg.PARAMS.upscale_model_name,
-                        prompt_text=getattr(tbg.LLM, "prompt", ""),
-                        seed=getattr(tbg.PARAMS, "Prompt_seed", 0),
-                        rebuild_fn=rebuild_pid_tiles,
-                        pid_model=labs_upscaler_dict.get("PID_Model", None) if labs_upscaler_dict else None,
-                        pid_model_type=labs_upscaler_dict.get("PID_VAE_Compatible_Model", None) if labs_upscaler_dict else None,
-                        clip=labs_upscaler_dict.get("PID_CLIP", None) if labs_upscaler_dict else None,
-                        source_vae=labs_upscaler_dict.get("PID_Source_VAE", None) if labs_upscaler_dict else None,
-                        overlap=pid_overlap,
+                    upscaled_image, pid_tiles, _pid_meta = run_tbg_pid_upscale_pipeline(
+                        image=upscaled_image,
+                        latent=None,
+                        upscale_by=requested_upscale_by,
+                        seed=pid_seed,
+                        steps=4,
+                        cfg=1.0,
+                        sampler_name="pid_sde",
+                        scheduler="simple",
+                        denoise=1.0,
                         degrade_sigma=getattr(tbg.PARAMS, "PID_degrade_sigma", 0.1),
-                        color_match_fn=color_match_pid_tile,
-                        color_match_method=PID_DEFAULT_COLOR_MATCH,
-                        prompt_fn=pid_prompt_fn,
+                        Color_Match=TBG_Refiner_v1.COLOR_STABILIZER_METHOD,
+                        Geometry_Drift_Correction=True,
+                        Color_Match_Str=1.0,
+                        prompt=getattr(tbg.LLM, "prompt", ""),
+                        Sampler=None,
+                        PID_Model=None,
+                        PID_VAE_Compatible_Model=pid_model_type,
+                        PID_CLIP=None,
+                        PID_Source_VAE=pid_source_vae,
+                        upscale_model_name=tbg.PARAMS.upscale_model_name,
+                        debug_prefix=f"TBG[Node {tbg.INFO.id}] Tiler PiD",
+                        debug_enabled=pid_debug_enabled,
                     )
-                finally:
-                    if pid_prompt_cleanup is not None:
-                        pid_prompt_cleanup()
                 final_width = max(1, int(round(input_image.shape[2] * requested_upscale_by)))
                 final_height = max(1, int(round(input_image.shape[1] * requested_upscale_by)))
                 if int(upscaled_image.shape[2]) != final_width or int(upscaled_image.shape[1]) != final_height:
@@ -986,29 +987,25 @@ class TBG_Upscaler_v1():
                         False,
                     )[0]
                 tbg.PARAMS.upscale_by = requested_upscale_by
-                tbg.PARAMS.pid_internal_scale_x = float(pid_meta.get("effective_scale_x", requested_upscale_by))
-                tbg.PARAMS.pid_internal_scale_y = float(pid_meta.get("effective_scale_y", requested_upscale_by))
-                tbg.PARAMS.pid_tile_count = int(pid_meta.get("tile_count", 0))
-                tbg.PARAMS.pid_overlap = int(pid_meta.get("overlap", pid_overlap))
-                tbg.PARAMS.pid_degrade_sigma = float(pid_meta.get("degrade_sigma", getattr(tbg.PARAMS, "PID_degrade_sigma", 0.1)))
-                tbg.PARAMS.pid_color_match_method = pid_meta.get("color_match_method", PID_DEFAULT_COLOR_MATCH)
+                tbg.PARAMS.pid_internal_scale_x = float(upscaled_image.shape[2]) / float(max(1, input_image.shape[2]))
+                tbg.PARAMS.pid_internal_scale_y = float(upscaled_image.shape[1]) / float(max(1, input_image.shape[1]))
+                tbg.PARAMS.pid_tile_count = len(pid_tiles or [])
+                tbg.PARAMS.pid_overlap = PID_DEFAULT_OVERLAP
+                tbg.PARAMS.pid_degrade_sigma = float(getattr(tbg.PARAMS, "PID_degrade_sigma", 0.1))
+                tbg.PARAMS.pid_color_match_method = PID_DEFAULT_COLOR_MATCH
 
             #GAN MODELS
             elif tbg.PARAMS.upscale_model_name != None and tbg.PARAMS.upscale_model_name not in tbg.upscale_models:
-                if hasattr(nodes_upscale_model_UpscaleModelLoader, "execute"):
-                    tbg.PARAMS.upscale_model = \
-                    nodes_upscale_model_UpscaleModelLoader_execute(tbg.PARAMS.upscale_model_name)[0]
-                elif hasattr(nodes_upscale_model_UpscaleModelLoader, "load_model"):
-                    tbg.PARAMS.upscale_model = \
-                    nodes_upscale_model_UpscaleModelLoader_execute(0, tbg.PARAMS.upscale_model_name)[0]
-                if hasattr(nodes_upscale_model_ImageUpscaleWithModel, "execute"):
-                    upscaled_image = nodes_upscale_model_ImageUpscaleWithModel_execute(tbg.PARAMS.upscale_model, upscaled_image)[0]
-                elif hasattr(nodes_upscale_model_ImageUpscaleWithModel, "upscale"):
-                    upscaled_image = nodes_upscale_model_ImageUpscaleWithModel_execute(0,tbg.PARAMS.upscale_model, upscaled_image)[0]
-                upscaled_image = nodes.ImageScale().upscale(upscaled_image, "bilinear",
-                                                            int(input_image.shape[2] * tbg.PARAMS.upscale_by),
-                                                            int(input_image.shape[1] * tbg.PARAMS.upscale_by),
-                                                            False)[0]
+                target_width = int(input_image.shape[2] * tbg.PARAMS.upscale_by)
+                target_height = int(input_image.shape[1] * tbg.PARAMS.upscale_by)
+                upscaled_image = TBG_Image().helper_upscaleimage(
+                    upscaled_image,
+                    "with model",
+                    tbg.PARAMS.upscale_model_name,
+                    scale_factor=0,
+                    width=target_width,
+                    height=target_height,
+                )
             # SuperResolution MODELS SeedVR2
             elif tbg.PARAMS.upscale_model_name.startswith("SuperResolution/Tiled-SeedVR2"):
                 upscaled_image = nodes.ImageScale().upscale(upscaled_image, "bilinear",
@@ -1084,6 +1081,20 @@ class TBG_Upscaler_v1():
         ):
             if hasattr(params, name):
                 setattr(params, name, None)
+
+        # Worker RPC payloads must contain values that can be unpickled without
+        # importing the hyphenated custom-node package.  The adapter is rebuilt
+        # in the worker from KSAMPLER.model_type; only its model-neutral config
+        # crosses this boundary.
+        params.model_adapter = None
+        rgb_config = getattr(params, "rgb_config", None)
+        if isinstance(rgb_config, dict):
+            params.rgb_config = SimpleNamespace(**rgb_config)
+        elif rgb_config is not None and hasattr(rgb_config, "__dict__"):
+            params.rgb_config = SimpleNamespace(**vars(rgb_config))
+        stage_pipeline = getattr(params, "stage_pipeline", None)
+        if isinstance(stage_pipeline, dict):
+            params.stage_pipeline = dict(stage_pipeline)
         return (
             TBG_Refiner_v1._worker_cpu_value(params),
             TBG_Refiner_v1._worker_cpu_value(size),
@@ -1137,7 +1148,11 @@ class TBG_Upscaler_v1():
         is_flux2_segment = (
             "FLUX2" in model_marker_text
             or "FLUX 2" in model_marker_text
-            or bool(getattr(tbg.PARAMS, "Flux2_Tile_Color_Correction", False))
+            or bool(getattr(
+                getattr(tbg.PARAMS, "rgb_config", None),
+                "tile_color_correction",
+                getattr(tbg.PARAMS, "Flux2_Tile_Color_Correction", False),
+            ))
         )
         needs_flux2_segment_size_guard = (
             is_flux2_segment
@@ -1388,6 +1403,16 @@ class TBG_Upscaler_v1():
         tbg.PARAMS, tbg.SIZE = get_tiler_init()
 
         grid_images = TBG_Image().gridspecs_get_grid_images(tbg.OUTPUTS.upscaled_image, tbg.PARAMS.grid_specs)
+        if cls._dev_debug_enabled():
+            first_grid_size = None
+            if tbg.PARAMS.grid_specs:
+                first_spec = tbg.PARAMS.grid_specs[0]
+                first_grid_size = (int(first_spec[5]), int(first_spec[6]))
+            print(
+                f"[TBG TileGeometry] worker={int(tbg.SIZE.fullW)}x{int(tbg.SIZE.fullH)} "
+                f"first_grid={first_grid_size} image={int(tbg.OUTPUTS.upscaled_image.shape[2])}x"
+                f"{int(tbg.OUTPUTS.upscaled_image.shape[1])}"
+            )
 
         if (tbg.SEGMENTS.segms and len(tbg.SEGMENTS.segms[0]) != 0):
             # FIRST: Apply coordinate transformation for padding/upscaling

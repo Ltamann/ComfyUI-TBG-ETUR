@@ -5,8 +5,8 @@ __________________________________________________a ToBi´s Gen production______
 """
 import time
 import threading
-import time
 import comfy
+import comfy.samplers as comfy_samplers
 import os
 import json
 import inspect
@@ -16,6 +16,7 @@ import PIL
 from PIL import Image
 import copy
 import nodes
+import node_helpers
 from comfy_extras.nodes_custom_sampler import Noise_RandomNoise, SamplerCustomAdvanced
 from comfy_extras.nodes_mask import MaskToImage, ImageToMask
 from .inc.TBG_split_aware_lanpaint_sampler  import TBG_DualModelSampler_COPY as TBG_DualModelSampler_lanpaint, TBG_KSamplerAdvancedSplitAware_Copy as TBG_KSamplerAdvancedSplitAware_lanpaint
@@ -49,7 +50,24 @@ from .inc.tbg_pid import (
 )
 from .inc.sigmas import get_sigmas
 from .inc.sigmas import denoise_sigmas_tgb
-from .inc.cnet import apply_reference_mode_hooks, get_Kontext_stiched_o_chained_cond, get_qwen_stiched_o_chained_cond, normalize_controlnet_mode
+from .inc.cnet import apply_reference_mode_hooks, get_Kontext_stiched_o_chained_cond, get_qwen_stiched_o_chained_cond, normalize_controlnet_mode, set_krea2_control_latent, clear_krea2_control_latent
+from .inc import sampler_adapters
+from .inc.pid_pipeline import PIDPipeline
+from .inc.refiner_pipeline import (
+    LEGACY_STAGE_ALIASES,
+    RGBPostProcessPipeline,
+    RGBConfig,
+    SamplerResult,
+    STAGE_IDS,
+    StageRegistry,
+    TileGeometry,
+    TileExecutionContext,
+    get_model_adapter,
+    normalize_rgb_contract,
+    normalize_rgb_config,
+    normalize_stage_config,
+)
+from .inc.refiner_presets import get_refiner_preset
 import comfy.model_management as mm
 from types import SimpleNamespace
 
@@ -58,6 +76,25 @@ import torch
 from ....TBG.CALLBACKS.constants import get_tbg , TBGState
 PIL.Image.MAX_IMAGE_PIXELS = 592515344
 persistent_storage = {}
+
+INPAINT_CONDITIONING_MODES = (
+    "Inpainting Off",
+    "Inpainting On with Conditioning",
+    "Inpainting On with Noise Mask",
+    "Inpainting On with Noise Mask and Conditioning",
+)
+
+
+def normalize_inpaint_conditioning_mode(value):
+    if isinstance(value, bool):
+        return (
+            "Inpainting On with Noise Mask and Conditioning"
+            if value else "Inpainting Off"
+        )
+    value = str(value or INPAINT_CONDITIONING_MODES[-1])
+    return value if value in INPAINT_CONDITIONING_MODES else INPAINT_CONDITIONING_MODES[-1]
+
+
 # V3 scheme name changes
 if hasattr(MaskToImage, "execute"):
     # execute is a @classmethod; no instance needed
@@ -174,14 +211,205 @@ class TBG_Refiner_v1():
         'FLUX2': 2048,
         'Ideogram4': 2048,
         'FLUX1 Kontext': 1024,
+        'Krea2': 2048,
         'Qwen Image': 1328,
         'Qwen Image Edit': 1328,
         'SDXL': 1024,
         'SD3': 1024,
         'Others': 1024,
     }
+    STAGE_IDS = STAGE_IDS
 
     MODEL_TYPES = list(MODEL_TYPE_SIZES.keys())
+
+    @classmethod
+    def _stage_registry(cls):
+        registry = getattr(tbg.TEMP, "refiner_stage_registry", None)
+        if registry is None:
+            registry = StageRegistry(
+                getattr(tbg.PARAMS, "ColorMatch_Debug_Switches", None),
+                getattr(tbg.KSAMPLER, "model_type", None),
+            )
+            tbg.TEMP.refiner_stage_registry = registry
+        return registry
+
+    @classmethod
+    def _stage_mark(cls, stage_id, normal_active=True, index=None,
+                    index_seg=None, input_space=None, output_space=None,
+                    reason=None, **metrics):
+        return cls._stage_registry().mark(
+            stage_id,
+            normal_active=normal_active,
+            tile_index=index,
+            segment_index=index_seg,
+            input_space=input_space,
+            output_space=output_space,
+            reason=reason,
+            **metrics,
+        )
+
+    @classmethod
+    def _stage_export(cls):
+        return cls._stage_registry().export()
+
+    @staticmethod
+    def _rgb_config():
+        return getattr(tbg.PARAMS, "rgb_config", RGBConfig())
+
+    @classmethod
+    def _build_rgb_contract(cls, image, index, index_seg, border_mask,
+                            inpaint_mask=None, compositing_mask=None,
+                            source_type="vae", coordinate_space="native_tile"):
+        contract = normalize_rgb_contract(
+            image,
+            tile_index=index,
+            segment_index=index_seg,
+            source_type=source_type,
+            coordinate_space=coordinate_space,
+            reference=getattr(tbg.OUTPUTS, "upscaled_image", None),
+            border_mask=border_mask,
+            fusion_mask=border_mask,
+            inpaint_mask=inpaint_mask,
+            compositing_mask=compositing_mask,
+            native_size=(int(image.shape[2]), int(image.shape[1])) if image.ndim == 4 else (int(image.shape[1]), int(image.shape[0])),
+            sampling_size=(int(image.shape[2]), int(image.shape[1])) if image.ndim == 4 else (int(image.shape[1]), int(image.shape[0])),
+        )
+        return contract
+
+    @classmethod
+    def _run_model_adapter(cls, **kwargs):
+        """Run the model-specific sampler through its adapter boundary."""
+        adapter = getattr(tbg.PARAMS, "model_adapter", None)
+        if adapter is None:
+            adapter = get_model_adapter(getattr(tbg.KSAMPLER, "model_type", None))
+            tbg.PARAMS.model_adapter = adapter
+        return adapter.sample_tile(cls, **kwargs)
+
+    @staticmethod
+    def _sampler_runtime():
+        return SimpleNamespace(
+            tbg=tbg,
+            flux2_differential=flux2_differential,
+            sample_flux2_direct_fn=sample_flux2_direct,
+            sampler_custom_advanced=SamplerCustomAdvanced,
+            noise_random_noise=Noise_RandomNoise,
+            dual_sampler_lanpaint=TBG_DualModelSampler_lanpaint,
+            dual_sampler_normal=TBG_DualModelSampler_normal,
+            split_sampler_lanpaint=TBG_KSamplerAdvancedSplitAware_lanpaint,
+            split_sampler_normal=TBG_KSamplerAdvancedSplitAware_normal,
+        )
+
+    @classmethod
+    def _decode_standard_tile(cls, vaedecoder, latent_output):
+        """Decode non-PiD output into the shared RGB boundary."""
+        adapter = getattr(tbg.PARAMS, "model_adapter", None)
+        if tbg.KSAMPLER.tiled:
+            if tbg.debug:
+                log(
+                    f"tile {getattr(tbg.TEMP, 'latent_index', 0) + 1}/{len(tbg.OUTPUTS.grid_images_all)}",
+                    None,
+                    None,
+                    f"Node {tbg.INFO.id} - VAEDecodingTiled",
+                )
+            decoded = lambda: (nodes.VAEDecodeTiled().decode(
+                vaedecoder,
+                latent_output,
+                tbg.SIZE.tile_size_vae,
+                tbg.SIZE.tile_size_vae // 4,
+                tbg.SIZE.tile_size_vae // 4,
+            )[0].unsqueeze(0))[0]
+        else:
+            if tbg.debug:
+                log(
+                    f"tile {getattr(tbg.TEMP, 'latent_index', 0) + 1}/{len(tbg.OUTPUTS.grid_images_all)}",
+                    None,
+                    None,
+                    f"Node {tbg.INFO.id} - VAEDecodingNormalized",
+                )
+            decoded = lambda: (TBG_Image.VAEDecodeFluxNormalized(
+                vaedecoder,
+                latent_output,
+            )[0].unsqueeze(0))[0]
+        return adapter.decode(decoded) if adapter is not None else decoded()
+
+    @classmethod
+    def _prepare_tile_context(cls, index, index_seg, tile, inpaint_mask,
+                               complexity_mask, border_mask,
+                               segment_inpaint_mask=None,
+                               segment_compositing_mask=None):
+        """Create the model-neutral state handed through one tile execution."""
+        native_size = (int(tile.shape[2]), int(tile.shape[1]))
+        geometry = TileGeometry(
+            native_size=native_size,
+            sampling_size=native_size,
+        )
+        context = TileExecutionContext(
+            tile_index=int(index),
+            segment_index=None if index_seg is None else int(index_seg),
+            model_type=str(getattr(tbg.KSAMPLER, "model_type", "") or ""),
+            tile=tile,
+            source_tile=tile,
+            inpaint_mask=inpaint_mask,
+            complexity_mask=complexity_mask,
+            border_mask=border_mask,
+            segment_inpaint_mask=segment_inpaint_mask,
+            segment_compositing_mask=segment_compositing_mask,
+            geometry=geometry,
+            masks={
+                "inpaint": inpaint_mask,
+                "complexity": complexity_mask,
+                "border": border_mask,
+                "segment_inpaint": segment_inpaint_mask,
+                "segment_compositing": segment_compositing_mask,
+            },
+            coordinate_spaces={
+                "tile": "sampling_tile",
+                "inpaint_mask": "sampling_tile",
+                "border_mask": "sampling_tile",
+                **geometry.spaces,
+            },
+        )
+        tbg.TEMP.current_tile_context = context
+        return context
+
+    @classmethod
+    def _run_rgb_pipeline(cls, context, tile_to_process, tile_processed,
+                          tile_width, tile_height, innerloop_scale_factor):
+        """Run shared post-decode processing for every model and decode source."""
+        tile_to_process, tile_processed = cls._run_common_post_decode_stages(
+            tile_to_process,
+            tile_processed,
+            tile_width,
+            tile_height,
+            innerloop_scale_factor,
+            context.tile_index,
+            context.segment_index,
+        )
+        if context.rgb is not None:
+            sift_active = (
+                bool(getattr(tbg.PARAMS, "sift_drift_correction", False))
+                and not bool(getattr(tbg.KSAMPLER, "pid_vae_decode", False))
+            )
+            for stage_id, active in (
+                ("sift_drift_correction", sift_active),
+                ("border_correction", True),
+            ):
+                RGBPostProcessPipeline.run_stage(
+                    cls._stage_registry(),
+                    stage_id,
+                    context.rgb,
+                    normal_active=active,
+                    output_space="native_tile",
+                    reason="shared RGB post-decode stage",
+                )
+        if context.rgb is not None:
+            context.rgb.image = (
+                tile_processed if tile_processed.ndim == 4 else tile_processed.unsqueeze(0)
+            )
+            context.rgb.coordinate_space = "native_tile"
+            context.rgb_result = context.rgb
+        context.decoded = tile_processed
+        return tile_to_process, tile_processed
 
     @classmethod
     def _parse_max_segment_size(cls, value):
@@ -267,7 +495,7 @@ class TBG_Refiner_v1():
         'hm-mkl-hm',
     ]
 
-    PID_VAE_ALLOWED_MODEL_TYPES = {"FLUX1", "FLUX2", "FLUX1 Kontext", "Qwen Image", "Qwen Image Edit", "SDXL", "SD3", "Z-Image"}
+    PID_VAE_ALLOWED_MODEL_TYPES = {"FLUX1", "FLUX2", "FLUX1 Kontext", "Qwen Image", "Qwen Image Edit", "Krea2", "SDXL", "SD3", "Z-Image"}
     _rf_untwisting_missing_warned = False
     _rf_untwisting_error_warned = False
 
@@ -344,6 +572,40 @@ class TBG_Refiner_v1():
         cls.tbg_mark_worker_job_started()
 
         log("ETUR Refiner PRO is starting", None, None, f"Node {tbg.INFO.id}")
+
+        # --- DEV: Trace denoise value from node input ---
+        if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+            _incoming_denoise = kwargs.get('denoise', None)
+            _incoming_steps = kwargs.get('steps', None)
+            _incoming_model_type = kwargs.get('model_type', None)
+            log(f"[TBG DevDenoise] fn() INPUT: denoise={_incoming_denoise} steps={_incoming_steps} model_type={_incoming_model_type} tile_count={len(tbg.OUTPUTS.grid_images_all) if hasattr(tbg, 'OUTPUTS') and tbg.OUTPUTS.grid_images_all else 0}", None, None, f"Node {tbg.INFO.id}")
+        # --- END DEV ---
+
+        # --- DEV: Generate run-id and trace Labs sigma input at fn entry ---
+        if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+            import time as _time
+            tbg.TEMP.debug_run_id = f"{int(_time.time()*1000)}"
+            _labs = kwargs.get('labs_refiner', None)
+            _labs0 = _labs[0] if isinstance(_labs, (list, tuple)) and _labs else _labs
+            _has_labs = bool(_labs0 is not None)
+            _labs_keys = list(_labs0.keys()) if isinstance(_labs0, dict) else None
+            _has_customsigmas_key = isinstance(_labs0, dict) and 'Custom_Sigmas_!DENOISE=1' in _labs0
+            cls._dbg_log("fn_entry",
+                incoming_denoise=kwargs.get('denoise', None),
+                incoming_steps=kwargs.get('steps', None),
+                incoming_model_type=kwargs.get('model_type', None),
+                has_labs=_has_labs,
+                labs_keys=_labs_keys,
+                has_customsigmas_key=_has_customsigmas_key,
+            )
+            if isinstance(_labs0, dict):
+                _raw_cs = _labs0.get('Custom_Sigmas_!DENOISE=1', None)
+                cls._dbg_log("fn_entry_labs_sigmas",
+                    raw_customsigmas_type=type(_raw_cs).__name__,
+                    raw_customsigmas_summary=cls._dbg_sig_summary(_raw_cs),
+                )
+        # --- END DEV ---
+
         cls.init(**kwargs)
         cls._sanitize_tile_override_model_registry()
         cls._sanitize_tile_override_cnetpipe_registry()
@@ -373,6 +635,7 @@ class TBG_Refiner_v1():
 
 
         output_image, output_image_only_tiles, output_image_noCC = cls.refine(tbg.OUTPUTS.upscaled_image, "Refiner")
+        tbg.TEMP.applied_stages = cls._stage_export()
         # Close WORKER on end of refinment
 
 
@@ -431,7 +694,7 @@ class TBG_Refiner_v1():
         if model_type not in cls.PID_VAE_ALLOWED_MODEL_TYPES:
             problems.append(
                 f"selected model type is '{model_type or 'None'}'; supported: "
-                "FLUX1, FLUX2, FLUX1 Kontext, Qwen Image, Qwen Image Edit, SDXL, SD3, Z-Image"
+                "FLUX1, FLUX2, FLUX1 Kontext, Qwen Image, Qwen Image Edit, Krea2, SDXL, SD3, Z-Image"
             )
 
         if problems:
@@ -583,6 +846,7 @@ class TBG_Refiner_v1():
         #from timer "result": (tbg.INPUTS, tbg.PARAMS, tbg.KSAMPLER, tbg.OUTPUTS, tbg.SEGMENTS, tbg.SIZE, tbg.API, tbg.PROMPTER,tbg.API.current_credits, node_id, tiler_id, tbg.API.info_url)
 
         labs_refiner_dict = kwargs.get('labs_refiner', None)
+        tbg.PARAMS.Labs_Refiner_Provided = labs_refiner_dict is not None
         #labs_refiner_dict = labs_refiner[0]
         if tbg.SEGMENTS.Segment_Mask is None and tbg.SEGMENTS.segms is None:
             # No segment inputs → clear everything
@@ -604,10 +868,17 @@ class TBG_Refiner_v1():
 
         if labs_refiner_dict is not None:
             # Optional
-            tbg.PARAMS.Differential_Diffusion =  labs_refiner_dict.get('Differential_Diffusion', True)
-            tbg.PARAMS.Flux2_Tile_Color_Correction = labs_refiner_dict.get('Flux2_Tile_Color_Correction', True)
+            tbg.PARAMS.VL_Encoding_Mode = labs_refiner_dict.get('VL_Encoding_Mode', 'tbg.PARAMS.VL_Encoding_Mode')
+            tbg.PARAMS.Krea2_VL_Inner_Tile = tbg.PARAMS.VL_Encoding_Mode == 'Inner Tile + Global Embedding'
+            raw_differential = labs_refiner_dict.get('Differential_Diffusion', True)
+            if isinstance(raw_differential, str):
+                raw_differential = raw_differential.strip().lower() not in ("", "0", "false", "off", "no")
+            tbg.PARAMS.Differential_Diffusion = bool(raw_differential)
+            tbg.PARAMS.Sigma_Jump_Enabled = bool(labs_refiner_dict.get('Sigma_Jump_Enabled', False))
+            tbg.PARAMS.Sigma_Jump_Strength = float(labs_refiner_dict.get('Sigma_Jump_Strength', 0.0))
+            tbg.PARAMS.Sigma_Jump_Start = float(labs_refiner_dict.get('Sigma_Jump_Start', 0.0))
+            tbg.PARAMS.Sigma_Jump_End = float(labs_refiner_dict.get('Sigma_Jump_End', 1.0))
             tbg.PARAMS.Flux2_Sampler_Hook = labs_refiner_dict.get('Flux2_Sampler_Hook', False)
-            tbg.PARAMS.Segment_Background_Harmonization = labs_refiner_dict.get('Segment_Background_Harmonization', True)
             tbg.PARAMS.ColorMatch_Debug_Switches = labs_refiner_dict.get('ColorMatch_Debug', None)
             tbg.KSAMPLER.custom_sigmas = labs_refiner_dict.get('Custom_Sigmas_!DENOISE=1', None)
             cls._log_sigma_trace(
@@ -616,14 +887,33 @@ class TBG_Refiner_v1():
                 source="labs_refiner",
                 model_type=kwargs.get('model_type', None),
             )
+            # --- DEV: Trace Labs merge ---
+            if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+                cls._dbg_log("init_labs_merge",
+                    labs_present=True,
+                    custom_sigmas_type=type(tbg.KSAMPLER.custom_sigmas).__name__,
+                    custom_sigmas_summary=cls._dbg_sig_summary(tbg.KSAMPLER.custom_sigmas),
+                )
+            # --- END DEV ---
             tbg.PARAMS.Alternative_Image = labs_refiner_dict.get('Resume_Tiled_Refinement_Image', None)
             # Requiered
-            tbg.PARAMS.Tile_Fusion_Blend = labs_refiner_dict.get('Tile_Fusion_Blend', 0.5)
-            tbg.PARAMS.inpaint_conditioning = labs_refiner_dict.get('Fusion_conditioning', True)
+            tbg.PARAMS.Tile_Fusion_Blend = labs_refiner_dict.get('Tile_Fusion_Blend', 1.0)
+            tbg.PARAMS.inpaint_conditioning_mode = normalize_inpaint_conditioning_mode(
+                labs_refiner_dict.get('Fusion_conditioning', INPAINT_CONDITIONING_MODES[-1])
+            )
+            tbg.PARAMS.inpaint_conditioning = tbg.PARAMS.inpaint_conditioning_mode in (
+                "Inpainting On with Conditioning",
+                "Inpainting On with Noise Mask and Conditioning",
+            )
             tbg.PARAMS.point_grid_image_stabilizer_experimental = labs_refiner_dict.get('Color & Structure Stabilizer', 0)
             tbg.PARAMS.memorize = labs_refiner_dict.get('PRO_Tile_Cache', 'OFF')
 
-            tbg.PARAMS.LanPaint = labs_refiner_dict.get('LanPaint', True)
+            execution_mode = labs_refiner_dict.get('Sampler_Execution_Mode')
+            if execution_mode is None:
+                execution_mode = "LanPaint (current)" if labs_refiner_dict.get('LanPaint', True) else "ETUR split-aware"
+            tbg.PARAMS.Sampler_Execution_Mode = execution_mode
+            tbg.PARAMS.LanPaint = execution_mode == "LanPaint (current)"
+            tbg.PARAMS.LanPaint_Internal_Steps = int(labs_refiner_dict.get('LanPaint_Internal_Steps', 5))
             inpaint_end = labs_refiner_dict.get('Fusion_end', 0)
             tbg.PARAMS.Preview_Tiles_in_Temp_Folder = labs_refiner_dict.get('Save_Tiles_in_Temp_Folder', False)
             if not bool(getattr(tbg.API, "dev_debug_enabled", getattr(tbg.API, "status", None) == "Dev")):
@@ -634,6 +924,7 @@ class TBG_Refiner_v1():
             tbg.KSAMPLER.cropped_positive = labs_refiner_dict.get('cropped_positive', None)
             tbg.KSAMPLER.cropped_negative = labs_refiner_dict.get('cropped_negative', None)
             tbg.PARAMS.stitch_blending = labs_refiner_dict.get('stitch_blending', "gpupyramid")
+            tbg.PARAMS.Content_Aware_Laplacian_Seam = labs_refiner_dict.get('Content_Aware_Laplacian_Seam', True)
             tbg.PARAMS.max_upscale_size_segment_inpainting = cls._parse_max_segment_size(
                 labs_refiner_dict.get('max_upscale_size_segment', 2048)
             )
@@ -641,30 +932,47 @@ class TBG_Refiner_v1():
 
         else:
 
+            preset = get_refiner_preset(kwargs.get('model_type'))
             tbg.KSAMPLER.custom_sigmas = None
             tbg.KSAMPLER.pid_model = None
             tbg.PARAMS.Alternative_Image = None
-            tbg.PARAMS.Differential_Diffusion = True
-            tbg.PARAMS.Flux2_Tile_Color_Correction = True
-            tbg.PARAMS.Flux2_Sampler_Hook = False
-            tbg.PARAMS.Segment_Background_Harmonization = False
+            tbg.PARAMS.Differential_Diffusion = bool(preset.get('Differential_Diffusion', True))
+            tbg.PARAMS.Sigma_Jump_Enabled = False
+            tbg.PARAMS.Sigma_Jump_Strength = 0.0
+            tbg.PARAMS.Sigma_Jump_Start = 0.0
+            tbg.PARAMS.Sigma_Jump_End = 1.0
+            tbg.PARAMS.Flux2_Sampler_Hook = bool(preset.get('Flux2_Sampler_Hook', False))
             tbg.PARAMS.ColorMatch_Debug_Switches = None
-            tbg.PARAMS.inpaint_conditioning = True
-            tbg.PARAMS.point_grid_image_stabilizer_experimental = 0
-            tbg.PARAMS.memorize = 'OFF'
-            tbg.SIZE.inpaint_max = 0.05
+            tbg.PARAMS.inpaint_conditioning_mode = normalize_inpaint_conditioning_mode(preset.get('Fusion_conditioning', INPAINT_CONDITIONING_MODES[-1]))
+            tbg.PARAMS.inpaint_conditioning = tbg.PARAMS.inpaint_conditioning_mode in ("Inpainting On with Conditioning", "Inpainting On with Noise Mask and Conditioning")
+            tbg.PARAMS.Tile_Fusion_Blend = preset.get('Tile_Fusion_Blend', 1.0)
+            tbg.PARAMS.point_grid_image_stabilizer_experimental = preset.get('Color & Structure Stabilizer', 0)
+            tbg.PARAMS.memorize = preset.get('PRO_Tile_Cache', 'OFF')
 
-            tbg.PARAMS.LanPaint = True
-            tbg.PARAMS.Preview_Tiles_in_Temp_Folder = False
-            inpaint_end = 0
+        
+
+            tbg.PARAMS.Sampler_Execution_Mode = preset.get('Sampler_Execution_Mode', 'LanPaint (current)')
+            tbg.PARAMS.LanPaint = tbg.PARAMS.Sampler_Execution_Mode == 'LanPaint (current)'
+            tbg.PARAMS.LanPaint_Internal_Steps = int(preset.get('LanPaint_Internal_Steps', 5))
+            tbg.PARAMS.Preview_Tiles_in_Temp_Folder = bool(preset.get('Save_Tiles_in_Temp_Folder', False))
+            inpaint_end = preset.get('Fusion_end', 0)
             tbg.KSAMPLER.sampler_input = None
             tbg.KSAMPLER.ideogram4_guider = None
             tbg.KSAMPLER.cropped_positive = None
             tbg.KSAMPLER.cropped_negative = None
-            tbg.PARAMS.stitch_blending = "gpupyramid"
-            tbg.PARAMS.max_upscale_size_segment_inpainting = 2048
+            tbg.PARAMS.stitch_blending = preset.get('stitch_blending', 'gpupyramid')
+            tbg.PARAMS.Content_Aware_Laplacian_Seam = bool(preset.get('Content_Aware_Laplacian_Seam', True))
+            tbg.PARAMS.max_upscale_size_segment_inpainting = cls._parse_max_segment_size(preset.get('max_upscale_size', 2048))
+            tbg.PARAMS.VL_Encoding_Mode = preset.get('VL_Encoding_Mode', 'Inner Tile + Global Embedding')
+            tbg.PARAMS.Krea2_VL_Inner_Tile = tbg.PARAMS.VL_Encoding_Mode == 'Inner Tile + Global Embedding'
 
-
+        fusion_extra_steps = max(0, min(200, int(kwargs.get('Fusion Extra Steps', 0))))
+        tbg.PARAMS.Fusion_Extra_Steps = fusion_extra_steps
+        tbg.PARAMS.Sampler_Execution_Mode = (
+            'ETUR split-aware' if fusion_extra_steps == 0 else 'LanPaint (current)'
+        )
+        tbg.PARAMS.LanPaint = fusion_extra_steps > 0
+        tbg.PARAMS.LanPaint_Internal_Steps = fusion_extra_steps
 
         tbg.DUALMODEL.steps=kwargs.get('Dual_Model_steps_low', None)
         tbg.DUALMODEL.cfg=kwargs.get('Dual_Model_cfg_low', None)
@@ -687,11 +995,11 @@ class TBG_Refiner_v1():
         tbg.lowvram = vram_profile != "Fast Cache (Max Speed)"
 
 
-
+        tbg.PARAMS.VL_Strength = kwargs.get('FLux_Redux_Krea2VL_strength', 0.5)
         tbg.PARAMS.PRO_Fusion_Complexity_Mask_Strength = kwargs.get('Image Stabilizer', 0)
         tbg.PARAMS.PRO_Per_Pixel_Denoise_Mask_Strength = kwargs.get('Per_Pixel_Denoise_Mask_Strength', 0)
         tbg.PARAMS.denoise_mask = kwargs.get('denoise_mask', None)
-        tbg.PARAMS.Redux_strength = kwargs.get('Redux_strength', 0)
+        tbg.PARAMS.Redux_strength = tbg.PARAMS.VL_Strength
         tbg.PARAMS.contrast = kwargs.get('contrast', None)
         tbg.PARAMS.highpass = kwargs.get('highpass', None)
         DENOISE_METHODS = [
@@ -703,12 +1011,25 @@ class TBG_Refiner_v1():
 
         tbg.PARAMS.denoise_method =  kwargs.get('denoise_method', 'default')
         tbg.PARAMS.Fast_1_Tile_Preview =  kwargs.get('Fast_1_Tile_Preview', False)
+       
         tbg.PARAMS.Redux_Style_Model =  kwargs.get('Redux_Style_Model', None)
         tbg.PARAMS.Redux_Clip_Vision =  kwargs.get('Redux_Clip_Vision', None)
         tbg.PARAMS.Laplacian_Pyramid_Blending =  kwargs.get('Enhanced_Laplacian_Blending', True)
         color_match_method = kwargs.get('Color_Match', cls.TILE_STABILIZER_METHOD)
         tbg.PARAMS.color_match_method = color_match_method
         tbg.PARAMS.color_match_str = kwargs.get('Color_Match_Str', 1)
+        rgb_config_source = dict(labs_refiner_dict or {})
+        rgb_config_source.update({
+            "Color_Match": color_match_method,
+            "Color_Match_Str": tbg.PARAMS.color_match_str,
+            "enabled": normalize_stage_config(
+                getattr(tbg.PARAMS, "ColorMatch_Debug_Switches", None)
+            ).get("enabled"),
+        })
+        tbg.PARAMS.rgb_config = normalize_rgb_config(
+            rgb_config_source,
+            defaults=RGBConfig(segment_harmonization=labs_refiner_dict is not None),
+        )
         tbg.PARAMS.rgb_luma_nonstructural = cls.is_tbg_non_structural(color_match_method)
         tbg.PARAMS.model_type = kwargs.get('model_type', None)
         tbg.PARAMS.tiles_to_process_active = kwargs.get('Selected_Tiles_Only', False)
@@ -734,6 +1055,10 @@ class TBG_Refiner_v1():
         tbg.KSAMPLER.steps = kwargs.get('steps', None)
         tbg.KSAMPLER.cfg = kwargs.get('cfg', None)
         tbg.KSAMPLER.denoise = kwargs.get('denoise', None)
+        # --- DEV: Trace denoise after set from kwargs ---
+        if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+            log(f"[TBG DevDenoise] init() after kwargs set: tbg.KSAMPLER.denoise={tbg.KSAMPLER.denoise} tbg.KSAMPLER.steps={tbg.KSAMPLER.steps} tbg.KSAMPLER.model_type={tbg.KSAMPLER.model_type}", None, None, f"Node {tbg.INFO.id}")
+        # --- END DEV ---
         cnet_multiply = kwargs.get(
             "Controlnet_Pipe_strength",
             kwargs.get("ControlNet_Pipe_strength", kwargs.get("controlnet_pipe_strength", 1)),
@@ -748,6 +1073,14 @@ class TBG_Refiner_v1():
         tbg.KSAMPLER.Flux_Guidance = kwargs.get('Flux_Guidance', None)
         tbg.KSAMPLER.Controlnet_Pipe = kwargs.get('Controlnet_Pipe', None)
         tbg.KSAMPLER.model_type = kwargs.get('model_type', None)
+        tbg.PARAMS.model_adapter = get_model_adapter(tbg.KSAMPLER.model_type)
+        tbg.PARAMS.stage_pipeline = normalize_stage_config(
+            getattr(tbg.PARAMS, "ColorMatch_Debug_Switches", None)
+        )
+        tbg.TEMP.refiner_stage_registry = StageRegistry(
+            tbg.PARAMS.stage_pipeline,
+            tbg.KSAMPLER.model_type,
+        )
         tbg.KSAMPLER.model = kwargs.get('model', None)
         tbg.KSAMPLER.clip = kwargs.get('clip', None)
         tbg.KSAMPLER.vae = kwargs.get('vae', None)
@@ -857,8 +1190,9 @@ class TBG_Refiner_v1():
                     obj = {}
                 # if the user build fist time the tile Overrides or its modified parameters could not be updated so we need to take values fro PIPE not from json , this json was though for on node load with infos...
 
-                if len(tbg.OUTPUTS.grid_images_all) == len(obj.get("prompts")):
-                    print(f"Tile Overrides set from JSON {len(tbg.OUTPUTS.grid_images_all)} Tiles and {len(obj.get("prompts"))} Prompts ")
+                prompts_count = len(obj.get("prompts"))
+                if len(tbg.OUTPUTS.grid_images_all) == prompts_count:
+                    print(f"Tile Overrides set from JSON {len(tbg.OUTPUTS.grid_images_all)} Tiles and {prompts_count} Prompts ")
                     tbg.PROMPTER.output_denoises = obj.get("denoises") or []
                     tbg.PROMPTER.output_seeds_js = obj.get("seeds") or []
                     tbg.PROMPTER.output_cnet_js = obj.get("cnet_strength") or []
@@ -868,15 +1202,42 @@ class TBG_Refiner_v1():
                     tbg.PROMPTER.output_color_match_js = obj.get("color_match_overrides") or []
                     tbg.PROMPTER.output_prompts = obj.get("prompts") or []
                 else:
-                    print(f"Skipped json inputs from Tile Overrides Node because {len(tbg.OUTPUTS.grid_images_all)} Tiles have not the same count than {len(obj.get("prompts"))} Prompts, using PIPE ")
+                    print(f"Skipped json inputs from Tile Overrides Node because {len(tbg.OUTPUTS.grid_images_all)} Tiles have not the same count than {prompts_count} Prompts, using PIPE ")
             except Exception:
                 print(f"Skipped json inputs from Tile Overrides Node")
 
-        # convert string to float and if empty add general
-        tbg.PROMPTER.output_denoises = [
-            float(x) if x != '' else tbg.KSAMPLER.denoise
-            for x in tbg.PROMPTER.output_denoises
-        ]
+        # --- DEV: Trace output_denoises after JSON override ---
+        if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+            log(f"[TBG DevDenoise] init() after JSON override: tbg.PROMPTER.output_denoises={tbg.PROMPTER.output_denoises[:5]}{'...' if len(tbg.PROMPTER.output_denoises) > 5 else ''} (len={len(tbg.PROMPTER.output_denoises)}) tbg.KSAMPLER.denoise={tbg.KSAMPLER.denoise}", None, None, f"Node {tbg.INFO.id}")
+        # --- END DEV ---
+
+        # Normalize length to match tile count (avoid index drift)
+        tile_count = len(getattr(tbg.OUTPUTS, "grid_images_all", []) or [])
+        if len(tbg.PROMPTER.output_denoises) < tile_count:
+            tbg.PROMPTER.output_denoises.extend(
+                [""] * (tile_count - len(tbg.PROMPTER.output_denoises))
+            )
+        elif len(tbg.PROMPTER.output_denoises) > tile_count:
+            tbg.PROMPTER.output_denoises = tbg.PROMPTER.output_denoises[:tile_count]
+
+        # Keep tile denoise overrides raw:
+        # '' / None  -> inherit current global denoise at sampling time
+        # numeric    -> explicit per-tile override
+        # Do NOT convert "" to global denoise here — that destroys inheritance semantics.
+        normalized_denoises = []
+        for x in tbg.PROMPTER.output_denoises:
+            if x in ("", None):
+                normalized_denoises.append("")
+                continue
+            try:
+                normalized_denoises.append(float(x))
+            except Exception:
+                normalized_denoises.append("")
+        tbg.PROMPTER.output_denoises = normalized_denoises
+        # --- DEV: Trace output_denoises after conversion ---
+        if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+            log(f"[TBG DevDenoise] init() after conversion: tbg.PROMPTER.output_denoises={tbg.PROMPTER.output_denoises[:5]}{'...' if len(tbg.PROMPTER.output_denoises) > 5 else ''} (len={len(tbg.PROMPTER.output_denoises)}) tbg.KSAMPLER.denoise={tbg.KSAMPLER.denoise}", None, None, f"Node {tbg.INFO.id}")
+        # --- END DEV ---
         tbg.PROMPTER.output_seeds_js = [
             int(x) if x != '' else tbg.KSAMPLER.noise_seed
             for x in tbg.PROMPTER.output_seeds_js
@@ -1018,6 +1379,18 @@ class TBG_Refiner_v1():
                 log(f"TBG[Node {tbg.INFO.id}] First run detected, preserving newly built cache", None, None,
                     f"Node {tbg.INFO.id}")
                 cls.VRAM_OPTIMIZER.last_timestamp = tbg.PARAMS.timestamp
+
+        # --- DEV: Trace final sampler state after all init ---
+        if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+            cls._dbg_log("init_final_sampler_state",
+                denoise=tbg.KSAMPLER.denoise,
+                steps=tbg.KSAMPLER.steps,
+                scheduler=tbg.KSAMPLER.scheduler,
+                sampler_name=tbg.KSAMPLER.sampler_name,
+                model_type=tbg.KSAMPLER.model_type,
+                custom_sigmas_summary=cls._dbg_sig_summary(getattr(tbg.KSAMPLER, "custom_sigmas", None)),
+            )
+        # --- END DEV ---
     # WORKER and LOCAL !
     @classmethod
     def prepare_tiles_to_process(cls):
@@ -1177,12 +1550,8 @@ class TBG_Refiner_v1():
         return cls._pid_vram_profile() == "Ultra Low Memory (Per-Tile Streaming)"
 
     @classmethod
-    def _flux2_pid_active(cls):
-        return (
-            getattr(tbg.KSAMPLER, "model_type", None) == "FLUX2"
-            and getattr(tbg.KSAMPLER, "pid_vae_decode", False)
-            and getattr(tbg.KSAMPLER, "vae_encode_type", None) == "Nvidia PiD 4x"
-        )
+    def _pid_active(cls):
+        return PIDPipeline.active(tbg.KSAMPLER)
 
     @classmethod
     def _pid_vae_decode_active(cls):
@@ -1192,20 +1561,12 @@ class TBG_Refiner_v1():
         )
 
     @classmethod
-    def _flux2_pid_use_flux1_baseline(cls):
-        """Keep Flux2 PiD on the proven Flux1 segment path until Flux2-specific tuning is tested."""
-        return bool(getattr(tbg.PARAMS, "Flux2_PiD_Use_Flux1_Baseline", True))
-
-    @classmethod
     def _pid_color_match_active(cls):
         method = getattr(tbg.PARAMS, "color_match_method", None)
         try:
             strength = float(getattr(tbg.PARAMS, "color_match_str", 1.0) or 1.0)
         except Exception:
             strength = 1.0
-        model_type = str(getattr(tbg.KSAMPLER, "model_type", None) or "").upper()
-        if model_type == "FLUX2" and cls._flux2_pid_use_flux1_baseline():
-            return False
         return (
             cls._pid_vae_decode_active()
             and method is not None
@@ -1214,10 +1575,10 @@ class TBG_Refiner_v1():
         )
 
     @classmethod
-    def _flux2_pid_normal_vae_color_match_active(cls):
+    def _pid_normal_vae_reference_active(cls):
         normal_active = (
-            cls._flux2_pid_active()
-            and bool(getattr(tbg.PARAMS, "Flux2_PiD_Normal_VAE_Color_Match", False))
+            cls._pid_vae_decode_active()
+            and cls._rgb_config().pid_normal_vae_reference
         )
         return cls._cm_debug_stage_enabled(
             "03_Flux2_PID_NormalVAE_Reference",
@@ -1311,7 +1672,7 @@ class TBG_Refiner_v1():
         )
 
     @classmethod
-    def _flux2_pid_color_match(cls, reference, target, label, method=None, strength=1.0):
+    def _pid_color_match(cls, reference, target, label, method=None, strength=1.0):
         if reference is None or target is None or not torch.is_tensor(reference) or not torch.is_tensor(target):
             return target
         ref = reference.unsqueeze(0) if reference.ndim == 3 else reference
@@ -1469,7 +1830,7 @@ class TBG_Refiner_v1():
         )
 
     @classmethod
-    def _flux2_pid_post_tone_active(cls):
+    def _pid_post_tone_active(cls):
         return cls._pid_post_decode_color_active()
 
     @classmethod
@@ -1578,7 +1939,7 @@ class TBG_Refiner_v1():
         return corrected
 
     @classmethod
-    def _apply_flux2_pid_post_tone(cls, reference, target, index, seam_mask=None, label="pid_post_tone", apply_global=True):
+    def _apply_pid_post_tone(cls, reference, target, index, seam_mask=None, label="pid_post_tone", apply_global=True):
         return cls._apply_pid_post_decode_color_stabilizer(
             reference,
             target,
@@ -2151,7 +2512,7 @@ class TBG_Refiner_v1():
             return None
 
     @classmethod
-    def _flux2_pid_segment_preprotect_image(cls, source_image, sampled_image, edit_mask, index):
+    def _pid_segment_preprotect_image(cls, source_image, sampled_image, edit_mask, index):
         if source_image is None or sampled_image is None or edit_mask is None:
             return sampled_image, None, None
         if not torch.is_tensor(source_image) or not torch.is_tensor(sampled_image) or not torch.is_tensor(edit_mask):
@@ -2221,11 +2582,11 @@ class TBG_Refiner_v1():
         return protected, mask, final_mask
 
     @classmethod
-    def _flux2_pid_segment_context_color_lock(cls, reference, target, segment_mask, index):
+    def _pid_segment_context_color_lock(cls, reference, target, segment_mask, index):
         """Use the Flux2 tile tone fix only on segment background/context pixels."""
         if reference is None or target is None or not torch.is_tensor(reference) or not torch.is_tensor(target):
             return target
-        if not bool(getattr(tbg.PARAMS, "Flux2_Tile_Color_Correction", True)):
+        if not cls._rgb_config().tile_color_correction:
             return target
         ref = reference.unsqueeze(0) if reference.ndim == 3 else reference
         tgt = target.unsqueeze(0) if target.ndim == 3 else target
@@ -2500,7 +2861,7 @@ class TBG_Refiner_v1():
         method = getattr(tbg.PARAMS, "color_match_method", "none")
         if method is None or str(method).lower() == "none":
             return False
-        return bool(getattr(tbg.PARAMS, "Flux2_Tile_Color_Correction", True))
+        return cls._rgb_config().tile_color_correction
 
     @staticmethod
     def _is_rgb_luma_method(method):
@@ -2509,7 +2870,14 @@ class TBG_Refiner_v1():
     @classmethod
     def _cm_debug_switches(cls):
         switches = getattr(tbg.PARAMS, "ColorMatch_Debug_Switches", None)
-        return switches if isinstance(switches, dict) and switches.get("_connected") else None
+        if not isinstance(switches, dict) or not switches.get("_connected"):
+            return None
+        normalized = normalize_stage_config(switches)
+        return {
+            "_connected": True,
+            "enabled": normalized["enabled"],
+            "Override_Normal_Gates": normalized["override"],
+        }
 
     @classmethod
     def _cm_debug_override(cls):
@@ -2526,10 +2894,25 @@ class TBG_Refiner_v1():
 
     @classmethod
     def _cm_debug_stage_enabled(cls, stage_key, normal_active=True, requires_method=True):
+        registry = getattr(tbg.TEMP, "refiner_stage_registry", None)
+        stage_id = LEGACY_STAGE_ALIASES.get(stage_key)
+        if (
+            registry is not None
+            and registry.config.get("_connected", False)
+            and stage_id is not None
+            and stage_id not in registry.config.get("enabled", ())
+        ):
+            registry.record(
+                stage_id,
+                "skipped",
+                reason=f"disabled by stage pipeline ({stage_key})",
+            )
+            return False
         switches = cls._cm_debug_switches()
         if not switches:
             return bool(normal_active)
-        switch_enabled = bool(switches.get(stage_key, True))
+        canonical_stage = LEGACY_STAGE_ALIASES.get(stage_key, stage_key)
+        switch_enabled = canonical_stage in switches["enabled"]
         override = bool(switches.get("Override_Normal_Gates", False))
         if not bool(switches.get("Override_Normal_Gates", False)):
             result = bool(normal_active) and switch_enabled
@@ -2547,12 +2930,12 @@ class TBG_Refiner_v1():
                 reason = "blocked_no_method"
             if reason:
                 seen = getattr(cls, "_cm_debug_log_seen", set())
-                key = (stage_key, reason, bool(normal_active), switch_enabled, override, result)
+                key = (canonical_stage, reason, bool(normal_active), switch_enabled, override, result)
                 if key not in seen:
                     seen.add(key)
                     cls._cm_debug_log_seen = seen
                     print(
-                        f"TBG[Node {tbg.INFO.id}] ColorMatch debug gate {stage_key}: "
+                        f"TBG[Node {tbg.INFO.id}] ColorMatch debug gate {canonical_stage}: "
                         f"{reason} normal={bool(normal_active)} switch={switch_enabled} "
                         f"override={override} result={result}"
                     )
@@ -2562,7 +2945,7 @@ class TBG_Refiner_v1():
     def _disable_worker_color_correction(cls, params):
         params.color_match_method = "none"
         params.color_match_str = 0
-        params.Flux2_Tile_Color_Correction = False
+        params.rgb_config = RGBConfig(tile_color_correction=False)
         params.point_grid_image_stabilizer_experimental = 0
         return params
 
@@ -2605,6 +2988,12 @@ class TBG_Refiner_v1():
 
     @classmethod
     def _apply_final_color_correction(cls, image):
+        cls._stage_mark(
+            "final_color_correction",
+            normal_active=cls._final_color_correction_enabled(),
+            input_space="final_output",
+            output_space="final_output",
+        )
         if (
             not cls._cm_debug_stage_enabled(
                 "14_Final_Global_ColorMode",
@@ -2659,10 +3048,6 @@ class TBG_Refiner_v1():
         if getattr(tbg.PARAMS, "Fast_1_Tile_Preview", False):
             return False
         if getattr(tbg.KSAMPLER, "pid_vae_decode", False):
-            return False
-        # Flux2 stays on the worker NGTF composite until this mask-aware detail path
-        # is verified against real Flux2 tiled-slow runs.
-        if getattr(tbg.KSAMPLER, "model_type", None) == "FLUX2":
             return False
         segms_new = getattr(tbg.SEGMENTS, "segms_new", None)
         if segms_new is not None:
@@ -2915,11 +3300,36 @@ class TBG_Refiner_v1():
         return final
 
     @classmethod
-    def conditioning(cls, image, index, tile_to_process):
+    def conditioning(cls, image, index, tile_to_process, complexity_mask=None, vl_tile_image=None):
+        adapter = getattr(tbg.PARAMS, "model_adapter", None)
+        if adapter is None:
+            adapter = get_model_adapter(getattr(tbg.KSAMPLER, "model_type", None))
+            tbg.PARAMS.model_adapter = adapter
+        cls._stage_mark(
+            "conditioning",
+            index=index,
+            index_seg=None,
+            input_space="sampling_tile",
+            output_space="conditioning",
+        )
+        return adapter.prepare_conditioning(
+            cls,
+            image,
+            index,
+            tile_to_process,
+            complexity_mask,
+            vl_tile_image,
+        )
+
+    @classmethod
+    def _conditioning_model_specific(cls, image, index, tile_to_process,
+                                     complexity_mask=None, vl_tile_image=None):
+        print(f"DEBUG_CONDITIONING: conditioning called index={index} model={getattr(cls, 'KSAMPLER', None)}")
         neg_low = None
         pos_low = None
         negative = None
         positive = None
+        vl_positive = None
         tbg.TEMP.latent_index = index  # used in Cnet.py
         # Flux conditioning + Guidance + cnet if Kontext
         if tbg.KSAMPLER.model_type in {"FLUX2", "FLUX1", "FLUX1 Kontext"}:
@@ -2958,20 +3368,91 @@ class TBG_Refiner_v1():
             positive = FluxGuidance_execute(positive, tbg.KSAMPLER.Flux_Guidance)[0]
 
         # Qwen Edit conditioning
-        elif tbg.KSAMPLER.model_type in {"Qwen Image", "Qwen Image Edit"}:
-            if tbg.KSAMPLER.model_type == "Qwen Image Edit":
+        elif tbg.KSAMPLER.model_type in {"Qwen Image", "Qwen Image Edit", "Krea2"}:
+            if tbg.KSAMPLER.model_type in {"Qwen Image Edit", "Krea2"}:
                 positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
                 if tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
                     pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
                 if tbg.KSAMPLER.Controlnet_Pipe:
-                    # build from Cnet stitched and chaind referent latent combination
+                    # Only the explicit CNet pipe may add reference latents
+                    # for Qwen Image Edit or Krea2.
                     positive, negative = get_qwen_stiched_o_chained_cond(tbg, positive, negative, tbg.KSAMPLER.Controlnet_Pipe, tile_to_process, index)
-                cls._debug_conditioning_trace(index, "qwen_reference", positive, negative, False)
+                cls._debug_conditioning_trace(index, "qwen_reference" if tbg.KSAMPLER.model_type == "Qwen Image Edit" else "krea2_cnet_reference", positive, negative, False)
             else:
 
                 positive, negative = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(tile_index=index)
                 if tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
                     pos_low, neg_low = cls.VRAM_OPTIMIZER.unified_condition_to_gpu(index, "low")
+
+            # Replace text conditioning with VL conditioning for Qwen models (both types).
+            # Global Embedding: precomputed in VRAMOptimizer.precompute_vl_conditioning().
+            # Tile Embedding: encoded on-the-fly from tile_to_process.
+            # Preserve reference_latents from ControlNet pipe (VAE-encoded refs for UNet attention).
+            vl_positive = None
+
+            # Debug: log the VL mode being used in conditioning
+            vl_mode_cond = getattr(tbg.PARAMS, 'VL_Encoding_Mode', 'Off')
+            log(
+                f"VL: conditioning mode check = '{vl_mode_cond}' (qwen={tbg.KSAMPLER.model_type in ('Qwen Image', 'Qwen Image Edit', 'Krea2')})",
+                None, None, f"Node {tbg.INFO.id}",
+            )
+
+            vl_mode = getattr(tbg.PARAMS, 'VL_Encoding_Mode', 'Off')
+            global_positive = None
+            if (
+                cls.VRAM_OPTIMIZER is not None
+                and getattr(cls.VRAM_OPTIMIZER, "vl_conditioning_cache", None)
+                and index in cls.VRAM_OPTIMIZER.vl_conditioning_cache
+            ):
+                global_positive = cls.VRAM_OPTIMIZER.vl_conditioning_cache[index]
+
+            # Tile Embedding modes encode the actual sampling tile on demand.
+            if cls.VRAM_OPTIMIZER is not None and tile_to_process is not None:
+                vl_positive = cls.VRAM_OPTIMIZER.get_tile_vl_conditioning(
+                    index, vl_tile_image if vl_tile_image is not None else tile_to_process
+                )
+
+            if vl_mode == "Global Embedding":
+                vl_positive = global_positive
+            elif vl_mode in ("Tile + Global Embedding", "Inner Tile + Global Embedding"):
+                if float(getattr(tbg.PARAMS, "VL_Strength", 0.5)) > 0.0:
+                    from .inc.vl_encode import combine_tile_and_global
+                    vl_positive = combine_tile_and_global(
+                        vl_positive,
+                        global_positive,
+                        tbg.KSAMPLER.model_type,
+                    )
+            if float(getattr(tbg.PARAMS, "VL_Strength", 0.5)) <= 0.0:
+                vl_positive = None
+
+            if vl_positive is not None:
+                # Extract reference_latents from the pre-computed conditioning.
+                ref_latents = []
+                for _entry_tensor, entry_meta in positive:
+                    if isinstance(entry_meta, dict):
+                        rl = entry_meta.get("reference_latents")
+                        if rl:
+                            ref_latents.extend(rl)
+
+                # Merge reference_latents into each VL conditioning entry.
+                for entry in vl_positive:
+                    if isinstance(entry, (list, tuple)) and len(entry) >= 2 and isinstance(entry[1], dict):
+                        if ref_latents:
+                            entry[1]["reference_latents"] = ref_latents
+
+                # Qwen VL already contains its native instruction/template tail.
+                # Keep it as one conditioning sequence; adding the text-only
+                # branch makes Comfy run and average separate conditions.
+                if tbg.KSAMPLER.model_type in ("Qwen Image", "Qwen Image Edit"):
+                    positive = list(vl_positive)
+                else:
+                    # Preserve the established Krea2 behavior.
+                    positive = list(vl_positive) + list(positive)
+                if tbg.API.status == "Dev":
+                    print(
+                        f"[TBG VL] tile={index + 1} model={tbg.KSAMPLER.model_type} "
+                        f"mode={vl_mode} native VL conditioning selected"
+                    )
 
         # SDXL and Other conditioning
         else:
@@ -3005,8 +3486,30 @@ class TBG_Refiner_v1():
             init_size = (tbg.OUTPUTS.upscaled_image.shape[2], tbg.OUTPUTS.upscaled_image.shape[1])
 
             if tbg.KSAMPLER.cropped_positive:
-                positive_crop = crop_cond(tbg.KSAMPLER.cropped_positive, crop_region, init_size, canvas_size, tile_size)
-                positive = combine_conditioning([positive, positive_crop])
+                if tbg.KSAMPLER.model_type == "Krea2":
+                    positive_crop = None
+                else:
+                    positive_crop = crop_cond(tbg.KSAMPLER.cropped_positive, crop_region, init_size, canvas_size, tile_size)
+                # TextEncodeQwenImageEditPlus returns one mixed text+image
+                # tensor.  When TBG has its own VL stream, adding that entry
+                # would duplicate the prompt and the image tokens.  Keep the
+                # TBG prompt tensor and carry over only edit metadata.
+                if (
+                    tbg.KSAMPLER.model_type == "Qwen Image Edit"
+                    and getattr(tbg.PARAMS, "VL_Encoding_Mode", "Off") != "Off"
+                ):
+                    positive = merge_reference_conditioning(positive, positive_crop)
+                elif tbg.KSAMPLER.model_type == "Krea2":
+                    # Krea2 does not consume standard Qwen edit reference
+                    # conditioning.  Krea2 references are accepted only from
+                    # the explicit ControlNet pipe path above.
+                    if tbg.API.status == "Dev":
+                        print(
+                            f"[TBG Conditioning] tile={index + 1}: "
+                            "ignored cropped_positive for Krea2; use CNet pipe for references"
+                        )
+                else:
+                    positive = combine_conditioning([positive, positive_crop])
 
             if tbg.KSAMPLER.cropped_negative:
                 negative_crop = crop_cond(tbg.KSAMPLER.cropped_negative, crop_region, init_size, canvas_size, tile_size)
@@ -3052,6 +3555,23 @@ class TBG_Refiner_v1():
 
     @classmethod
     def sigmas(cls, iteration, index):
+            # --- DEV: Trace denoise in sigmas() ---
+            if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+                log(f"[TBG DevDenoise] sigmas() tile={index+1}: tbg.KSAMPLER.denoise={tbg.KSAMPLER.denoise} tbg.PROMPTER.output_denoises[{index}]={tbg.PROMPTER.output_denoises[index] if index < len(tbg.PROMPTER.output_denoises) else 'OUT_OF_RANGE'} tbg.KSAMPLER.steps={tbg.KSAMPLER.steps} tbg.KSAMPLER.scheduler={tbg.KSAMPLER.scheduler}", None, None, f"Node {tbg.INFO.id}")
+            # --- END DEV ---
+
+            # --- DEV: Trace sigmas branch selection ---
+            if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+                cls._dbg_log("sigmas_entry",
+                    tile_index=index + 1,
+                    iteration=iteration,
+                    global_denoise=tbg.KSAMPLER.denoise,
+                    tile_output_denoise=tbg.PROMPTER.output_denoises[index] if index < len(getattr(tbg.PROMPTER, "output_denoises", []) or []) else None,
+                    denoise_method=tbg.PARAMS.denoise_method,
+                    custom_sigmas_summary=cls._dbg_sig_summary(getattr(tbg.KSAMPLER, "custom_sigmas", None)),
+                )
+            # --- END DEV ---
+
             # PRO Step 3.5.1 Sigmas
             if tbg.KSAMPLER.custom_sigmas is not None:
                 # use custom sigmas from input node should have denoise 1
@@ -3070,6 +3590,15 @@ class TBG_Refiner_v1():
                 # create full sigmas denoise 1
                 sigmas = get_sigmas(tbg.KSAMPLER.model, tbg.KSAMPLER.scheduler, tbg.KSAMPLER.steps, 1.0 , tbg.PARAMS.denoise_method)[0]
 
+            # --- DEV: Trace base sigma selection ---
+            if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+                cls._dbg_log("sigmas_base_selected",
+                    tile_index=index + 1,
+                    source="custom_sigmas" if getattr(tbg.KSAMPLER, "custom_sigmas", None) is not None else "generated",
+                    base_sigmas=cls._dbg_sig_summary(sigmas),
+                    base_steps=len(sigmas) if hasattr(sigmas, "__len__") else None,
+                )
+            # --- END DEV ---
 
             # ------------------------------------------------------------------
             # PRO Step 3.5.2 FLUX_Kontext Sigma corrections
@@ -3092,15 +3621,36 @@ class TBG_Refiner_v1():
             # PRO Step 3.5.3 Denoise Correction
 
 
-            if tbg.PROMPTER.output_denoises[index] != tbg.KSAMPLER.denoise and tbg.PROMPTER.output_denoises[index] != "":
-                denoise = tbg.PROMPTER.output_denoises[index]
+            # Resolve per-tile denoise at sampling time (last possible moment).
+            # "" / None -> inherit global denoise; numeric -> explicit override.
+            tile_denoise_raw = ""
+            if index < len(getattr(tbg.PROMPTER, "output_denoises", []) or []):
+                tile_denoise_raw = tbg.PROMPTER.output_denoises[index]
 
-                sigmas = denoise_sigmas_tgb(sigmas, tbg.PROMPTER.output_denoises[index], tbg.PARAMS.denoise_method, tbg.KSAMPLER.model, tbg.KSAMPLER.scheduler)
-                denoise_override = True
-            else:
+            if tile_denoise_raw in ("", None):
                 denoise = tbg.KSAMPLER.denoise
-                sigmas = denoise_sigmas_tgb(sigmas, tbg.KSAMPLER.denoise, tbg.PARAMS.denoise_method, tbg.KSAMPLER.model, tbg.KSAMPLER.scheduler)
                 denoise_override = False
+            else:
+                try:
+                    tile_denoise_value = float(tile_denoise_raw)
+                except Exception:
+                    tile_denoise_value = tbg.KSAMPLER.denoise
+
+                if tile_denoise_value != tbg.KSAMPLER.denoise:
+                    denoise = tile_denoise_value
+                    denoise_override = True
+                else:
+                    denoise = tbg.KSAMPLER.denoise
+                    denoise_override = False
+
+            sigmas = denoise_sigmas_tgb(
+                sigmas,
+                denoise,
+                tbg.PARAMS.denoise_method,
+                tbg.KSAMPLER.model,
+                tbg.KSAMPLER.scheduler,
+                preserve_custom_curve=tbg.KSAMPLER.custom_sigmas is not None,
+            )
 
             cls._log_sigma_trace(
                 "post_denoise",
@@ -3110,7 +3660,13 @@ class TBG_Refiner_v1():
                 denoise=round(float(denoise), 6) if denoise is not None else None,
                 denoise_method=tbg.PARAMS.denoise_method,
                 tile_override=denoise_override,
+                custom_curve=tbg.KSAMPLER.custom_sigmas is not None,
             )
+
+            # --- DEV: Trace denoise returned from sigmas() ---
+            if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+                log(f"[TBG DevDenoise] sigmas() RETURN tile={index+1}: denoise={denoise} denoise_override={denoise_override} sigmas_len={len(sigmas) if hasattr(sigmas, '__len__') else 'N/A'}", None, None, f"Node {tbg.INFO.id}")
+            # --- END DEV ---
 
             return  (denoise, sigmas)
     @classmethod
@@ -3139,6 +3695,13 @@ class TBG_Refiner_v1():
         # ------------------------------------------------------------------
 
         cls.prepare_tiles_to_process()  # return tbg.OUTPUTS.grid_images_all and tbg.PARAMS.tiles_to_process
+        cls._stage_mark(
+            "tile_preparation",
+            index=None,
+            input_space="full_canvas",
+            output_space="native_tile",
+            reason="tile selection and cache preparation",
+        )
 
         # Detect what changed
         # change_type, changed_indices, change_msg = cls._detect_changes()
@@ -3208,7 +3771,27 @@ class TBG_Refiner_v1():
         worker_params.output_color_match_js = list(getattr(tbg.PROMPTER, "output_color_match_js", []) or [])
         worker_params.output_ignore_general_prompt_js = list(getattr(tbg.PROMPTER, "output_ignore_general_prompt_js", []) or [])
         worker_params.output_prompts = list(getattr(tbg.PROMPTER, "output_prompts", []) or [])
-        output_image_new, output_image_only_tiles, output_image_noCC = WORKER.id(tiler_id).ETUR.refiner_init(worker_params, tbg.SIZE)
+        # Keep custom-node implementation objects out of the worker RPC
+        # payload.  The worker reconstructs the adapter from model_type.
+        worker_params.model_adapter = None
+        rgb_config = getattr(worker_params, "rgb_config", None)
+        if isinstance(rgb_config, dict):
+            worker_params.rgb_config = SimpleNamespace(**rgb_config)
+        elif rgb_config is not None and hasattr(rgb_config, "__dict__"):
+            worker_params.rgb_config = SimpleNamespace(**vars(rgb_config))
+        stage_pipeline = getattr(worker_params, "stage_pipeline", None)
+        if isinstance(stage_pipeline, dict):
+            worker_params.stage_pipeline = dict(stage_pipeline)
+        output_image_new, output_image_only_tiles, output_image_noCC = WORKER.id(tiler_id).ETUR.refiner_init(
+            cls._worker_cpu_value(worker_params),
+            cls._worker_cpu_value(tbg.SIZE),
+        )
+        cls._stage_mark(
+            "tile_compositing",
+            input_space="native_tile",
+            output_space="tile_only_canvas",
+            reason="worker tile-only rebuild",
+        )
         # output_image_new, output_image_only_tiles, output_image_noCC = WORKER.id(tiler_id).ETUR.refiner_init(tbg.PARAMS, tbg.SIZE)
 
         if getattr(tbg.KSAMPLER, "pid_vae_decode", False):
@@ -3238,6 +3821,12 @@ class TBG_Refiner_v1():
                     output_image_new,
                     output_image_only_tiles,
                     output_image_noCC,
+                )
+                cls._stage_mark(
+                    "final_rebuild",
+                    input_space="pid_tile_4x",
+                    output_space="final_output",
+                    reason="PiD final rebuild",
                 )
                 output_image_new = cls._apply_pid_segment_final_color_match(output_image_new)
                 if tbg.API.status == "Dev" and torch.is_tensor(output_image_new):
@@ -4080,7 +4669,7 @@ class TBG_Refiner_v1():
         if color_match_context:
             if tbg.API.status == "Dev":
                 cls.debug_image_to_folder(reference_context, str(debug_prefix) + "_Segment_PID_context_reference_raw_4x")
-            reference_context = cls._flux2_pid_color_match(
+            reference_context = cls._pid_color_match(
                 base_context,
                 reference_context,
                 f"segment_context_reference_4x_{int(index_seg) + 1}",
@@ -4454,7 +5043,7 @@ class TBG_Refiner_v1():
 
     @classmethod
     def _apply_pid_pre_decode_hooks(cls, vae, latent_output, base_image, edit_mask, index, label, denoise=None):
-        if not cls._flux2_pid_active():
+        if not cls._pid_active():
             return latent_output, base_image, None, False
         try:
             denoise_value = float(denoise)
@@ -4494,7 +5083,7 @@ class TBG_Refiner_v1():
         )
         if sampled_image is None or edit_mask is None:
             return latent_output, base_image, None, False
-        protected_image, _, protected_mask = cls._flux2_pid_segment_preprotect_image(
+        protected_image, _, protected_mask = cls._pid_segment_preprotect_image(
             base_image,
             sampled_image,
             edit_mask,
@@ -4524,7 +5113,7 @@ class TBG_Refiner_v1():
         if color_match_context:
             if tbg.API.status == "Dev":
                 cls.debug_image_to_folder(reference_context, str(debug_prefix) + "_PID_context_reference_raw_4x")
-            reference_context = cls._flux2_pid_color_match(
+            reference_context = cls._pid_color_match(
                 base_context,
                 reference_context,
                 "context_reference_4x",
@@ -4666,6 +5255,8 @@ class TBG_Refiner_v1():
     def _debug_save_flux2_sampler_parity(cls, index, vaedecoder, latent_image, latent_source, positive, negative, tile_cfg, denoise, sampler_input_image=None):
         if getattr(getattr(tbg, "API", None), "status", None) != "Dev":
             return
+        if not bool(getattr(getattr(tbg, "API", None), "dev_debug_enabled", True)):
+            return
         if getattr(tbg.KSAMPLER, "model_type", None) != "FLUX2":
             return
         try:
@@ -4767,7 +5358,11 @@ class TBG_Refiner_v1():
             return [cls._worker_cpu_value(item) for item in value]
         if isinstance(value, tuple):
             return tuple(cls._worker_cpu_value(item) for item in value)
-        return value
+        if isinstance(value, set):
+            return {cls._worker_cpu_value(item) for item in value}
+        if value is None or isinstance(value, (bool, int, float, str, bytes)):
+            return value
+        return None
 
     @classmethod
     def _scaled_pid_segment_rebuild_inputs(cls):
@@ -4995,6 +5590,12 @@ class TBG_Refiner_v1():
             stitch_feather=int(getattr(scaled_size, "composite_blur_margin", 16) or 16),
             label=f"TBG[Node {tbg.INFO.id}] PID 4x ETUR",
         )
+        if torch.is_tensor(tile_only_canvas) and tile_only_canvas.device.type != "cuda":
+            print(
+                f"TBG[Node {tbg.INFO.id}] PID 4x GPU final rebuild tile-only canvas fell back to "
+                f"{tile_only_canvas.device}; using CPU worker compositor for full rebuild."
+            )
+            return None
         tile_only_canvas = tile_only_canvas.to(device=device, dtype=reference_gpu.dtype).clamp(0.0, 1.0)
         if getattr(tbg.API, "status", None) == "Dev":
             cls.debug_image_to_folder(tile_only_canvas, "PID_FinalRebuild_TileOnlyCanvas4x")
@@ -5717,6 +6318,8 @@ class TBG_Refiner_v1():
             if gpu_result is not None:
                 return gpu_result
         except Exception as exc:
+            if mm.is_oom(exc):
+                mm.soft_empty_cache()
             print(
                 f"TBG[Node {tbg.INFO.id}] PID 4x GPU final rebuild failed; "
                 f"falling back to CPU worker compositor: {exc}"
@@ -5986,6 +6589,47 @@ class TBG_Refiner_v1():
                             values.append(None)
                         values[int(index_seg)] = value
                         setattr(tbg.SEGMENTS, attr, values)
+                context = cls._prepare_tile_context(
+                    index,
+                    index_seg,
+                    tile_to_process,
+                    inpaintmask,
+                    Complexity_Mask,
+                    border_correction_mask,
+                    segment_inpainting_mask,
+                    segment_compositing_mask,
+                )
+                cls._stage_mark(
+                    "geometry_normalization",
+                    index=index,
+                    index_seg=index_seg,
+                    input_space="native_tile",
+                    output_space="sampling_tile",
+                )
+                cls._stage_mark(
+                    "segment_mask_preparation",
+                    normal_active=index_seg is not None,
+                    index=index,
+                    index_seg=index_seg,
+                    input_space="native_segment_crop",
+                    output_space="sampling_tile",
+                )
+                cls._stage_mark(
+                    "neighbor_fusion",
+                    normal_active=index > 0 and not bool(index_seg is not None),
+                    index=index,
+                    index_seg=index_seg,
+                    input_space="sampling_tile",
+                    output_space="sampling_tile",
+                )
+                cls._stage_mark(
+                    "segment_fusion",
+                    normal_active=index_seg is not None,
+                    index=index,
+                    index_seg=index_seg,
+                    input_space="native_segment_crop",
+                    output_space="sampling_tile",
+                )
                 with ((torch.inference_mode(True))):
                     if tbg.API.status == "Dev":
                         cls.debug_image_to_folder(tile_to_process, str(index) + "Tile before Sampling")
@@ -6009,6 +6653,21 @@ class TBG_Refiner_v1():
 
                     if tbg.PARAMS.inner_Upscale_type == 'finer details' and innerloop_scale_factor not in (0, 1):
                         tile_to_process = TBG_Image().helper_upscaleimage(tile_to_process, tbg.PARAMS.upscale_method_inpainting, tbg.PARAMS.upscale_model_inpainting,innerloop_scale_factor)
+
+                    vl_tile_image = tile_to_process
+                    if getattr(tbg.KSAMPLER, "model_type", None) in {
+                        "Qwen Image", "Qwen Image Edit", "Krea2"
+                    }:
+                        original_tiles = getattr(tbg.OUTPUTS, "orig_grid_images_all", None) or []
+                        if index < len(original_tiles) and torch.is_tensor(original_tiles[index]):
+                            vl_tile_image = copy.deepcopy(original_tiles[index])
+                            if tbg.PARAMS.inner_Upscale_type == 'finer details' and innerloop_scale_factor not in (0, 1):
+                                vl_tile_image = TBG_Image().helper_upscaleimage(
+                                    vl_tile_image,
+                                    tbg.PARAMS.upscale_method_inpainting,
+                                    tbg.PARAMS.upscale_model_inpainting,
+                                    innerloop_scale_factor,
+                                )
 
                     if tbg.API.status == "Dev":
                         cls.debug_image_to_folder(tile_to_process, str(index) + "_Sampler_Input_Image")
@@ -6043,7 +6702,10 @@ class TBG_Refiner_v1():
                             f"Node {tbg.INFO.id}"
                         )
 
-                    positive, negative, pos_low, neg_low =  cls.conditioning(tbg.OUTPUTS.upscaled_image, index, tile_to_process)
+                    positive, negative, pos_low, neg_low = cls.conditioning(
+                        tbg.OUTPUTS.upscaled_image, index, tile_to_process, Complexity_Mask, vl_tile_image
+                    )
+                    context.coordinate_spaces["conditioning"] = "conditioning"
 
                     # ------------------------------------------------------------------
                     # 3.6 Inpaint Mask
@@ -6063,6 +6725,57 @@ class TBG_Refiner_v1():
 
                     flux2_hook_active = False
                     flux2_direct_sampler_selected = False
+
+                    fusion_mode = getattr(tbg.PARAMS, "Tile_Fusion_Mode", None)
+                    if not getattr(tbg.PARAMS, "Labs_Refiner_Provided", False) and fusion_mode in (
+                        "Neuro_Generative_Tile_Fusion",
+                        "NGTF_FLUX_Kontext",
+                    ):
+                        if not tbg.PARAMS.Differential_Diffusion and tbg.API.status == "Dev":
+                            print(
+                                f"TBG[Node {tbg.INFO.id}] tile {index + 1}: "
+                                f"fallback forcing Differential Diffusion ON for {fusion_mode}"
+                            )
+                        tbg.PARAMS.Differential_Diffusion = True
+                    elif (
+                        not getattr(tbg.PARAMS, "Labs_Refiner_Provided", False)
+                        and fusion_mode == "Soft Merge"
+                    ):
+                        if tbg.PARAMS.Differential_Diffusion and tbg.API.status == "Dev":
+                            print(
+                                f"TBG[Node {tbg.INFO.id}] tile {index + 1}: "
+                                "forcing Differential Diffusion OFF for Soft Merge"
+                            )
+                        tbg.PARAMS.Differential_Diffusion = False
+
+                    is_flux2 = getattr(tbg.KSAMPLER, "model_type", None) == "FLUX2"
+                    flux2_hook_requested = bool(getattr(tbg.PARAMS, "Flux2_Sampler_Hook", False))
+                    if tbg.PARAMS.Differential_Diffusion:
+                        flux2_hook_active, flux2_direct_sampler_selected = (
+                            tbg.PARAMS.model_adapter.resolve_sampler_path(
+                                tbg.KSAMPLER,
+                                TBG_FLUX2_SAMPLER_NAME,
+                            )
+                        )
+                    else:
+                        flux2_hook_active = False
+                        flux2_direct_sampler_selected = False
+                        if flux2_hook_requested and tbg.API.status == "Dev":
+                            print(
+                                f"TBG[Node {tbg.INFO.id}] tile {index + 1}: "
+                                "Flux2 differential hook disabled with Differential Diffusion"
+                            )
+                    if tbg.PARAMS.Differential_Diffusion and not flux2_hook_active:
+                        before_has_dd = "denoise_mask_function" in getattr(tbg.KSAMPLER.model, "model_options", {})
+                        tbg.KSAMPLER.model = DifferentialDiffusion_execute(tbg.KSAMPLER.model)[0]
+                        after_has_dd = "denoise_mask_function" in getattr(tbg.KSAMPLER.model, "model_options", {})
+                        if tbg.API.status == "Dev":
+                            print(
+                                f"TBG[Node {tbg.INFO.id}] tile {index + 1}: Differential Diffusion active "
+                                f"before_hook={before_has_dd} after_hook={after_has_dd}"
+                            )
+                    elif not flux2_hook_active and tbg.API.status == "Dev":
+                        print(f"TBG[Node {tbg.INFO.id}] tile {index + 1}: Differential Diffusion disabled")
 
                     if (
                             # First condition block Neuro_Generative_Tile_Fusion Always
@@ -6088,33 +6801,6 @@ class TBG_Refiner_v1():
                             )
                     ):
 
-                        fusion_mode = getattr(tbg.PARAMS, "Tile_Fusion_Mode", None)
-                        if fusion_mode in ("Neuro_Generative_Tile_Fusion", "NGTF_FLUX_Kontext"):
-                            if not tbg.PARAMS.Differential_Diffusion and tbg.API.status == "Dev":
-                                print(
-                                    f"TBG[Node {tbg.INFO.id}] tile {index + 1}: "
-                                    f"forcing Differential Diffusion ON for {fusion_mode}"
-                                )
-                            tbg.PARAMS.Differential_Diffusion = True
-                        elif fusion_mode == "Soft Merge":
-                            if tbg.PARAMS.Differential_Diffusion and tbg.API.status == "Dev":
-                                print(
-                                    f"TBG[Node {tbg.INFO.id}] tile {index + 1}: "
-                                    "forcing Differential Diffusion OFF for Soft Merge"
-                                )
-                            tbg.PARAMS.Differential_Diffusion = False
-
-                        is_flux2 = getattr(tbg.KSAMPLER, "model_type", None) == "FLUX2"
-                        flux2_hook_requested = bool(getattr(tbg.PARAMS, "Flux2_Sampler_Hook", False))
-                        flux2_hook_active = (
-                            is_flux2
-                            and flux2_hook_requested
-                        )
-                        flux2_direct_sampler_selected = (
-                            flux2_hook_active
-                            and tbg.KSAMPLER.sampler_input is None
-                            and tbg.KSAMPLER.sampler_name == TBG_FLUX2_SAMPLER_NAME
-                        )
                         if flux2_direct_sampler_selected:
                             if tbg.API.status == "Dev":
                                 print(
@@ -6130,47 +6816,73 @@ class TBG_Refiner_v1():
                                     "noise_mask_forwarded=False"
                                 )
 
-                        if tbg.PARAMS.Differential_Diffusion and not flux2_hook_active:
-                            before_has_dd = "denoise_mask_function" in getattr(tbg.KSAMPLER.model, "model_options", {})
-                            tbg.KSAMPLER.model = DifferentialDiffusion_execute(tbg.KSAMPLER.model)[0]
-                            after_has_dd = "denoise_mask_function" in getattr(tbg.KSAMPLER.model, "model_options", {})
-                            if tbg.API.status == "Dev":
-                                print(
-                                    f"TBG[Node {tbg.INFO.id}] tile {index + 1}: Differential Diffusion active "
-                                    f"before_hook={before_has_dd} after_hook={after_has_dd}"
-                                )
-                        elif not flux2_hook_active and tbg.API.status == "Dev":
-                            print(f"TBG[Node {tbg.INFO.id}] tile {index + 1}: Differential Diffusion disabled")
-
                         latent_source = "unset"
-                        if  tbg.PARAMS.inpaint_conditioning and not flux2_hook_active and not is_flux2:
+                        inpaint_mode = normalize_inpaint_conditioning_mode(
+                            getattr(
+                                tbg.PARAMS,
+                                "inpaint_conditioning_mode",
+                                getattr(tbg.PARAMS, "inpaint_conditioning", True),
+                            )
+                        )
+                        use_inpaint_conditioning = inpaint_mode in (
+                            "Inpainting On with Conditioning",
+                            "Inpainting On with Noise Mask and Conditioning",
+                        )
+                        use_inpaint_noise_mask = inpaint_mode in (
+                            "Inpainting On with Noise Mask",
+                            "Inpainting On with Noise Mask and Conditioning",
+                        )
+                        sampler_mask = Complexity_Mask
+                        if not bool(getattr(tbg.PARAMS, "Differential_Diffusion", False)):
+                            sampler_mask = inpaintmask
+
+                        if use_inpaint_conditioning and not flux2_hook_active and not is_flux2:
                             InpaintModelConditioningNode = nodes.InpaintModelConditioning()
                             positive, negative, latent_image = InpaintModelConditioningNode.encode(positive, negative,
                                                                                                        flux2_encode_tile,
                                                                                                        tbg.KSAMPLER.vae,
-                                                                                                       Complexity_Mask,
-                                                                                                       noise_mask=True)
+                                                                                                       sampler_mask,
+                                                                                                       noise_mask=use_inpaint_noise_mask)
                             latent_source = "InpaintModelConditioning"
 
                             if tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
                                 pos_low, neg_low , latent_image = InpaintModelConditioningNode.encode(positive, negative,
                                                                                                        flux2_encode_tile,
                                                                                                        tbg.KSAMPLER.vae,
-                                                                                                       tbg.DUALMODEL.Complexity_Mask,
-                                                                                                       noise_mask=True)
+                                                                                                       sampler_mask,
+                                                                                                       noise_mask=use_inpaint_noise_mask)
                                 latent_source = "InpaintModelConditioning_dual"
                         else:
-                            latent_image = nodes.VAEEncode().encode(tbg.KSAMPLER.vae, flux2_encode_tile)[0]
-                            if flux2_hook_active:
-                                latent_image["_flux2_inpaint_mask"] = Complexity_Mask.reshape((-1, 1, Complexity_Mask.shape[-2], Complexity_Mask.shape[-1]))
-                                latent_image["_flux2_differential"] = dict(flux2_differential.DEFAULT_CONFIG)
-                                latent_source = "VAEEncode_private_flux2_mask"
-                            elif is_flux2:
-                                latent_image = nodes.SetLatentNoiseMask().set_mask(latent_image, Complexity_Mask)[0]
-                                latent_source = "Flux2_VAEEncode_SetLatentNoiseMask"
-                            else:
-                                latent_image["noise_mask"] = Complexity_Mask.reshape((-1, 1, Complexity_Mask.shape[-2], Complexity_Mask.shape[-1]))
-                                latent_source = "VAEEncode_noise_mask"
+                            latent_image = tbg.PARAMS.model_adapter.encode_tile(
+                                lambda: nodes.VAEEncode().encode(tbg.KSAMPLER.vae, flux2_encode_tile)[0]
+                            )
+                            latent_image, latent_source = tbg.PARAMS.model_adapter.prepare_latent(
+                                latent_image,
+                                sampler_mask if use_inpaint_noise_mask else None,
+                                latent_source,
+                                set_mask=lambda latent, mask: nodes.SetLatentNoiseMask().set_mask(latent, mask)[0],
+                                hook_active=flux2_hook_active,
+                            )
+
+                        context.latent = latent_image
+                        context.coordinate_spaces["latent"] = "latent"
+                        if tbg.API.status == "Dev":
+                            noise_mask = latent_image.get("noise_mask") if isinstance(latent_image, dict) else None
+                            print(
+                                f"[TBG Inpaint] tile={index + 1} model={tbg.KSAMPLER.model_type} "
+                                f"mode={inpaint_mode} use_noise_mask={use_inpaint_noise_mask} "
+                                f"latent_has_noise_mask={noise_mask is not None} "
+                                f"mask_shape={getattr(noise_mask, 'shape', None)} "
+                                f"latent_source={latent_source}"
+                            )
+                        cls._stage_mark(
+                            "latent_encoding",
+                            index=index,
+                            index_seg=index_seg,
+                            input_space="sampling_tile",
+                            output_space="latent",
+                            reason=latent_source,
+                        )
 
                         if is_flux2 and tbg.API.status == "Dev":
                             print(
@@ -6178,7 +6890,7 @@ class TBG_Refiner_v1():
                                 f"model_type={getattr(tbg.KSAMPLER, 'model_type', None)} "
                                 f"hook_requested={flux2_hook_requested} "
                                 f"hook_active={flux2_hook_active} "
-                                f"inpaint_conditioning={bool(tbg.PARAMS.inpaint_conditioning)} "
+                                f"inpaint_mode={inpaint_mode} "
                                 f"differential={bool(tbg.PARAMS.Differential_Diffusion)} "
                                 f"latent_source={latent_source}"
                             )
@@ -6201,10 +6913,20 @@ class TBG_Refiner_v1():
 
                     else:
                         if tbg.KSAMPLER.tiled:
-                            latent_image = nodes.VAEEncodeTiled().encode(tbg.KSAMPLER.vae, flux2_encode_tile, tbg.SIZE.tile_size_vae, tbg.SIZE.tile_size_vae // 4, tbg.SIZE.tile_size_vae // 4)[0]
+                            latent_image = tbg.PARAMS.model_adapter.encode_tile(
+                                lambda: nodes.VAEEncodeTiled().encode(
+                                    tbg.KSAMPLER.vae,
+                                    flux2_encode_tile,
+                                    tbg.SIZE.tile_size_vae,
+                                    tbg.SIZE.tile_size_vae // 4,
+                                    tbg.SIZE.tile_size_vae // 4,
+                                )[0]
+                            )
                             latent_source = "VAEEncodeTiled_no_mask"
                         else:
-                            latent_image = nodes.VAEEncode().encode(tbg.KSAMPLER.vae, flux2_encode_tile)[0]
+                            latent_image = tbg.PARAMS.model_adapter.encode_tile(
+                                lambda: nodes.VAEEncode().encode(tbg.KSAMPLER.vae, flux2_encode_tile)[0]
+                            )
                             latent_source = "VAEEncode_no_mask"
                         if (
                             tbg.API.status == "Dev"
@@ -6258,12 +6980,26 @@ class TBG_Refiner_v1():
 
                 
         #-Start sampling-------------------------------------------------------------------------------------------------------------------
+                    cls._stage_mark(
+                        "model_sampling",
+                        normal_active=denoise != 0,
+                        index=index,
+                        index_seg=index_seg,
+                        input_space="latent",
+                        output_space="latent",
+                        reason="model-specific sampler dispatch",
+                    )
                     base_model = tbg.KSAMPLER.model
                     selected_model, selected_label = cls._resolve_tile_model_override(index, base_model)
                     tile_cfg = cls._resolve_tile_cfg_override(index)
                     tbg.KSAMPLER.model = selected_model
                     reference_model = base_model
                     sampling_model = selected_model
+                    krea2_control_latent = None
+                    if getattr(cls.VRAM_OPTIMIZER, "krea2_control_latents", None) is not None:
+                        krea2_control_latent = cls.VRAM_OPTIMIZER.krea2_control_latents.get(index)
+                    if krea2_control_latent is not None:
+                        set_krea2_control_latent(sampling_model, krea2_control_latent)
                     if tbg.API.status == "Dev":
                         log(
                             f"[TBG TileOverride] tile {index + 1} model={selected_label} cfg={tile_cfg}",
@@ -6306,135 +7042,50 @@ class TBG_Refiner_v1():
                         and not bool(getattr(tbg.PARAMS, "RF_UntwistingRoPE_runtime_disabled", False))
                     ):
                         print(f"TBG[Node {tbg.INFO.id}] RF UntwistingRoPE active for normal tile sampler only.")
-                    #saveguard
-                    if tbg.PARAMS.LanPaint:
-                        TBG_DualModelSampler = TBG_DualModelSampler_lanpaint,
-                        TBG_KSamplerAdvancedSplitAware = TBG_KSamplerAdvancedSplitAware_lanpaint
-                    else:
-                        TBG_DualModelSampler = TBG_DualModelSampler_normal
-                        TBG_KSamplerAdvancedSplitAware = TBG_KSamplerAdvancedSplitAware_normal
-                    if denoise != 0:
-                        if flux2_direct_sampler_selected:
-                            latent_output = sample_flux2_direct(
-                                model=sampling_model,
-                                positive=positive,
-                                negative=negative,
-                                pixels=flux2_encode_tile,
-                                vae=tbg.KSAMPLER.vae,
-                                mask=Complexity_Mask,
-                                steps=tbg.KSAMPLER.steps,
-                                seed=tbg.PROMPTER.output_seeds_js[index],
-                                cfg=tile_cfg,
-                                denoise=denoise,
-                                base_shift=float(flux2_differential.DEFAULT_CONFIG["base_shift"]),
-                                max_shift=float(flux2_differential.DEFAULT_CONFIG["max_shift"]),
-                                transition_width=float(flux2_differential.DEFAULT_CONFIG["transition_width"]),
-                                mask_gamma=float(flux2_differential.DEFAULT_CONFIG["mask_gamma"]),
-                                invert_mask=False,
-                                correction_start_sigma=float(flux2_differential.DEFAULT_CONFIG["correction_start_sigma"]),
-                                post_composite_preserve=bool(flux2_differential.DEFAULT_CONFIG["post_composite_preserve"]),
-                                sigmas=sigmas,
-                                denoise_method=tbg.PARAMS.denoise_method,
-                            )
+                    latent_output = cls._run_model_adapter(
+                        index=index,
+                        denoise=denoise,
+                        flux2_direct_sampler_selected=flux2_direct_sampler_selected,
+                        sigmas=sigmas,
+                        sampling_model=sampling_model,
+                        positive=positive,
+                        negative=negative,
+                        pos_low=pos_low,
+                        neg_low=neg_low,
+                        flux2_encode_tile=flux2_encode_tile,
+                        complexity_mask=Complexity_Mask,
+                        latent_image=latent_image,
+                        tile_cfg=tile_cfg,
+                    )
 
-                        elif (
-                                getattr(tbg.KSAMPLER, "model_type", None) == "Ideogram4"
-                                and getattr(tbg.KSAMPLER, "ideogram4_guider", None) is not None
-                        ):
-                            if tbg.API.status == "Dev":
-                                print(
-                                    f"[TBG Ideogram4] path=SamplerCustomAdvanced "
-                                    f"tile={index + 1} denoise={denoise}"
-                                )
-                            cls._log_sigma_trace(
-                                "custom_sampler_advanced_input",
-                                sigmas,
-                                tile=index + 1,
-                                model_type=getattr(tbg.KSAMPLER, "model_type", None),
-                                sampler=str(getattr(tbg.KSAMPLER, "sampler_name", None) or getattr(tbg.KSAMPLER, "sampler", None)),
-                            )
-                            latent_output = SamplerCustomAdvanced.execute(
-                                Noise_RandomNoise(tbg.PROMPTER.output_seeds_js[index]),
-                                tbg.KSAMPLER.ideogram4_guider,
-                                tbg.KSAMPLER.sampler,
-                                sigmas,
-                                latent_image
-                            )[0]
+                    sampler_result = tbg.PARAMS.model_adapter.sample(latent_output)
+                    if not isinstance(sampler_result, SamplerResult):
+                        sampler_result = SamplerResult(latent=sampler_result)
+                    latent_output = sampler_result.latent
+                    adapter_metadata = sampler_result.metadata
+                    context.sampler_result = sampler_result
+                    context.sampler_metadata = dict(adapter_metadata)
+                    context.latent = latent_output
+                    context.sampler_metadata.update({
+                        "latent_source": latent_source,
+                        "sampler": getattr(tbg.KSAMPLER, "sampler_name", None),
+                        "denoise": denoise,
+                        **adapter_metadata,
+                    })
+                    cls._stage_mark(
+                        "vae_decode",
+                        normal_active=bool(len(tbg.PARAMS.tiles_to_process) == 0 or index in tbg.PARAMS.tiles_to_process),
+                        index=index,
+                        index_seg=index_seg,
+                        input_space="latent",
+                        output_space="native_tile" if not getattr(tbg.KSAMPLER, "pid_vae_decode", False) else "pid_tile_4x",
+                        reason="PiD or model VAE decode",
+                    )
 
-                        elif tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
-
-                            Dualmodel_Sampler = TBG_DualModelSampler.sample
-                            latent_output = Dualmodel_Sampler(0,
-                                tbg.DUALMODEL.inpaint_end,
-                                tbg.DUALMODEL.smoother_sharper,
-                                tbg.DUALMODEL.detail_enhancer,
-                                sampling_model,
-                                tbg.DUALMODEL.model,
-                                tbg.PROMPTER.output_seeds_js[index], #tbg.KSAMPLER.noise_seed,
-                                tile_cfg,
-                                tile_cfg,
-                                positive,
-                                negative,
-                                pos_low,
-                                neg_low,
-                                tbg.KSAMPLER.sampler,
-                                tbg.KSAMPLER.scheduler,
-                                tbg.KSAMPLER.steps,
-                                tbg.DUALMODEL.steps,
-                                denoise,
-                                tbg.DUALMODEL.model_crossover_sigma_strength,
-                                1,
-                                latent_image
-                            )
-
-                            latent_output = latent_output[0]  # Extract dict from tuple
-
-
-                        else: # if not split sigma That's the standard Sample
-
-                            inpaint_start = 0
-                            if tbg.DUALMODEL.inpaint_end == 0:
-                               inpaint_end = 10000
-                            elif tbg.DUALMODEL.inpaint_end <= -50 or  tbg.KSAMPLER.steps < abs(tbg.DUALMODEL.inpaint_end):
-                                inpaint_end = 0
-                                inpaint_start = 0
-                            else:  # inpaint_end -32 inpaint_steps 5    29 Total - 24 = 5
-                               inpaint_end =  tbg.KSAMPLER.steps + tbg.DUALMODEL.inpaint_end  # 29 Total - 24 = 5
-
-                            TBG_KSampler = TBG_KSamplerAdvancedSplitAware().sample
-                            result = TBG_KSampler(
-                                sampling_model,
-                                True, # add noise
-                                tbg.PROMPTER.output_seeds_js[index], #tbg.KSAMPLER.noise_seed,
-                                tbg.KSAMPLER.steps,
-                                tile_cfg,
-                                tbg.KSAMPLER.sampler,
-                                tbg.KSAMPLER.scheduler,
-                                positive,
-                                negative,
-                                latent_image,
-                                0, #start_at_step,
-                                tbg.KSAMPLER.steps,
-                                denoise, # denoise is the modified or selectig tbg.KSAMPLER.denoise is the general
-                                False, #return_with_leftover_noise,
-                                inpaint_end,
-                                inpaint_start,
-                                tbg.DUALMODEL.smoother_sharper,
-                                tbg.DUALMODEL.detail_enhancer,
-                                sampler_state=None
-                            )
-                            latent_output = result[0]
-
-
-
-                            #latent_output = latent_output[0]  # Extract dict from tuple
-
-
-            # VAE decode Debug
-                    else: # if denoise 0
-                        latent_output = latent_image
 
                     tbg.KSAMPLER.model = reference_model
+                    if krea2_control_latent is not None:
+                        clear_krea2_control_latent(sampling_model)
                     tbg.KSAMPLER.Controlnet_Pipe = base_cnetpipe
                     sampling_model = None
 
@@ -6465,12 +7116,12 @@ class TBG_Refiner_v1():
                             if tbg.debug:
                                 log(f"tile {index + 1}/{len(tbg.OUTPUTS.grid_images_all)}", None, None, f"Node {tbg.INFO.id} - PIDVAE4xDecode")
                             pid_vae_active = cls._pid_vae_decode_active()
-                            flux2_pid_active = cls._flux2_pid_active()
+                            pid_active = cls._pid_active()
                             pid_color_match_active = cls._cm_debug_stage_enabled(
                                 "04_Flux2_PID_AfterPiDVAE_ColorMatch",
                                 cls._pid_color_match_active(),
                             )
-                            flux2_normal_vae_color_match_active = cls._flux2_pid_normal_vae_color_match_active()
+                            pid_normal_vae_reference_active = cls._pid_normal_vae_reference_active()
                             pid_color_method = cls._pid_color_method()
                             segment_pid_active = cls._is_segment_index(index)
                             segment_visible_mask_1x = None
@@ -6511,12 +7162,11 @@ class TBG_Refiner_v1():
                                         "pre-PiD color match skipped; PiD receives only the sampled latent tensor."
                                     )
                             elif (
-                                flux2_pid_active
+                                pid_active
                                 and segment_pid_active
-                                and not cls._flux2_pid_use_flux1_baseline()
                                 and cls._cm_debug_stage_enabled("08_Segment_PostVAE_ColorMatch", True)
                             ):
-                                base_tile_image = cls._flux2_pid_segment_context_color_lock(
+                                base_tile_image = cls._pid_segment_context_color_lock(
                                     tile_to_process,
                                     base_tile_image,
                                     segment_source_mask_1x if segment_source_mask_1x is not None else segment_visible_mask_1x,
@@ -6524,7 +7174,7 @@ class TBG_Refiner_v1():
                                 )
                                 if tbg.API.status == "Dev":
                                     cls.debug_image_to_folder(base_tile_image, str(index) + "_Flux2_PID_sampled_tile_after_correction")
-                            elif flux2_pid_active and segment_pid_active:
+                            elif pid_active and segment_pid_active:
                                 print(
                                     f"TBG[Node {tbg.INFO.id}] Flux2 PiD tile {index + 1}: "
                                     "using Flux1 baseline segment path; Flux2 context color lock disabled."
@@ -6556,7 +7206,7 @@ class TBG_Refiner_v1():
                                         f"{source_width_1x}x{source_height_1x} uses tiled latent PiD decode; "
                                         "skipping segment PiD 4x context/mask rebuild."
                                     )
-                                if flux2_pid_active and pid_base_context_4x is not None:
+                                if pid_active and pid_base_context_4x is not None:
                                     print(
                                         f"TBG[Node {tbg.INFO.id}] Segment PiD context color match skipped for tile {index + 1}: "
                                         "raw segment context stays spatial authority to avoid ghost imprint."
@@ -6884,8 +7534,8 @@ class TBG_Refiner_v1():
                                             f"TBG[Node {tbg.INFO.id}] SIFT drift correction PiD 4x tile {index + 1}: "
                                             f"skipped error={type(exc).__name__}: {exc}"
                                         )
-                            flux2_pid_normal_vae_corrected = False
-                            if flux2_normal_vae_color_match_active and pid_color_match_active:
+                            pid_normal_vae_corrected = False
+                            if pid_normal_vae_reference_active and pid_color_match_active:
                                 normal_vae_reference_4x = cls._normal_vae_decode_for_pid_color_reference(
                                     vaedecoder,
                                     pid_latent_output,
@@ -6908,7 +7558,7 @@ class TBG_Refiner_v1():
                                     )
                                     if global_metrics is None:
                                         tile_processed_4x = pid_before_normal_vae_match
-                                    flux2_pid_normal_vae_corrected = True
+                                    pid_normal_vae_corrected = True
                                     cls._debug_pid_detail_retention(
                                         f"normal_vae_color_match_tile_{index + 1}",
                                         pid_before_normal_vae_match,
@@ -7069,7 +7719,7 @@ class TBG_Refiner_v1():
                                 print(
                                     f"TBG[Node {tbg.INFO.id}] Segment PiD tile {index + 1}: "
                                     "latent tiled PiD decode complete; returned 1x native crop from "
-                                    f"{'normal-VAE-color-corrected ' if flux2_pid_normal_vae_corrected else ''}4x PiD output "
+                                    f"{'normal-VAE-color-corrected ' if pid_normal_vae_corrected else ''}4x PiD output "
                                     "for sequential reference."
                                 )
                                 if tbg.API.status == "Dev":
@@ -7082,7 +7732,7 @@ class TBG_Refiner_v1():
                                     int(tile_to_process.shape[1]),
                                     False,
                                 )[0]
-                                if tbg.API.status == "Dev" and flux2_pid_normal_vae_corrected:
+                                if tbg.API.status == "Dev" and pid_normal_vae_corrected:
                                     print(
                                         f"TBG[Node {tbg.INFO.id}] Flux2 PiD tile {index + 1}: "
                                         "worker tile/stitch source is normal-VAE-color-corrected PiD downscale."
@@ -7118,52 +7768,52 @@ class TBG_Refiner_v1():
                                             tile_processed,
                                             str(index) + "_PID_tile_processed_seam_color_matched",
                                         )
-                        elif tbg.KSAMPLER.tiled:
-                            if tbg.debug:
-                                log(f"tile {index + 1}/{len(tbg.OUTPUTS.grid_images_all)}", None, None,f"Node {tbg.INFO.id} - VAEDecodingTiled ")
-                            tile_processed = (nodes.VAEDecodeTiled().decode(vaedecoder, latent_output,tbg.SIZE.tile_size_vae,tbg.SIZE.tile_size_vae // 4, tbg.SIZE.tile_size_vae // 4)[0].unsqueeze(0))[0]
-
                         else:
-                            if tbg.debug:
-                                log(f"tile {index + 1}/{len(tbg.OUTPUTS.grid_images_all)}", None, None, f"Node {tbg.INFO.id} - VAEDecodingNormalized")
-
-                            tile_processed = (TBG_Image.VAEDecodeFluxNormalized(vaedecoder, latent_output)[0].unsqueeze(0))[0]
+                            tile_processed = cls._decode_standard_tile(vaedecoder, latent_output)
 
                         if tbg.API.status == "Dev":
                             cls.debug_image_to_folder(tile_processed, str(index)+"_VAE_decode_after_sampling")
 
+                        context.decoded = tile_processed
+                        context.coordinate_spaces["decoded"] = (
+                            "pid_tile_4x" if getattr(tbg.KSAMPLER, "pid_vae_decode", False)
+                            else "native_tile"
+                        )
+                        context.rgb = cls._build_rgb_contract(
+                            tile_processed,
+                            index,
+                            index_seg,
+                            border_correction_mask,
+                            inpaintmask,
+                            segment_compositing_mask,
+                            source_type=PIDPipeline.source_type(tbg.KSAMPLER, index_seg),
+                            coordinate_space=context.coordinate_spaces["decoded"],
+                        )
+                        RGBPostProcessPipeline.run_stage(
+                            cls._stage_registry(),
+                            "decoded_rgb_normalization",
+                            context.rgb,
+                            output_space=context.rgb.coordinate_space,
+                            reason="normalized decoded RGB contract",
+                        )
+                        cls._stage_mark(
+                            "decoded_size_normalization",
+                            index=index,
+                            index_seg=index_seg,
+                            input_space=context.coordinate_spaces["decoded"],
+                            output_space="native_tile",
+                            reason="normalize decoded tile to processing geometry",
+                        )
 
-                        if tbg.PARAMS.inner_Upscale_type == 'finer details' and innerloop_scale_factor not in (0,1):
-
-                            tile_to_process = TBG_Image().helper_upscaleimage(tile_to_process, tbg.PARAMS.upscale_method_inpainting,
-                                                                                     tbg.PARAMS.upscale_model_inpainting,0,round(tile_to_process_W), round(tile_to_process_H))
-                            tile_processed = TBG_Image().helper_upscaleimage(tile_processed, round(tile_to_process_W), round(tile_to_process_H),
-                                                                                     tbg.PARAMS.upscale_method_inpainting,
-                                                                                     tbg.PARAMS.upscale_model_inpainting)
-
-                        if (
-                                bool(getattr(tbg.PARAMS, "sift_drift_correction", False))
-                                and not bool(getattr(tbg.KSAMPLER, "pid_vae_decode", False))
-                        ):
-                            before_sift = tile_processed
-                            tile_processed, sift_info = cls._apply_sift_drift_correction(
-                                tile_to_process,
-                                tile_processed,
-                                index=index,
-                                mode=getattr(tbg.PARAMS, "sift_drift_correction_mode", "x1"),
-                            )
-                            if tbg.API.status == "Dev":
-                                reason = sift_info.get("reason", "unknown")
-                                changed = bool(sift_info.get("changed", False))
-                                print(
-                                    f"TBG[Node {tbg.INFO.id}] SIFT drift correction tile {index + 1}: "
-                                    f"changed={changed} reason={reason} "
-                                    f"matches={sift_info.get('matches', 0)} inliers={sift_info.get('inliers', 0)}"
-                                )
-                                if changed:
-                                    cls.debug_image_to_folder(tile_to_process, str(index) + "_SIFT_reference_tile")
-                                    cls.debug_image_to_folder(before_sift, str(index) + "_SIFT_before")
-                                    cls.debug_image_to_folder(tile_processed, str(index) + "_SIFT_after")
+                        tile_to_process, tile_processed = cls._run_rgb_pipeline(
+                            context,
+                            tile_to_process,
+                            tile_processed,
+                            tile_to_process_W,
+                            tile_to_process_H,
+                            innerloop_scale_factor,
+                        )
+                        
 
                         # the latent en and decode VAE is producing a color even if the fusion is perfect this can produce a seam, so we need to correct this with a simple blend in the border region
                         
@@ -7262,6 +7912,297 @@ class TBG_Refiner_v1():
         return apply_sift_drift_correction(reference_tile, sampled_tile, index=index, mode=mode)
 
     @classmethod
+    def _run_common_post_decode_stages(
+        cls,
+        tile_to_process,
+        tile_processed,
+        tile_width,
+        tile_height,
+        innerloop_scale_factor,
+        index,
+        index_seg,
+    ):
+        """Normalize every non-PiD decode before shared seam processing."""
+        if tbg.PARAMS.inner_Upscale_type == "finer details" and innerloop_scale_factor not in (0, 1):
+            tile_to_process = TBG_Image().helper_upscaleimage(
+                tile_to_process,
+                tbg.PARAMS.upscale_method_inpainting,
+                tbg.PARAMS.upscale_model_inpainting,
+                0,
+                round(tile_width),
+                round(tile_height),
+            )
+            tile_processed = TBG_Image().helper_upscaleimage(
+                tile_processed,
+                round(tile_width),
+                round(tile_height),
+                tbg.PARAMS.upscale_method_inpainting,
+                tbg.PARAMS.upscale_model_inpainting,
+            )
+
+        sift_active = (
+            bool(getattr(tbg.PARAMS, "sift_drift_correction", False))
+            and not bool(getattr(tbg.KSAMPLER, "pid_vae_decode", False))
+        )
+        if sift_active:
+            before_sift = tile_processed
+            tile_processed, sift_info = cls._apply_sift_drift_correction(
+                tile_to_process,
+                tile_processed,
+                index=index,
+                mode=getattr(tbg.PARAMS, "sift_drift_correction_mode", "x1"),
+            )
+            if tbg.API.status == "Dev":
+                reason = sift_info.get("reason", "unknown")
+                changed = bool(sift_info.get("changed", False))
+                print(
+                    f"TBG[Node {tbg.INFO.id}] SIFT drift correction tile {index + 1}: "
+                    f"changed={changed} reason={reason} "
+                    f"matches={sift_info.get('matches', 0)} inliers={sift_info.get('inliers', 0)}"
+                )
+                if changed:
+                    cls.debug_image_to_folder(tile_to_process, str(index) + "_SIFT_reference_tile")
+                    cls.debug_image_to_folder(before_sift, str(index) + "_SIFT_before")
+                    cls.debug_image_to_folder(tile_processed, str(index) + "_SIFT_after")
+
+        return tile_to_process, tile_processed
+
+    @classmethod
+    def _sample_flux2_tile(cls, **kwargs):
+        if kwargs.get("denoise") == 0:
+            return kwargs["latent_image"]
+        if kwargs.pop("flux2_direct_sampler_selected", False):
+            return sampler_adapters.sample_flux2_direct(cls._sampler_runtime(), **kwargs)
+        return sampler_adapters.sample_generic(cls._sampler_runtime(), **kwargs)
+
+    @classmethod
+    def _sample_flux2_direct_tile(
+        cls,
+        index,
+        denoise,
+        sigmas,
+        sampling_model,
+        positive,
+        negative,
+        flux2_encode_tile,
+        complexity_mask,
+        tile_cfg,
+    ):
+        if denoise == 0:
+            return None
+        return sample_flux2_direct(
+            model=sampling_model,
+            positive=positive,
+            negative=negative,
+            pixels=flux2_encode_tile,
+            vae=tbg.KSAMPLER.vae,
+            mask=complexity_mask,
+            steps=tbg.KSAMPLER.steps,
+            seed=tbg.PROMPTER.output_seeds_js[index],
+            cfg=tile_cfg,
+            denoise=denoise,
+            base_shift=float(flux2_differential.DEFAULT_CONFIG["base_shift"]),
+            max_shift=float(flux2_differential.DEFAULT_CONFIG["max_shift"]),
+            transition_width=float(flux2_differential.DEFAULT_CONFIG["transition_width"]),
+            mask_gamma=float(flux2_differential.DEFAULT_CONFIG["mask_gamma"]),
+            invert_mask=False,
+            correction_start_sigma=float(flux2_differential.DEFAULT_CONFIG["correction_start_sigma"]),
+            post_composite_preserve=bool(flux2_differential.DEFAULT_CONFIG["post_composite_preserve"]),
+            sigmas=sigmas,
+            denoise_method=tbg.PARAMS.denoise_method,
+        )
+
+    @classmethod
+    def _sample_generic_tile(
+        cls,
+        index,
+        denoise,
+        sigmas,
+        sampling_model,
+        positive,
+        negative,
+        pos_low,
+        neg_low,
+        flux2_encode_tile,
+        complexity_mask,
+        latent_image,
+        tile_cfg,
+        ideogram_sampler=False,
+    ):
+        """Run the model sampler and return one normalized latent dictionary."""
+        return sampler_adapters.sample_generic(
+            cls._sampler_runtime(),
+            index=index,
+            denoise=denoise,
+            sigmas=sigmas,
+            sampling_model=sampling_model,
+            positive=positive,
+            negative=negative,
+            pos_low=pos_low,
+            neg_low=neg_low,
+            flux2_encode_tile=flux2_encode_tile,
+            complexity_mask=complexity_mask,
+            latent_image=latent_image,
+            tile_cfg=tile_cfg,
+            ideogram_sampler=ideogram_sampler,
+        )
+
+        if ideogram_sampler and getattr(tbg.KSAMPLER, "ideogram4_guider", None) is not None:
+            guider = tbg.KSAMPLER.ideogram4_guider
+            try:
+                return SamplerCustomAdvanced.execute(
+                    Noise_RandomNoise(tbg.PROMPTER.output_seeds_js[index]),
+                    guider,
+                    tbg.KSAMPLER.sampler,
+                    sigmas,
+                    latent_image,
+                )[0]
+            finally:
+                pass
+
+        if tbg.DUALMODEL.model is not None and tbg.DUALMODEL.clip is not None and tbg.DUALMODEL.vae is not None:
+            sampler_cls = (
+                TBG_DualModelSampler_lanpaint
+                if tbg.PARAMS.LanPaint
+                else TBG_DualModelSampler_normal
+            )
+            return sampler_cls.sample(
+                0,
+                tbg.DUALMODEL.inpaint_end,
+                tbg.DUALMODEL.smoother_sharper,
+                tbg.DUALMODEL.detail_enhancer,
+                sampling_model,
+                tbg.DUALMODEL.model,
+                tbg.PROMPTER.output_seeds_js[index],
+                tile_cfg,
+                tile_cfg,
+                positive,
+                negative,
+                pos_low,
+                neg_low,
+                tbg.KSAMPLER.sampler,
+                tbg.KSAMPLER.scheduler,
+                tbg.KSAMPLER.steps,
+                tbg.DUALMODEL.steps,
+                denoise,
+            tbg.DUALMODEL.model_crossover_sigma_strength,
+                1,
+                latent_image,
+            )[0]
+
+        if tbg.DUALMODEL.inpaint_end == 0:
+            inpaint_end = 10000
+            inpaint_start = 0
+        elif tbg.DUALMODEL.inpaint_end <= -50 or tbg.KSAMPLER.steps < abs(tbg.DUALMODEL.inpaint_end):
+            inpaint_end = 0
+            inpaint_start = 0
+        else:
+            inpaint_end = tbg.KSAMPLER.steps + tbg.DUALMODEL.inpaint_end
+            inpaint_start = 0
+
+        sampler_cls = (
+            TBG_KSamplerAdvancedSplitAware_lanpaint
+            if tbg.PARAMS.LanPaint
+            else TBG_KSamplerAdvancedSplitAware_normal
+        )
+        return sampler_cls().sample(
+            sampling_model,
+            True,
+            tbg.PROMPTER.output_seeds_js[index],
+            tbg.KSAMPLER.steps,
+            tile_cfg,
+            tbg.KSAMPLER.sampler,
+            tbg.KSAMPLER.scheduler,
+            positive,
+            negative,
+            latent_image,
+            0,
+            tbg.KSAMPLER.steps,
+            denoise,
+            False,
+            inpaint_end,
+            inpaint_start,
+            tbg.DUALMODEL.smoother_sharper,
+            tbg.DUALMODEL.detail_enhancer,
+            sampler_state=None,
+        )[0]
+
+    # ------------------------------------------------------------------
+    # Dev logging helpers for denoise / custom sigmas tracing
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def _dbg_run_id(cls):
+        try:
+            return getattr(tbg.TEMP, "debug_run_id", None)
+        except Exception:
+            return None
+
+    @classmethod
+    def _dbg_sig_summary(cls, sigmas):
+        """Compact summary of a sigma tensor/list for logging."""
+        try:
+            if sigmas is None:
+                return "none"
+            if torch.is_tensor(sigmas):
+                vals = sigmas.detach().float().cpu().view(-1).tolist()
+            else:
+                vals = [float(v) for v in list(sigmas)]
+            if not vals:
+                return "len=0"
+            head = [round(v, 6) for v in vals[:4]]
+            tail = [round(v, 6) for v in vals[-4:]]
+            return f"len={len(vals)} head={head} tail={tail}"
+        except Exception as e:
+            return f"err={e}"
+
+    @classmethod
+    def _dbg_log(cls, stage, **data):
+        """Emit a compact dev log line grouped by run-id. Skipped when not in Dev mode."""
+        if not (tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False)):
+            return
+        parts = [f"run={cls._dbg_run_id()}", f"stage={stage}"]
+        for k, v in data.items():
+            parts.append(f"{k}={v}")
+        log("TBG Debug " + " | ".join(parts), None, None, f"Node {tbg.INFO.id}")
+
+    @classmethod
+    def _sigma_signature(cls, sigmas):
+        """Convert custom_sigmas to a stable hashable fingerprint."""
+        if sigmas is None:
+            return None
+        try:
+            if torch.is_tensor(sigmas):
+                values = sigmas.detach().float().cpu().view(-1).tolist()
+            else:
+                values = list(sigmas)
+            return tuple(round(float(v), 6) for v in values)
+        except Exception:
+            return str(sigmas)
+
+    @classmethod
+    def _normalize_component_for_hash(cls, component):
+        """Return a normalized dict suitable for hashing.
+
+        Replaces tensor/list values that need stable fingerprints (e.g.
+        custom_sigmas) with hashable tuples, and filters out fields that
+        change every run but do not affect the sampling result.
+        """
+        comp_dict = vars(component) if hasattr(component, '__dict__') else {}
+        filtered = {}
+        for k, v in comp_dict.items():
+            if k in ('sampler', 'timestamp'):
+                continue
+            if any(k.startswith(p) for p in ('generated', 'output', 'segms')):
+                continue
+            # Replace custom_sigmas tensor with a stable numeric tuple
+            if k == 'custom_sigmas':
+                filtered[k] = cls._sigma_signature(v)
+            else:
+                filtered[k] = v
+        return filtered
+
+    @classmethod
     def _detect_changes(cls):
         """
         Detect what changed in the node inputs.
@@ -7269,6 +8210,20 @@ class TBG_Refiner_v1():
         """
         storage = persistent_storage.get(tbg.storage_key, {})
         tbg.PARAMS.force_fresh_refiner_background = False
+
+        # --- DEV: Trace change detection entry ---
+        if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+            cls._dbg_log("detectchanges_entry",
+                denoise=tbg.KSAMPLER.denoise,
+                steps=tbg.KSAMPLER.steps,
+                scheduler=tbg.KSAMPLER.scheduler,
+                sampler_name=tbg.KSAMPLER.sampler_name,
+                model_type=tbg.KSAMPLER.model_type,
+                fastpreview=getattr(tbg.PARAMS, "Fast_1_Tile_Preview", None),
+                selected_only=getattr(tbg.PARAMS, "tiles_to_process_active", None),
+                custom_sigmas_summary=cls._dbg_sig_summary(getattr(tbg.KSAMPLER, "custom_sigmas", None)),
+            )
+        # --- END DEV ---
 
         # Define components to check (excluding PROMPTER)
         components_to_check = {
@@ -7286,19 +8241,8 @@ class TBG_Refiner_v1():
 
         for name, component in components_to_check.items():
             try:
-                comp_dict = vars(component) if hasattr(component, '__dict__') else {}
-
-                # Filter out tile-specific data
-                filtered_dict = {}
-                for k, v in comp_dict.items():
-                    if k in ['sampler', 'timestamp']: #sampler has on every run a new reference  PARAMS.timestamp:
-                        continue
-                    if any(k.startswith(prefix) for prefix in ['generated', 'output', 'segms']):
-
-
-                        continue
-                    filtered_dict[k] = v
-
+                # Use normalized component for stable hashing
+                filtered_dict = cls._normalize_component_for_hash(component)
                 current_values[name] = filtered_dict
                 current_hashes[name] = hash(str(sorted(filtered_dict.items())))
             except:
@@ -7308,6 +8252,33 @@ class TBG_Refiner_v1():
         # Get previous values and hashes
         prev_values = storage.get('component_values', {})
         prev_hashes = storage.get('component_hashes', {})
+
+        # --- DEV: Trace hash comparison ---
+        if tbg.API.status == "Dev" or getattr(tbg.API, "dev_debug_enabled", False):
+            for cname in ("KSAMPLER", "PARAMS", "PROMPTER"):
+                try:
+                    cls._dbg_log("detectchanges_hash",
+                        component=cname,
+                        prev_hash=prev_hashes.get(cname),
+                        curr_hash=current_hashes.get(cname),
+                        changed=(prev_hashes.get(cname) != current_hashes.get(cname)),
+                    )
+                except Exception:
+                    pass
+            # Log normalized KSAMPLER subfields for debugging
+            try:
+                ks_norm = cls._normalize_component_for_hash(tbg.KSAMPLER)
+                cls._dbg_log("detectchanges_ksampler_norm",
+                    denoise=ks_norm.get("denoise"),
+                    steps=ks_norm.get("steps"),
+                    scheduler=ks_norm.get("scheduler"),
+                    sampler_name=ks_norm.get("sampler_name"),
+                    model_type=ks_norm.get("model_type"),
+                    custom_sigmas=ks_norm.get("custom_sigmas"),
+                )
+            except Exception:
+                pass
+        # --- END DEV ---
 
         # Check for non-PROMPTER changes
         changed_components = []
@@ -7643,6 +8614,40 @@ def combine_conditioning(conds: list):
         combined_conds.extend(cond)
     combined = combine_conditions(combined_conds)
     return combined
+
+
+def merge_reference_conditioning(base, reference):
+    """Keep TBG's text entries and transfer Qwen edit reference metadata."""
+    refs = []
+    ref_method = None
+    for _tensor, metadata in reference or []:
+        if not isinstance(metadata, dict):
+            continue
+        values = metadata.get("reference_latents")
+        if values:
+            refs.extend(values)
+        if ref_method is None and metadata.get("reference_latents_method") is not None:
+            ref_method = metadata["reference_latents_method"]
+
+    merged = []
+    for tensor, base_metadata in base:
+        new_metadata = dict(base_metadata)
+        if refs and not base_metadata.get("tbg_vl_vision_ranges"):
+            new_metadata["reference_latents"] = refs
+        if ref_method is not None and not base_metadata.get("tbg_vl_vision_ranges"):
+            new_metadata["reference_latents_method"] = ref_method
+        if base_metadata.get("tbg_vl_vision_ranges"):
+            # Keep the visual features from the external Qwen edit reference
+            # native.  They are not interchangeable with TBG's text layers.
+            new_metadata["tbg_qwen_edit_reference_vl"] = True
+        else:
+            # This is a TBG text tensor carrying edit metadata, not the
+            # original mixed TextEncodeQwenImageEditPlus tensor.
+            new_metadata["tbg_reference_metadata_only"] = True
+        merged.append([tensor, new_metadata])
+    return merged
+
+
 def combine_conditions(conditions):
     # Combine tensors (assuming they are identical, just use the first)
     tensor = conditions[0][0]

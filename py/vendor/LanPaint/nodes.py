@@ -592,23 +592,7 @@ class LanPaint_SamplerCustomAdvanced:
             return (out, out_denoised)
 
 
-# A dictionary that contains all nodes you want to export with their names
-# NOTE: names should be globally unique
-NODE_CLASS_MAPPINGS = {
-    "LanPaint_KSampler": LanPaint_KSampler,
-    "LanPaint_KSamplerAdvanced": LanPaint_KSamplerAdvanced,
-    "LanPaint_SamplerCustom" : LanPaint_SamplerCustom,
-    "LanPaint_SamplerCustomAdvanced" : LanPaint_SamplerCustomAdvanced,
-    "LanPaint_MaskBlend": MaskBlend,
-#    "LanPaint_UpSale_LatentNoiseMask": LanPaint_UpSale_LatentNoiseMask,
-}
-
-# A dictionary that contains the friendly/humanly readable titles for the nodes
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "LanPaint_KSampler": "LanPaint KSampler",
-    "LanPaint_KSamplerAdvanced": "LanPaint KSampler (Advanced)",
-    "LanPaint_SamplerCustom" : "LanPaint Sampler Custom",
-    "LanPaint_SamplerCustomAdvanced" : "LanPaint Sampler Custom (Advanced)",
-    "LanPaint_MaskBlend": "LanPaint Mask Blend",
-#    "LanPaint_UpSale_LatentNoiseMask": "LanPaint UpSale Latent Noise Mask"
-}
+# This copy is a private runtime dependency of TBG ETUR. TBG imports helper
+# classes directly and must not expose LanPaint nodes to ComfyUI's node loader.
+NODE_CLASS_MAPPINGS = {}
+NODE_DISPLAY_NAME_MAPPINGS = {}

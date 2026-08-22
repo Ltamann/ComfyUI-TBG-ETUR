@@ -252,7 +252,6 @@ def sample_flux2_direct(
             if preview_callback is not None:
                 x0_est = (x - t_curr * pred) if t_curr > 1e-6 else x
                 preview_callback(i, x0_est.detach().cpu().float(), x.detach().cpu().float(), total_steps)
-
             x = x + (t_prev - t_curr) * pred
 
             if i >= gate_index and post_composite_preserve:

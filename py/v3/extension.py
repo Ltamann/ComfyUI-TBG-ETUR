@@ -44,6 +44,11 @@ from ..nodes.UpscalerRefiner.TBG_Pipes import (
 )
 from ..nodes.UpscalerRefiner.TBG_PID_Upscale import TBG_ETUR_Download_PID_Model, TBG_ETUR_PID_Tile_Upscale_Rebuild
 from ..nodes.UpscalerRefiner.TBG_Flux2_Sampler import TBGFlux2Sampler
+from ..nodes.UpscalerRefiner.TBG_Krea2_Standalone import (
+    TBG_Krea2InpaintingConditioning,
+    TBG_SplitAwareInpaintSampler,
+)
+from ..nodes.UpscalerRefiner.TBG_GPU_Upscale import TBG_ETUR_Upscale_Image_GPU_Using_Model
 from ..nodes.UpscalerRefiner.inc.pid_sde_sampler_registry import TBG_PiD_Creative_SDE_Sampler
 
 
@@ -231,55 +236,55 @@ def _normalize_legacy_result(raw_result: Any, expected_count: int):
 
 
 def _build_v3_wrapper(legacy_cls: type, node_id: str, display_name: str):
-    input_types = _call_input_types(legacy_cls)
-    required = input_types.get("required", {}) or {}
-    optional = input_types.get("optional", {}) or {}
-    hidden = input_types.get("hidden", {}) or {}
+    def _build_legacy_schema():
+        input_types = _call_input_types(legacy_cls)
+        required = input_types.get("required", {}) or {}
+        optional = input_types.get("optional", {}) or {}
+        hidden = input_types.get("hidden", {}) or {}
 
-    inputs = []
-    key_map = {}
-    seen_ids = set()
+        inputs = []
+        key_map = {}
+        seen_ids = set()
 
-    def _add_input(name: str, spec: Any, is_optional: bool):
-        normalized, original, node_input = _parse_input_spec(name, spec, is_optional)
-        unique = normalized
-        counter = 2
-        while unique in seen_ids:
-            unique = f"{normalized}_{counter}"
-            counter += 1
-        if unique != normalized:
-            if hasattr(node_input, "id"):
+        def _add_input(name: str, spec: Any, is_optional: bool):
+            normalized, original, node_input = _parse_input_spec(name, spec, is_optional)
+            unique = normalized
+            counter = 2
+            while unique in seen_ids:
+                unique = f"{normalized}_{counter}"
+                counter += 1
+            if unique != normalized and hasattr(node_input, "id"):
                 node_input.id = unique
-        seen_ids.add(unique)
-        key_map[unique] = original
-        inputs.append(node_input)
+            seen_ids.add(unique)
+            key_map[unique] = original
+            inputs.append(node_input)
 
-    optional_first = ()
-    if legacy_cls is TBG_ETUR_PID_Tile_Upscale_Rebuild:
-        optional_first = ("image",)
+        optional_first = ()
+        if legacy_cls is TBG_ETUR_PID_Tile_Upscale_Rebuild:
+            optional_first = ("image",)
 
-    for name in optional_first:
-        if name in optional:
-            _add_input(name, optional[name], True)
-    for name, spec in required.items():
-        _add_input(name, spec, False)
-    for name, spec in optional.items():
-        if name in optional_first:
-            continue
-        _add_input(name, spec, True)
+        for name in optional_first:
+            if name in optional:
+                _add_input(name, optional[name], True)
+        for name, spec in required.items():
+            _add_input(name, spec, False)
+        for name, spec in optional.items():
+            if name not in optional_first:
+                _add_input(name, spec, True)
 
-    hidden_items = []
-    hidden_key_map = {}
-    hidden_defaults = {}
-    for name, hidden_spec in hidden.items():
-        hidden_marker = _extract_hidden_marker(hidden_spec)
-        hidden_type = _HIDDEN_MAP.get(hidden_marker)
-        if hidden_type is not None:
-            hidden_items.append(hidden_type)
-            hidden_key_map[hidden_marker] = name
-        else:
-            # Keep non-core legacy hidden values internal; inject defaults at execute time.
-            hidden_defaults[name] = _extract_default_value(hidden_spec)
+        hidden_items = []
+        hidden_key_map = {}
+        hidden_defaults = {}
+        for name, hidden_spec in hidden.items():
+            hidden_marker = _extract_hidden_marker(hidden_spec)
+            hidden_type = _HIDDEN_MAP.get(hidden_marker)
+            if hidden_type is not None:
+                hidden_items.append(hidden_type)
+                hidden_key_map[hidden_marker] = name
+            else:
+                hidden_defaults[name] = _extract_default_value(hidden_spec)
+
+        return inputs, key_map, hidden_items, hidden_key_map, hidden_defaults
 
     outputs, expected_count = _parse_outputs(legacy_cls)
     category = getattr(legacy_cls, "CATEGORY", "TBG/ETUR")
@@ -289,6 +294,10 @@ def _build_v3_wrapper(legacy_cls: type, node_id: str, display_name: str):
 
     @classmethod
     def define_schema(cls):
+        inputs, key_map, hidden_items, hidden_key_map, hidden_defaults = _build_legacy_schema()
+        cls._key_map = key_map
+        cls._hidden_key_map = hidden_key_map
+        cls._hidden_defaults = hidden_defaults
         return io.Schema(
             node_id=node_id,
             display_name=display_name,
@@ -331,9 +340,9 @@ def _build_v3_wrapper(legacy_cls: type, node_id: str, display_name: str):
             "__module__": __name__,
             "_legacy_cls": legacy_cls,
             "_function_name": function_name,
-            "_key_map": key_map,
-            "_hidden_key_map": hidden_key_map,
-            "_hidden_defaults": hidden_defaults,
+            "_key_map": {},
+            "_hidden_key_map": {},
+            "_hidden_defaults": {},
             "_expected_count": expected_count,
             "define_schema": define_schema,
             "execute": execute,
@@ -358,9 +367,12 @@ _NODE_DEFS = [
     (TBG_ETUR_Labs_Refiner, "TBG ETUR Labs for Refiner", "TBG ETUR Labs for Refiner"),
     (TBG_ETUR_Download_PID_Model, "TBG ETUR Download PiD Model", "TBG ETUR Download PiD Model"),
     (TBG_ETUR_PID_Tile_Upscale_Rebuild, "TBG ETUR PID Tile Upscale Rebuild", "TBG ETUR tiled Nvidia PID Image Upscale"),
+    (TBG_ETUR_Upscale_Image_GPU_Using_Model, "Upscale Image GPU (using Model)", "Upscale Image GPU (using Model)"),
     (TBG_PiD_Creative_SDE_Sampler, "TBG PiD Creative SDE Sampler", "TBG PiD Creative SDE Sampler"),
     (TBG_ETUR_SIFT_Drift_Correction, "TBG SIFT+ Drift Correction", "TBG SIFT+ Drift Correction"),
     (TBGFlux2Sampler, "TBGFlux2Sampler", "TBG Flux2 Differential Diffusion Inpainting"),
+    (TBG_Krea2InpaintingConditioning, "TBG_Krea2InpaintingConditioning", "TBG Krea2 Inpainting Conditioning"),
+    (TBG_SplitAwareInpaintSampler, "TBG_SplitAwareInpaintSampler", "TBG Split-Aware Inpaint Sampler"),
     (AISourcePatternCleanup, "AISourcePatternCleanup", "AI Source Pattern Cleanup"),
     (QwenEditResolution, "QwenEditResolution", "Qwen Edit Resolution"),
     (FluxKontextResolution, "FluxKontextResolution", "Flux Kontext Resolution"),

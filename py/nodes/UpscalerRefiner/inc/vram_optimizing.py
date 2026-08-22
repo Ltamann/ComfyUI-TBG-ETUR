@@ -7,7 +7,7 @@ import torch
 import nodes
 
 from ....utils.log import log
-from .cnet import apply_controlnets_from_pipe, normalize_controlnet_mode
+from .cnet import apply_controlnets_from_pipe, normalize_controlnet_mode, prepare_krea2_depth_control
 from .redux import FluxRedux_ForTiles
 from comfy import model_management
 
@@ -28,6 +28,7 @@ class VRAMOptimizer:
         self.OUTPUTS = SELF.OUTPUTS
         self.PARAMS = SELF.PARAMS
         self.PROMPTER = SELF.PROMPTER
+        self.API = SELF.API
         self.node_id = SELF.INFO.id
         self.DUALMODELvae = SELF.DUALMODEL.vae
         self.DUALMODELmodel = SELF.DUALMODEL.model
@@ -65,10 +66,14 @@ class VRAMOptimizer:
 
         self.text_embeddings_cache = {}  # tile_idx -> {"conditioning","negative","fingerprint"}
         self.text_embeddings_cache_low = {}  # Low model (optional)
+        self.vl_conditioning_cache = {}  # tile_idx -> vl_conditioning (for Qwen models)
+        self.krea2_control_latents = {}
         self.device = device
         self.last_timestamp = getattr(self.PARAMS, "timestamp", 0)
 
         self.precompute_all_embeddings(SELF)
+        print(f"DEBUG_INIT: about to call precompute_vl_conditioning, VL_Encoding_Mode={getattr(self.PARAMS, 'VL_Encoding_Mode', 'NOT_SET')}")
+        self.precompute_vl_conditioning(SELF)
 
     def _copy_embedding_entry(self, emb):
         if not isinstance(emb, dict):
@@ -94,6 +99,36 @@ class VRAMOptimizer:
 
     def is_ultra_low(self):
         return self.vram_profile == "Ultra Low Memory (Per-Tile Streaming)"
+
+    def _unload_vl_encoder(self, stage):
+        """Release only the VL CLIP when the profile does not keep models cached."""
+        if self.vram_profile == "Fast Cache (Max Speed)":
+            return
+
+        patcher = getattr(self.clip_model, "patcher", None)
+        if patcher is None or model_management.is_device_cpu(patcher.load_device):
+            return
+        if patcher.loaded_size() <= 0:
+            return
+
+        loaded_models = model_management.current_loaded_models
+        if not any(loaded.model is patcher for loaded in loaded_models):
+            return
+
+        keep_loaded = [loaded for loaded in loaded_models if loaded.model is not patcher]
+        unloaded = model_management.free_memory(
+            1e30,
+            patcher.load_device,
+            keep_loaded,
+        )
+        if unloaded:
+            model_management.soft_empty_cache()
+            log(
+                f"[TBG][{self.vram_profile}] unloaded VL encoder after {stage}",
+                None,
+                None,
+                f"Node {self.node_id}",
+            )
 
     def _ultra_stage_unload(self, stage):
         if not self.is_ultra_low():
@@ -185,9 +220,32 @@ class VRAMOptimizer:
         cnet_hash = self._get_cnet_pipe_hash() if getattr(self.KSAMPLER, "Controlnet_Pipe", None) else None
         image_hash = self._hash_tile_image(tile_index)
         ts = getattr(self.PARAMS, "timestamp", 0)
+        denoise = getattr(self.KSAMPLER, "denoise", None)
+        # --- DEV: Trace denoise + custom_sigmas in fingerprint ---
+        if self.API.status == "Dev" or getattr(self.API, "dev_debug_enabled", False):
+            try:
+                _cs = getattr(self.KSAMPLER, "custom_sigmas", None)
+                if torch.is_tensor(_cs):
+                    _sigsig = tuple(round(float(v), 6) for v in _cs.detach().float().cpu().view(-1).tolist()[:8])
+                    _siglen = int(_cs.numel())
+                elif _cs is None:
+                    _sigsig = None
+                    _siglen = 0
+                else:
+                    _vals = [round(float(v), 6) for v in list(_cs)]
+                    _sigsig = tuple(_vals[:8])
+                    _siglen = len(_vals)
+            except Exception:
+                _sigsig = "err"
+                _siglen = -1
+            try:
+                log(f"[TBG DevDenoise] VRAM fingerprint tile={tile_index}: denoise={denoise} redux={self.redux_strength} cs_len={_siglen} cs_head={_sigsig}", None, None, f"Node {self.node_id}")
+            except Exception:
+                pass
+        # --- END DEV ---
         return hash(
             f"t{tile_index}_p{prompt_hash}_img{image_hash}_c{cnet_hash}_r{redux_hash}"
-            f"_s{self.redux_strength}_ts{ts}"
+            f"_s{self.redux_strength}_d{denoise}_ts{ts}"
         )
 
     def _ignore_general_prompt_for_tile(self, tile_idx):
@@ -321,14 +379,138 @@ class VRAMOptimizer:
             None,
             f"Node {self.node_id}",
         )
+
+    def precompute_vl_conditioning(self, SELF):
+        """Precompute VL conditioning for Global Embedding mode (Qwen only).
+
+        Tile Embedding mode encodes on-the-fly from tile_to_process in conditioning().
+        """
+        print(f"DEBUG_VL: precompute_vl_conditioning ENTERING node={self.node_id}")
+        from .vl_encode import build_vl_conditioning
+
+        # Debug: log the VL mode being used
+        vl_mode = getattr(self.PARAMS, 'VL_Encoding_Mode', 'Off')
+        log(
+            f"VL: precompute mode check = '{vl_mode}' (PARAMS keys={list(self.PARAMS.__dict__.keys())})",
+            None, None, f"Node {self.node_id}",
+        )
+
+        # Only run for Qwen / Krea2 VL models
+        model_type = getattr(self.KSAMPLER, 'model_type', None)
+        if model_type not in ("Qwen Image", "Qwen Image Edit", "Krea2"):
+            return
+
+        # Check VL mode
+        if vl_mode not in ("Global Embedding", "Tile + Global Embedding", "Inner Tile + Global Embedding"):
+            return
+
+        if self.clip_model is None:
+            return
+
+        full_image = getattr(self, 'image', None)
+        if full_image is None or full_image.shape[0] != 1:
+            return
+
+        grid_specs = list(getattr(self.PARAMS, "grid_specs", []) or [])
+        if not grid_specs:
+            return
+
+        canvas_h = int(full_image.shape[1])
+        canvas_w = int(full_image.shape[2])
+
+        vl_strength = float(getattr(self.PARAMS, 'VL_Strength', 0.5))
+        if not (0.0 <= vl_strength <= 1.0):
+            vl_strength = 0.5
+        log(
+            f"VL: Global Embedding mode — encoding canvas, "
+            f"vl_strength={vl_strength:.2f} (model={model_type})",
+            None, None, f"Node {self.node_id}",
+        )
+        try:
+            selected_tiles = getattr(self.PARAMS, "tiles_to_process", None)
+            if not selected_tiles:
+                selected_tiles = None
+            self.vl_conditioning_cache = build_vl_conditioning(
+                clip=self.clip_model,
+                full_image=full_image,
+                grid_specs=grid_specs,
+                canvas_h=canvas_h,
+                canvas_w=canvas_w,
+                model_type=model_type,
+                vl_strength=vl_strength,
+                tile_indices=selected_tiles,
+            )
+        finally:
+            self._unload_vl_encoder("global VL encoding")
+        log(
+            f"VL: Global Embedding mode — {len(self.vl_conditioning_cache)} tiles sliced, "
+            f"vl_strength={vl_strength:.2f} (model={model_type})",
+            None, None, f"Node {self.node_id}",
+        )
+
+    def get_tile_vl_conditioning(self, tile_idx, tile_image):
+        """Encode a single tile for Tile Embedding mode (on-the-fly).
+
+        Parameters
+        ----------
+        tile_idx : int
+            Tile index (for logging).
+        tile_image : torch.Tensor
+            The tile's upscaled crop (tile_to_process), shape ``(1, H, W, 3)``.
+
+        Returns
+        -------
+        list or None
+            Conditioning for this tile, or None if VL is not enabled/not Qwen.
+        """
+        from .vl_encode import encode_tile
+
+        vl_mode = getattr(self.PARAMS, 'VL_Encoding_Mode', 'Off')
+        if vl_mode not in ("Tile Embedding", "Tile + Global Embedding", "Inner Tile + Global Embedding"):
+            return None
+
+        model_type = getattr(self.KSAMPLER, 'model_type', None)
+        if model_type not in ("Qwen Image", "Qwen Image Edit", "Krea2"):
+            return None
+
+        if self.clip_model is None:
+            return None
+
+        if tile_image is None or tile_image.shape[0] != 1:
+            return None
+
+        tile_vl_strength = float(getattr(self.PARAMS, "VL_Strength", 0.5))
+        try:
+            vl_cond = encode_tile(
+                self.clip_model,
+                tile_image,
+                model_type,
+                vl_strength=tile_vl_strength,
+                layer_weights=None,
+                layer_multiplier=1.0,
+                reference_rebalance=False,
+            )
+        finally:
+            self._unload_vl_encoder(f"tile {tile_idx + 1} VL encoding")
+        log(
+            f"VL: Tile Embedding mode — tile {tile_idx + 1} encoded "
+            f"(model={model_type} strength={tile_vl_strength:.3f})",
+            None, None, f"Node {self.node_id}",
+        )
+        return vl_cond
+
     # ---------------------------------------------------------- ControlNet/CN
 
     def _compute_single_controlnet(self, SELF, tile_idx):
         pipe = self._filtered_controlnet_pipe()
+        all_pipe = getattr(self.KSAMPLER, "Controlnet_Pipe", None) or []
+        tile_image = self.get_tile_image(tile_idx)
+        self.krea2_control_latents[tile_idx] = prepare_krea2_depth_control(
+            self, all_pipe, tile_image, self.KSAMPLER.vae
+        )
         if not pipe:
             return None, None
 
-        tile_image = self.get_tile_image(tile_idx)
         chosen = [str(p.get("preprocessor", "None")) for p in pipe]
         log(
             f"[TBG][ControlNet] Tile {tile_idx + 1}: selected {len(pipe)} entries for precompute -> {chosen}",
@@ -587,6 +769,7 @@ class VRAMOptimizer:
     def cleanup(self):
         self.text_embeddings_cache.clear()
         self.text_embeddings_cache_low.clear()
+        self.vl_conditioning_cache.clear()
         self.last_timestamp = None
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -597,5 +780,3 @@ class VRAMOptimizer:
             None,
             f"Node {self.node_id}",
         )
-
-

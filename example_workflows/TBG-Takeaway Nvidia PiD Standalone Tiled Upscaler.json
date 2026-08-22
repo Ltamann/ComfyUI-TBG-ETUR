@@ -1,135 +1,9 @@
 {
   "id": "b29b027f-1c70-4543-8fe4-40954d1c4ced",
   "revision": 0,
-  "last_node_id": 5,
-  "last_link_id": 6,
+  "last_node_id": 6,
+  "last_link_id": 11,
   "nodes": [
-    {
-      "id": 1,
-      "type": "PreviewImage",
-      "pos": [
-        7069.972916317032,
-        6799.375626068558
-      ],
-      "size": [
-        580.9993948031779,
-        642.7275800420084
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 1
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.24.0",
-        "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 2,
-      "type": "TBG ETUR PID Tile Upscale Rebuild",
-      "pos": [
-        6643.755308843287,
-        6798.117174867988
-      ],
-      "size": [
-        400,
-        656
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "PID Diffusion Model",
-          "name": "PID_Model",
-          "type": "MODEL",
-          "link": 2
-        },
-        {
-          "label": "PID Model Info",
-          "name": "PID_Model_Info",
-          "type": "PID_MODEL_INFO",
-          "link": 3
-        },
-        {
-          "label": "Image",
-          "name": "image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 4
-        },
-        {
-          "label": "Source Latent",
-          "name": "latent",
-          "shape": 7,
-          "type": "LATENT",
-          "link": null
-        },
-        {
-          "label": "Sampler Override",
-          "name": "Sampler",
-          "shape": 7,
-          "type": "SAMPLER",
-          "link": null
-        },
-        {
-          "label": "PID CLIP Override",
-          "name": "PID_CLIP",
-          "shape": 7,
-          "type": "CLIP",
-          "link": 5
-        },
-        {
-          "label": "PID Source VAE Override",
-          "name": "PID_Source_VAE",
-          "shape": 7,
-          "type": "VAE",
-          "link": 6
-        }
-      ],
-      "outputs": [
-        {
-          "name": "PID Rebuilt",
-          "type": "IMAGE",
-          "links": [
-            1
-          ]
-        },
-        {
-          "name": "PID Tiles",
-          "shape": 6,
-          "type": "IMAGE",
-          "links": []
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
-        "Node name for S&R": "TBG ETUR PID Tile Upscale Rebuild"
-      },
-      "widgets_values": [
-        3,
-        "randomize",
-        4,
-        4,
-        1,
-        "pid_sde",
-        "simple",
-        1,
-        0.1,
-        true,
-        ""
-      ]
-    },
     {
       "id": 3,
       "type": "VAELoader",
@@ -150,7 +24,7 @@
           "name": "VAE",
           "type": "VAE",
           "links": [
-            6
+            10
           ]
         }
       ],
@@ -183,7 +57,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            4
+            8
           ]
         },
         {
@@ -222,22 +96,20 @@
           "name": "PID Model",
           "type": "MODEL",
           "links": [
-            2
+            7
           ]
         },
         {
           "name": "PID CLIP",
           "type": "CLIP",
           "links": [
-            5
+            9
           ]
         },
         {
           "name": "PID Model Info",
           "type": "PID_MODEL_INFO",
-          "links": [
-            3
-          ]
+          "links": []
         }
       ],
       "properties": {
@@ -249,69 +121,190 @@
         "SuperResolution/PID Flux1 1K to 4K BF16",
         true
       ]
+    },
+    {
+      "id": 1,
+      "type": "PreviewImage",
+      "pos": [
+        7069.972916317032,
+        6799.375626068558
+      ],
+      "size": [
+        693.4831939558953,
+        657.5280799305237
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.24.0",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 6,
+      "type": "TBG ETUR PID Tile Upscale Rebuild",
+      "pos": [
+        6643.755308843287,
+        6798.117174867988
+      ],
+      "size": [
+        400,
+        708
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
+          "type": "MODEL",
+          "link": 7
+        },
+        {
+          "label": "Input Image (color correction reference)",
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "label": "Source Latent",
+          "name": "latent",
+          "shape": 7,
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "label": "Sampler Override",
+          "name": "Sampler",
+          "shape": 7,
+          "type": "SAMPLER",
+          "link": null
+        },
+        {
+          "label": "PID CLIP Override",
+          "name": "PID_CLIP",
+          "shape": 7,
+          "type": "CLIP",
+          "link": 9
+        },
+        {
+          "label": "PID Source VAE Override",
+          "name": "PID_Source_VAE",
+          "shape": 7,
+          "type": "VAE",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "PID Rebuilt",
+          "type": "IMAGE",
+          "links": [
+            11
+          ]
+        },
+        {
+          "name": "PID Tiles",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR PID Tile Upscale Rebuild"
+      },
+      "widgets_values": [
+        "FLUX1",
+        5,
+        "fixed",
+        4,
+        4,
+        1,
+        "pid_sde",
+        "simple",
+        1,
+        0.1,
+        "TBG Detail-Preserving Color Stabilizer",
+        true,
+        1,
+        ""
+      ]
     }
   ],
   "links": [
     [
-      1,
-      2,
-      0,
-      1,
-      0,
-      "IMAGE"
-    ],
-    [
-      2,
+      7,
       5,
       0,
-      2,
+      6,
       0,
       "MODEL"
     ],
     [
-      3,
-      5,
-      2,
-      2,
-      1,
-      "PID_MODEL_INFO"
-    ],
-    [
-      4,
+      8,
       4,
       0,
-      2,
-      2,
+      6,
+      1,
       "IMAGE"
     ],
     [
-      5,
+      9,
       5,
       1,
-      2,
-      5,
+      6,
+      4,
       "CLIP"
     ],
     [
-      6,
+      10,
       3,
       0,
-      2,
       6,
+      5,
       "VAE"
+    ],
+    [
+      11,
+      6,
+      0,
+      1,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5209868481924677,
+      "scale": 1.116781577942544,
       "offset": [
-        -4788.809513615568,
-        -6420.537217792047
+        -6080.201015595305,
+        -6626.053822453686
       ]
     },
-    "frontendVersion": "1.45.15",
+    "frontendVersion": "1.48.7",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,

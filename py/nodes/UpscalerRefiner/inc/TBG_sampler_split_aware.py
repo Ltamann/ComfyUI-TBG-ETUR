@@ -32,6 +32,19 @@ import math
 import comfy.utils
 from . import flux2_differential
 
+
+def apply_spatial_2d_per_depth(tensor, operation):
+    if tensor.ndim == 4:
+        return operation(tensor)
+    if tensor.ndim != 5:
+        raise ValueError(f"Expected a 4D or 5D latent, got {tuple(tensor.shape)}")
+
+    batch, channels, depth, height, width = tensor.shape
+    flattened = tensor.permute(0, 2, 1, 3, 4).reshape(batch * depth, channels, height, width)
+    processed = operation(flattened)
+    processed_height, processed_width = processed.shape[-2:]
+    return processed.reshape(batch, depth, channels, processed_height, processed_width).permute(0, 2, 1, 3, 4)
+
 def _conditioning_ref_latent_count(conditioning):
     count = 0
     if not isinstance(conditioning, (list, tuple)):
@@ -85,6 +98,29 @@ class TBGKSampler():
         return self.full_sigmas
 
     @classmethod
+    def apply_sigma_jump(cls, sigmas, enabled, strength, start_percent, end_percent):
+        if not enabled or strength == 0 or sigmas is None or len(sigmas) < 3:
+            return sigmas
+
+        start_percent = max(0.0, min(1.0, float(start_percent)))
+        end_percent = max(0.0, min(1.0, float(end_percent)))
+        if end_percent < start_percent:
+            start_percent, end_percent = end_percent, start_percent
+        if end_percent <= start_percent:
+            return sigmas
+
+        jumped = sigmas.clone()
+        last_index = len(jumped) - 1
+        for index in range(len(jumped)):
+            progress = index / last_index
+            if progress <= start_percent or progress >= end_percent:
+                continue
+            window_progress = (progress - start_percent) / (end_percent - start_percent)
+            envelope = 4.0 * window_progress * (1.0 - window_progress)
+            jumped[index] = jumped[index] * (1.0 + float(strength) * envelope)
+        return jumped.clamp_min(0.0)
+
+    @classmethod
     def apply_hybrid_sharpening(self, out, x_anterior, sigma, sharpener, steps):
         if sharpener == 0:
             return out
@@ -124,8 +160,11 @@ class TBGKSampler():
         kernel_2d = kernel_2d.unsqueeze(0).unsqueeze(0)
         kernel_2d = kernel_2d.repeat(latent.shape[1], 1, 1, 1)
         padding = kernel_size // 2
-        low_freq = F.conv2d(latent, kernel_2d, padding=padding, groups=latent.shape[1])
-        return low_freq
+
+        def blur_2d(value):
+            return F.conv2d(value, kernel_2d, padding=padding, groups=value.shape[1])
+
+        return apply_spatial_2d_per_depth(latent, blur_2d)
 
     @classmethod
     def create_denoise_mask_wrapper(self, original_denoise_mask_fn):
@@ -197,6 +236,7 @@ class TBGKSampler():
 
         def patched_inpaint_call(self_x0, x, sigma, denoise_mask,
                                  model_options={}, seed=None, *args, **kwargs):
+            latent_mask = None
             if self.step_count == 0 and self._state is not None:
                 if "noise" in self._state:
                     self_x0.noise = self._state["noise"]
@@ -238,6 +278,7 @@ class TBGKSampler():
 
         def first_pass_call(self_x0, x, sigma, denoise_mask,
                             model_options={}, seed=None, *args, **kwargs):
+            latent_mask = None
 
             flux2_active, x, denoise_mask, flux2_post_mask = flux2_differential.begin_step(
                 self, self_x0, x, sigma, denoise_mask, model_options
@@ -315,7 +356,8 @@ class TBGKSampler():
     def sample(self, noise, positive, negative, latent_image,
                cfg, sampler_name, denoise, start_at_step, end_at_step,
                force_full_denoise, noise_mask, callback, disable_pbar, seed,
-               inpaint_start=0, inpaint_end=1000, disable_noise=False, sharpener=0, detail_enhancer=0, sigmas=None, better_inpainting= False):
+               inpaint_start=0, inpaint_end=1000, disable_noise=False, sharpener=0, detail_enhancer=0, sigmas=None, better_inpainting= False,
+               ):
         self.step_count = 0
         self.total_step_count = start_at_step
         model_sampling = self.model.get_model_object("model_sampling")
@@ -324,6 +366,24 @@ class TBGKSampler():
         else:
             self.full_sigmas = sigmas
             self.steps = len(sigmas)-1
+        jump_config = self.model.model_options.get("tbg_sigma_jump", {})
+        sampler_sigmas = self.apply_sigma_jump(
+            self.full_sigmas,
+            bool(jump_config.get("enabled", False)),
+            jump_config.get("strength", 0.0),
+            jump_config.get("start", 0.0),
+            jump_config.get("end", 1.0),
+        )
+        if sampler_sigmas is not self.full_sigmas:
+            print(
+                "[TBG Sigma Jump] enabled="
+                f"{bool(jump_config.get('enabled', False))} "
+                f"strength={float(jump_config.get('strength', 0.0)):.4f} "
+                f"start={float(jump_config.get('start', 0.0)):.4f} "
+                f"end={float(jump_config.get('end', 1.0)):.4f} "
+                f"base={self.full_sigmas.detach().float().cpu().tolist()} "
+                f"sampler={sampler_sigmas.detach().float().cpu().tolist()}"
+            )
         self.original_denoise_mask_fn = self.model.model_options.get("denoise_mask_function")
         self._flux2_diff_config = flux2_differential.latent_config(latent_image)
         self._flux2_diff_state = {}
@@ -348,14 +408,18 @@ class TBGKSampler():
         KSamplerX0Inpaint.__call__ = inpaint_patch
 
         try:
-            if self._flux2_diff_config is not None and hasattr(sampler_name, "sample"):
-                print("[TBG Flux2 Differential] normal sampler using SAMPLER object path")
+            if hasattr(sampler_name, "sample"):
+                print(
+                    "[TBG ETUR] using SAMPLER object path "
+                    f"sigma_max={float(self.full_sigmas[0]):.6f} "
+                    f"sigma_count={len(self.full_sigmas)}"
+                )
                 samples = comfy.sample.sample_custom(
                     self.model,
                     noise=noise,
                     cfg=cfg,
                     sampler=sampler_name,
-                    sigmas=self.full_sigmas,
+                    sigmas=sampler_sigmas,
                     positive=positive,
                     negative=negative,
                     latent_image=latent_image["samples"],
@@ -381,6 +445,7 @@ class TBGKSampler():
                     last_step=end_at_step,
                     force_full_denoise=force_full_denoise,
                     noise_mask=noise_mask,
+                    sigmas=sampler_sigmas,
                     callback=callback,
                     disable_pbar=disable_pbar,
                     seed=seed,
@@ -449,7 +514,7 @@ class TBG_KSamplerAdvancedSplitAware_Copy:
     def sample(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler,
                positive, negative, latent_image, start_at_step, end_at_step, denoise,
                return_with_leftover_noise, inpaint_end, inpaint_start,smoother_sharper,detail_enhancer,
-               sampler_state=None):
+               sampler_state=None, sigmas=None):
         better_inpainting = False
         device = model.load_device
         _debug_sampler_conditioning("normal_split_aware", positive, negative)
@@ -492,7 +557,7 @@ class TBG_KSamplerAdvancedSplitAware_Copy:
             disable_noise=disable_noise,
             sharpener=smoother_sharper,
             detail_enhancer=detail_enhancer,
-            sigmas=None,
+            sigmas=sigmas,
             better_inpainting = better_inpainting,
         )
 
@@ -583,7 +648,8 @@ class TBG_DualModelSampler_COPY:
 
     @classmethod
     def _run_custom(self,inpaint_end, better_inpainting, smoother_sharper,detail_enhancer,start_step,end_step,sigmas_full, model, add_noise, noise_seed, cfg,
-                    positive, negative, sampler_name, scheduler, sigmas, latent_image, label, sampler_state=None):
+                    positive, negative, sampler_name, scheduler, sigmas, latent_image, label, sampler_state=None,
+                    ):
         device = model.load_device
         _debug_sampler_conditioning(f"normal_dual_{label}", positive, negative)
         if not add_noise:
@@ -806,7 +872,7 @@ class TBG_DualModelSampler_COPY:
             start_step_high, end_step_high, s_h,
             model_high, True, noise_seed, cfg_high,
             positive_high, negative_high,
-            sampler_name, scheduler, s_h[:end_step_high + 1], latent_image, "HIGH_part"
+            sampler_name, scheduler, s_h[:end_step_high + 1], latent_image, "HIGH_part",
         )
 
         # 6) LOW segment sampling - use INTERPOLATED low sigmas
@@ -816,7 +882,7 @@ class TBG_DualModelSampler_COPY:
             start_step_low, end_step_low, sigmas_low_modified,
             model_low, False, noise_seed, cfg_low,
             positive_low, negative_low,
-            sampler_name, scheduler, sigmas_low_modified[start_step_low:], out_high, "LOW_part", state
+            sampler_name, scheduler, sigmas_low_modified[start_step_low:], out_high, "LOW_part", state,
         )
 
         return (out_low,)

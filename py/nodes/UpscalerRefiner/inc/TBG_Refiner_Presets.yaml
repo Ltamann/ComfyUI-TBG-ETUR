@@ -1,0 +1,41 @@
+# Used only when TBG ETUR Labs Refiner is not connected.
+# These are the current hardcoded refiner defaults.
+defaults:
+  Differential_Diffusion: true # true | false
+  Flux2_Sampler_Hook: false # true | false
+  Tile_Fusion_Blend: 1 # -1.0-1.0, step 0.01; fraction of fusion-blur width, positive inward and negative outward
+  Fusion_conditioning: "Inpainting On with Noise Mask and Conditioning" # Inpainting Off | Inpainting On with Conditioning | Inpainting On with Noise Mask | Inpainting On with Noise Mask and Conditioning
+  Color & Structure Stabilizer: 0.0 # 0.0-1.0, step 0.01
+  PRO_Tile_Cache: "OFF" # OFF | ON
+  Sampler_Execution_Mode: "ETUR split-aware" # LanPaint (current) | ETUR split-aware | ComfyUI SamplerCustomAdvanced
+  LanPaint_Internal_Steps: 1 # 0-100, integer
+  Fusion_end: 0 # -50-0, integer
+  Save_Tiles_in_Temp_Folder: false # true | false (Dev debug output)
+  stitch_blending: "gpupyramid" # gpupyramid | cpupyramid
+  Content_Aware_Laplacian_Seam: true # true | false
+  VL_Encoding_Mode: "Inner Tile + Global Embedding" # Off | Global Embedding | Tile Embedding | Tile + Global Embedding | Inner Tile + Global Embedding
+  max_upscale_size: 2048 # 256-4096, step 8; model default may be 1024, 1328, or 2048
+
+models:
+  FLUX1:
+    max_upscale_size: 2048
+  FLUX2:
+    max_upscale_size: 2048
+  Ideogram4:
+    max_upscale_size: 2048 #  Sampler_Execution_Mode is a custom samper with spetial guidance input
+  "FLUX1 Kontext":
+    max_upscale_size: 2048
+  Krea2:
+    max_upscale_size: 2048
+  "Qwen Image":
+    max_upscale_size: 2048
+  "Qwen Image Edit":
+    max_upscale_size: 2048
+  SDXL:
+    max_upscale_size: 2048
+  SD3:
+    max_upscale_size: 2048
+  "Z-Image":
+    max_upscale_size: 2048
+  Others:
+    max_upscale_size: 2048

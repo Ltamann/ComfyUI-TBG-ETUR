@@ -1,7 +1,7 @@
 {
   "id": "af7253b3-2287-4b2f-8849-ff7792cb1fef",
   "revision": 0,
-  "last_node_id": 205,
+  "last_node_id": 206,
   "last_link_id": 345,
   "nodes": [
     {
@@ -18,7 +18,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 5,
+      "order": 0,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -48,100 +48,6 @@
       "bgcolor": "#353"
     },
     {
-      "id": 7,
-      "type": "TBG Color Correction",
-      "pos": [
-        1550,
-        2250
-      ],
-      "size": [
-        350,
-        150
-      ],
-      "flags": {},
-      "order": 22,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "Image",
-          "name": "image",
-          "type": "IMAGE",
-          "link": 333
-        },
-        {
-          "label": "Reference Image",
-          "name": "reference",
-          "type": "IMAGE",
-          "link": 324
-        }
-      ],
-      "outputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "links": [
-            329,
-            331,
-            344
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TBG Color Correction"
-      },
-      "widgets_values": [
-        "TBG Detail-Preserving Color Stabilizer",
-        true,
-        1
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
-      "id": 168,
-      "type": "ConditioningZeroOut",
-      "pos": [
-        1000,
-        1800
-      ],
-      "size": [
-        250,
-        50
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "link": 284
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            320
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.8.2",
-        "Node name for S&R": "ConditioningZeroOut",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65
-      },
-      "widgets_values": []
-    },
-    {
       "id": 169,
       "type": "CFGGuider",
       "pos": [
@@ -153,7 +59,7 @@
         100
       ],
       "flags": {},
-      "order": 18,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
@@ -209,7 +115,7 @@
         150
       ],
       "flags": {},
-      "order": 16,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
@@ -270,7 +176,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 20,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
@@ -322,7 +228,7 @@
         100
       ],
       "flags": {},
-      "order": 2,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -362,7 +268,7 @@
         100
       ],
       "flags": {},
-      "order": 1,
+      "order": 2,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -387,61 +293,8 @@
         "secondTabWidth": 65
       },
       "widgets_values": [
-        2759,
+        2760,
         "increment"
-      ]
-    },
-    {
-      "id": 176,
-      "type": "ImageScaleToTotalPixels",
-      "pos": [
-        550,
-        1750
-      ],
-      "size": [
-        300,
-        150
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 10,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 321
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            301,
-            316,
-            323,
-            339
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.8.2",
-        "Node name for S&R": "ImageScaleToTotalPixels",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65
-      },
-      "widgets_values": [
-        "bilinear",
-        1,
-        1
       ]
     },
     {
@@ -456,7 +309,7 @@
         100
       ],
       "flags": {},
-      "order": 6,
+      "order": 3,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -504,7 +357,7 @@
         150
       ],
       "flags": {},
-      "order": 0,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -553,7 +406,7 @@
         100
       ],
       "flags": {},
-      "order": 4,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -573,55 +426,6 @@
       "widgets_values": [
         "FLUX\\flux-2-klein-base-9b.safetensors",
         "default"
-      ]
-    },
-    {
-      "id": 181,
-      "type": "CLIPTextEncode",
-      "pos": [
-        500,
-        2050
-      ],
-      "size": [
-        400,
-        150
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 298
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "slot_index": 0,
-          "links": [
-            284,
-            314
-          ]
-        }
-      ],
-      "title": "CLIP Text Encode (Positive Prompt)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.8.2",
-        "Node name for S&R": "CLIPTextEncode",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65
-      },
-      "widgets_values": [
-        "\nRefine and add detail to this upscaled tile. Restore the image quality and resolve it to a sharp, high-resolution result. Remove compression artifacts, banding, and noise, and clarify soft or blurred areas into crisp, clean edges and definition. Enrich existing textures and surfaces with fine, intricate, physically accurate detail, matching the existing grain, focus, and material properties of each surface. Keep in-focus areas crisp and sharp, keep softly blurred areas soft, and leave flat or evenly-toned areas clean and smooth. Recover detail only where detail is already present, and add no new objects, elements, or content — refine only what is already in the tile. Preserve the original lighting, colour, contrast, and composition exactly as shown. Produce a clean, photorealistic result faithful to the source."
       ]
     },
     {
@@ -692,7 +496,7 @@
         350
       ],
       "flags": {},
-      "order": 19,
+      "order": 20,
       "mode": 0,
       "inputs": [
         {
@@ -761,7 +565,7 @@
         350
       ],
       "flags": {},
-      "order": 21,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -770,115 +574,18 @@
           "link": 310
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "title": "edited",
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.18.1",
         "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 191,
-      "type": "VAEEncode",
-      "pos": [
-        700,
-        1850
-      ],
-      "size": [
-        200,
-        50
-      ],
-      "flags": {
-        "collapsed": true
-      },
-      "order": 13,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "pixels",
-          "type": "IMAGE",
-          "link": 316
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 317
-        }
-      ],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "links": [
-            313
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.8.2",
-        "Node name for S&R": "VAEEncode",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 192,
-      "type": "ReferenceLatent",
-      "pos": [
-        1000,
-        1700
-      ],
-      "size": [
-        250,
-        50
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 17,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "link": 314
-        },
-        {
-          "name": "latent",
-          "shape": 7,
-          "type": "LATENT",
-          "link": 313
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            318
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.8.2",
-        "Node name for S&R": "ReferenceLatent",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65
       },
       "widgets_values": []
     },
@@ -896,7 +603,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 3,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -935,8 +642,8 @@
       "id": 194,
       "type": "Reroute",
       "pos": [
-        1350,
-        2150
+        1342.0545247272573,
+        1857.6073901506506
       ],
       "size": [
         75,
@@ -978,7 +685,7 @@
         500
       ],
       "flags": {},
-      "order": 23,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -994,7 +701,15 @@
           "link": 329
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "dir": 4,
+          "name": "images",
+          "shape": 3,
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "rgthree-comfy",
         "ver": "1.0.2605082257",
@@ -1005,12 +720,12 @@
           {
             "name": "A",
             "selected": true,
-            "url": "/api/view?filename=rgthree.compare._temp_xeymp_00007_.png&type=temp&subfolder=&rand=0.15514717845175796"
+            "url": "/api/view?filename=rgthree.compare._temp_ruyqp_00003_.png&type=temp&subfolder=&rand=0.9943254270835151"
           },
           {
             "name": "B",
             "selected": true,
-            "url": "/api/view?filename=rgthree.compare._temp_xeymp_00008_.png&type=temp&subfolder=&rand=0.33238842802946955"
+            "url": "/api/view?filename=rgthree.compare._temp_ruyqp_00004_.png&type=temp&subfolder=&rand=0.614060034649891"
           }
         ]
       ]
@@ -1029,7 +744,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 24,
+      "order": 25,
       "mode": 0,
       "inputs": [
         {
@@ -1038,7 +753,13 @@
           "link": 331
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "title": "Geometry Drift Correction-Detail-Preserving Color Matc",
       "properties": {
         "cnr_id": "comfy-core",
@@ -1150,6 +871,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
         "Node name for S&R": "TBG ETUR Labs Upscaler"
       },
       "widgets_values": [
@@ -1177,7 +900,7 @@
         800
       ],
       "flags": {},
-      "order": 25,
+      "order": 26,
       "mode": 0,
       "inputs": [
         {
@@ -1221,6 +944,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
         "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO"
       },
       "widgets_values": [
@@ -1259,7 +984,7 @@
         950
       ],
       "flags": {},
-      "order": 26,
+      "order": 27,
       "mode": 0,
       "inputs": [
         {
@@ -1268,7 +993,13 @@
           "link": 345
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.24.0",
@@ -1299,6 +1030,354 @@
       ],
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
+    },
+    {
+      "id": 168,
+      "type": "ConditioningZeroOut",
+      "pos": [
+        957.9744538772246,
+        2050.8398487908844
+      ],
+      "size": [
+        250,
+        50
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 284
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            320
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.8.2",
+        "Node name for S&R": "ConditioningZeroOut",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 192,
+      "type": "ReferenceLatent",
+      "pos": [
+        977.6739192288386,
+        1820.823377470232
+      ],
+      "size": [
+        250,
+        50
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 314
+        },
+        {
+          "name": "latent",
+          "shape": 7,
+          "type": "LATENT",
+          "link": 313
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            318
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.8.2",
+        "Node name for S&R": "ReferenceLatent",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 191,
+      "type": "VAEEncode",
+      "pos": [
+        827.3898859601027,
+        1968.1967921096832
+      ],
+      "size": [
+        200,
+        50
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 316
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 317
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            313
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.8.2",
+        "Node name for S&R": "VAEEncode",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 176,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        488.2749885256107,
+        1748.6867073197254
+      ],
+      "size": [
+        300,
+        150
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 321
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            301,
+            316,
+            323,
+            339
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.8.2",
+        "Node name for S&R": "ImageScaleToTotalPixels",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65
+      },
+      "widgets_values": [
+        "bilinear",
+        1,
+        1
+      ]
+    },
+    {
+      "id": 181,
+      "type": "CLIPTextEncode",
+      "pos": [
+        468.4808554374178,
+        2040.8069362085794
+      ],
+      "size": [
+        451.30838455767275,
+        241.76309930879506
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 298
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            284,
+            314
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Positive Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.8.2",
+        "Node name for S&R": "CLIPTextEncode",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65
+      },
+      "widgets_values": [
+        "\nRefine and add detail to this upscaled tile. Restore the image quality and resolve it to a sharp, high-resolution result. Remove compression artifacts, banding, and noise, and clarify soft or blurred areas into crisp, clean edges and definition. Enrich existing textures and surfaces with fine, intricate, physically accurate detail, matching the existing grain, focus, and material properties of each surface. Keep in-focus areas crisp and sharp, keep softly blurred areas soft, and leave flat or evenly-toned areas clean and smooth. Recover detail only where detail is already present, and add no new objects, elements, or content — refine only what is already in the tile. Preserve the original lighting, colour, contrast, and composition exactly as shown. Produce a clean, photorealistic result faithful to the source."
+      ]
+    },
+    {
+      "id": 7,
+      "type": "TBG Color Correction",
+      "pos": [
+        1500,
+        1930
+      ],
+      "size": [
+        350,
+        150
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 333
+        },
+        {
+          "label": "Reference Image",
+          "name": "reference",
+          "type": "IMAGE",
+          "link": 324
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            329,
+            331,
+            344
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG Color Correction"
+      },
+      "widgets_values": [
+        "TBG Detail-Preserving Color Stabilizer",
+        true,
+        1
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 206,
+      "type": "AISourcePatternCleanup",
+      "pos": [
+        1496.536549454147,
+        2286.1799078193185
+      ],
+      "size": [
+        350,
+        200
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 4,
+      "inputs": [
+        {
+          "label": "Image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "difference_image",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "AISourcePatternCleanup"
+      },
+      "widgets_values": [
+        0.58,
+        128,
+        "AI luma guard"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
     }
   ],
   "links": [
@@ -1600,10 +1679,10 @@
       "id": 8,
       "title": "TBG Geometry Drift Correction-Detail-Preserving Color Match",
       "bounding": [
-        1350,
-        1950,
-        650,
-        650
+        1342.0545247272573,
+        1657.6073901506502,
+        655.7784216634104,
+        463.64305777373283
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1619,18 +1698,34 @@
       ],
       "color": "#3f789e",
       "flags": {}
+    },
+    {
+      "id": 10,
+      "title": "TBG AI Source Pattern Cleanup - Removes OPENAI grid structures",
+      "bounding": [
+        1336.3563275459874,
+        2162.996595690261,
+        655.7784216634104,
+        463.64305777373283
+      ],
+      "color": "#3f789e",
+      "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5730855330117188,
+      "scale": 0.24304420967399684,
       "offset": [
-        -703.0671153936341,
-        -1059.5080375909972
+        1059.6075928958292,
+        -298.9164277379624
       ]
     },
-    "frontendVersion": "1.44.19"
+    "frontendVersion": "1.48.7",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }

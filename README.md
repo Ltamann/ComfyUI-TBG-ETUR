@@ -1,6 +1,6 @@
 # TBG ETUR Version 1.2 dropped - What's New?
-**TBG_Enhanced Tiled Upscaler & Refiner PRO V1.2**
-Ideogram4,Qwen,Z-Image,Flux1+2,Sdxl snd Sd3 and more model familys
+**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.2.9**
+
   ![TBG ETUR 1.2 Patreon image](img/TBG_ETUR_1.2.9_Patreon.png)
 **Keep in mind this is still a beta version, and we're updating and fine-tuning it daily. So do the same**
 
@@ -9,9 +9,9 @@ Tutorials of old version and highlights available at [Youtube@TBG_AI](https://ww
 and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)). 
 
 
-## TBG ETUR 1.2
+## TBG ETUR 1.2.9
 
-Last version v1.2.11, released on **June 13, 2026 at 20:25 CEST (UTC+2)**.
+Last version v1.2.9, released on **June 13, 2026 at 20:25 CEST (UTC+2)**.
 
 This is a major feature update over the public 1.1.18 version. We're breaking free from ETUR and turning the best knowledge into lightweight, standalone nodes. Check out all the new takeaway nodes we've added!
 

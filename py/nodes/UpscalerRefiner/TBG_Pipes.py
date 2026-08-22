@@ -64,6 +64,7 @@ class TBG_ControlNetPipeline:
         '42lux-Hildegard Ref.Img': "42lux-Hildegard Ref.Img",
         '42lux-Hildegard Ref.Img + CFG Hook': "42lux-Hildegard Ref.Img + CFG Hook",
         'Model_Patch': "Model_Patch",
+        'Krea2_Depth_LoRA': "Krea2_Depth_LoRA",
     }
 
     @classmethod
@@ -1250,6 +1251,23 @@ async def set_tile_edits_json(request):
             try:
                 obj = json.loads(data)
                 obj.pop("tiles", None)
+                # --- FIX: Filter per-tile denoises that match global denoise ---
+                # Per-tile denoises equal to the global are "follow global" and
+                # should not be cached as explicit overrides. This prevents stale
+                # cache entries from overriding a changed global denoise.
+                try:
+                    _tbg = get_tbg("global")
+                    global_denoise = getattr(getattr(_tbg, "KSAMPLER", None), "denoise", None)
+                    if global_denoise is not None:
+                        denoises = obj.get("denoises")
+                        if denoises:
+                            obj["denoises"] = [
+                                "" if (isinstance(d, (int, float)) and abs(float(d) - float(global_denoise)) < 1e-6) else d
+                                for d in denoises
+                            ]
+                except Exception:
+                    pass
+                # --- END FIX ---
                 has_edits = any(
                     any(TBG_TilePrompter_v1._json_value_has_content(v) for v in (obj.get(key) or []))
                     for key in TBG_TilePrompter_v1.TILE_EDIT_JSON_KEYS
@@ -1376,7 +1394,6 @@ async def tile_prompt(request):
     if not os.path.isfile(image_path):
         return web.Response(status=404)
     return web.json_response(f"here is the prompt \n{image_path}")
-
 
 
 

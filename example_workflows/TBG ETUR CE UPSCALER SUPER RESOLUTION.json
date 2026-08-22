@@ -223,7 +223,13 @@
           "link": 839
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.24.0",
@@ -388,7 +394,7 @@
         "SDXL",
         6,
         30,
-        1074617078154288,
+        139471666007201,
         "randomize",
         3.5,
         "euler",
@@ -427,7 +433,13 @@
           "link": 787
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.50",
@@ -456,7 +468,13 @@
           "link": 842
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.24.0",
@@ -532,207 +550,6 @@
         150,
         "None",
         "ControlNet"
-      ]
-    },
-    {
-      "id": 758,
-      "type": "MarkdownNote",
-      "pos": [
-        139.22109473739334,
-        1142.6343639914735
-      ],
-      "size": [
-        400,
-        250
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Note from Shara !",
-      "properties": {},
-      "widgets_values": [
-        "Hi there, it’s Shara! We’ve finished updating TBG ETUR to version 1.1.0. For our Community Edition followers, we’ve decided not to repeat the old “dirty” SDXL 2-step upscaler workflow, since it’s not state-of-the-art anymore.\n\nInstead, we’ve added the new Super Resolution workflows for your convenience. Have fun experimenting with them, and feel free to give us a shout!"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 789,
-      "type": "TBG ETUR Tile Overrides",
-      "pos": [
-        618.9123879698802,
-        581.7180492152264
-      ],
-      "size": [
-        514.3119805448337,
-        2056
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "Tile Prompt Pipe",
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 838
-        },
-        {
-          "label": "model 1 override",
-          "name": "Model_1",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "model 2 override",
-          "name": "Model_2",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "model 3 override",
-          "name": "Model_3",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "cnetpipe 1 override",
-          "name": "CnetPipe_1",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        },
-        {
-          "label": "cnetpipe 2 override",
-          "name": "CnetPipe_2",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        },
-        {
-          "label": "cnetpipe 3 override",
-          "name": "CnetPipe_3",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            833
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
-        "Node name for S&R": "TBG ETUR Tile Overrides",
-        "Filter by Indexes": "",
-        "Prompt": "",
-        "Denoise": "unchanged",
-        "Seed": "",
-        "CNet Strength": "unchanged",
-        "Reset": false,
-        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cfg_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"model_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnetpipe_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"color_match_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"ignore_general_prompts\":[false,false,false,false,false,false,false,false,false],\"_tbg_tiler_context_key\":\"d,f,4,9,7,2,7,a,e,5,4,d,9,7,4,d,2,d,7,c,4,b,d,b,5,4,d,a,8,a,0,5\"}",
-        "prompt_0": "",
-        "denoise_0": "",
-        "seed_0": "",
-        "cnet_strength_0": "",
-        "cfg_override_0": "",
-        "model_override_0": "",
-        "cnetpipe_override_0": "",
-        "color_match_override_0": "",
-        "ignore_general_prompt_0": "",
-        "prompt_1": "",
-        "denoise_1": "",
-        "seed_1": "",
-        "cnet_strength_1": "",
-        "cfg_override_1": "",
-        "model_override_1": "",
-        "cnetpipe_override_1": "",
-        "color_match_override_1": "",
-        "ignore_general_prompt_1": "",
-        "prompt_2": "",
-        "denoise_2": "",
-        "seed_2": "",
-        "cnet_strength_2": "",
-        "cfg_override_2": "",
-        "model_override_2": "",
-        "cnetpipe_override_2": "",
-        "color_match_override_2": "",
-        "ignore_general_prompt_2": "",
-        "prompt_3": "",
-        "denoise_3": "",
-        "seed_3": "",
-        "cnet_strength_3": "",
-        "cfg_override_3": "",
-        "model_override_3": "",
-        "cnetpipe_override_3": "",
-        "color_match_override_3": "",
-        "ignore_general_prompt_3": "",
-        "prompt_4": "",
-        "denoise_4": "",
-        "seed_4": "",
-        "cnet_strength_4": "",
-        "cfg_override_4": "",
-        "model_override_4": "",
-        "cnetpipe_override_4": "",
-        "color_match_override_4": "",
-        "ignore_general_prompt_4": "",
-        "prompt_5": "",
-        "denoise_5": "",
-        "seed_5": "",
-        "cnet_strength_5": "",
-        "cfg_override_5": "",
-        "model_override_5": "",
-        "cnetpipe_override_5": "",
-        "color_match_override_5": "",
-        "ignore_general_prompt_5": "",
-        "prompt_6": "",
-        "denoise_6": "",
-        "seed_6": "",
-        "cnet_strength_6": "",
-        "cfg_override_6": "",
-        "model_override_6": "",
-        "cnetpipe_override_6": "",
-        "color_match_override_6": "",
-        "ignore_general_prompt_6": "",
-        "prompt_7": "",
-        "denoise_7": "",
-        "seed_7": "",
-        "cnet_strength_7": "",
-        "cfg_override_7": "",
-        "model_override_7": "",
-        "cnetpipe_override_7": "",
-        "color_match_override_7": "",
-        "ignore_general_prompt_7": "",
-        "prompt_8": "",
-        "denoise_8": "",
-        "seed_8": "",
-        "cnet_strength_8": "",
-        "cfg_override_8": "",
-        "model_override_8": "",
-        "cnetpipe_override_8": "",
-        "color_match_override_8": "",
-        "ignore_general_prompt_8": ""
-      },
-      "widgets_values": [
-        true,
-        0,
-        "",
-        "",
-        "unchanged",
-        "",
-        "unchanged",
-        false
       ]
     },
     {
@@ -822,7 +639,7 @@
         "SDXL",
         6,
         30,
-        15925272239551,
+        524390335068324,
         "randomize",
         3.5,
         "euler",
@@ -861,7 +678,13 @@
           "link": 795
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.50",
@@ -897,7 +720,15 @@
           "link": 813
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "dir": 4,
+          "name": "images",
+          "shape": 3,
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "rgthree-comfy",
         "ver": "1.0.2605082257",
@@ -1042,6 +873,207 @@
         32,
         64,
         ""
+      ]
+    },
+    {
+      "id": 758,
+      "type": "MarkdownNote",
+      "pos": [
+        139.22109473739334,
+        1142.0774060675178
+      ],
+      "size": [
+        400,
+        250
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note from Shara !",
+      "properties": {},
+      "widgets_values": [
+        "Hi there, it’s Shara! We’ve finished updating TBG ETUR to version 1.2.12. For our Community Edition followers, we’ve decided not to repeat the old “dirty” SDXL 2-step upscaler workflow, since it’s not state-of-the-art anymore.\n\nInstead, we’ve added the new Super Resolution workflows for your convenience. Have fun experimenting with them, and feel free to give us a shout"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 789,
+      "type": "TBG ETUR Tile Overrides",
+      "pos": [
+        618.9123879698802,
+        581.7180492152264
+      ],
+      "size": [
+        514.3119805448337,
+        2056
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Tile Prompt Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 838
+        },
+        {
+          "label": "model 1 override",
+          "name": "Model_1",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "model 2 override",
+          "name": "Model_2",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "model 3 override",
+          "name": "Model_3",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 1 override",
+          "name": "CnetPipe_1",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 2 override",
+          "name": "CnetPipe_2",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 3 override",
+          "name": "CnetPipe_3",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            833
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Tile Overrides",
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false,
+        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cfg_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"model_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnetpipe_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"color_match_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"ignore_general_prompts\":[false,false,false,false,false,false,false,false,false],\"_tbg_tiler_context_key\":\"b,6,1,d,8,4,7,5,1,4,b,c,9,6,d,7,1,a,b,1,a,9,c,c,e,a,4,c,b,7,8,9\"}",
+        "prompt_0": "",
+        "denoise_0": "",
+        "seed_0": "",
+        "cnet_strength_0": "",
+        "cfg_override_0": "",
+        "model_override_0": "",
+        "cnetpipe_override_0": "",
+        "color_match_override_0": "",
+        "ignore_general_prompt_0": "",
+        "prompt_1": "",
+        "denoise_1": "",
+        "seed_1": "",
+        "cnet_strength_1": "",
+        "cfg_override_1": "",
+        "model_override_1": "",
+        "cnetpipe_override_1": "",
+        "color_match_override_1": "",
+        "ignore_general_prompt_1": "",
+        "prompt_2": "",
+        "denoise_2": "",
+        "seed_2": "",
+        "cnet_strength_2": "",
+        "cfg_override_2": "",
+        "model_override_2": "",
+        "cnetpipe_override_2": "",
+        "color_match_override_2": "",
+        "ignore_general_prompt_2": "",
+        "prompt_3": "",
+        "denoise_3": "",
+        "seed_3": "",
+        "cnet_strength_3": "",
+        "cfg_override_3": "",
+        "model_override_3": "",
+        "cnetpipe_override_3": "",
+        "color_match_override_3": "",
+        "ignore_general_prompt_3": "",
+        "prompt_4": "",
+        "denoise_4": "",
+        "seed_4": "",
+        "cnet_strength_4": "",
+        "cfg_override_4": "",
+        "model_override_4": "",
+        "cnetpipe_override_4": "",
+        "color_match_override_4": "",
+        "ignore_general_prompt_4": "",
+        "prompt_5": "",
+        "denoise_5": "",
+        "seed_5": "",
+        "cnet_strength_5": "",
+        "cfg_override_5": "",
+        "model_override_5": "",
+        "cnetpipe_override_5": "",
+        "color_match_override_5": "",
+        "ignore_general_prompt_5": "",
+        "prompt_6": "",
+        "denoise_6": "",
+        "seed_6": "",
+        "cnet_strength_6": "",
+        "cfg_override_6": "",
+        "model_override_6": "",
+        "cnetpipe_override_6": "",
+        "color_match_override_6": "",
+        "ignore_general_prompt_6": "",
+        "prompt_7": "",
+        "denoise_7": "",
+        "seed_7": "",
+        "cnet_strength_7": "",
+        "cfg_override_7": "",
+        "model_override_7": "",
+        "cnetpipe_override_7": "",
+        "color_match_override_7": "",
+        "ignore_general_prompt_7": "",
+        "prompt_8": "",
+        "denoise_8": "",
+        "seed_8": "",
+        "cnet_strength_8": "",
+        "cfg_override_8": "",
+        "model_override_8": "",
+        "cnetpipe_override_8": "",
+        "color_match_override_8": "",
+        "ignore_general_prompt_8": ""
+      },
+      "widgets_values": [
+        true,
+        0,
+        "",
+        "",
+        "unchanged",
+        "",
+        "unchanged",
+        false
       ]
     }
   ],
@@ -1240,13 +1272,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.4736244074476712,
+      "scale": 0.3914251301220439,
       "offset": [
-        780.7800481613102,
-        589.8336121195189
+        698.4654658984059,
+        748.9116101320728
       ]
     },
-    "frontendVersion": "1.45.15",
+    "frontendVersion": "1.48.7",
     "workflowRendererVersion": "LG",
     "ue_links": [],
     "groupNodes": {},

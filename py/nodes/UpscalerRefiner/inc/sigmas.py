@@ -119,19 +119,26 @@ def process_image_to_tiles(self, input_image): # for controllnet preprocessing w
 
 
 
-def denoise_sigmas_tgb(sigmas, denoise, denoise_method, model, scheduler):
+def denoise_sigmas_tgb(
+    sigmas,
+    denoise,
+    denoise_method,
+    model,
+    scheduler,
+    preserve_custom_curve=False,
+):
     total_steps = sigmas.shape[0]
     if denoise_method == "default":
-
-        """
-        if denoise is not None and denoise < 1.0:
+        if preserve_custom_curve:
             if denoise <= 0.0:
-                return (torch.FloatTensor([]),)
-            aumented_steps = int(total_steps/denoise)
-            sigmas = sigmas.view(1, 1, -1)
-            interpolated_sigmas = F.interpolate( sigmas, size=aumented_steps, mode='linear', align_corners=True    ).view(-1)
-            sigmas = interpolated_sigmas[-(total_steps):]
-        """
+                return torch.empty(0, device=sigmas.device, dtype=sigmas.dtype)
+            if denoise < 1.0:
+                extended_steps = max(total_steps, int((total_steps - 1) / denoise) + 1)
+                curve = sigmas.reshape(1, 1, -1)
+                curve = F.interpolate(curve, size=extended_steps, mode="linear", align_corners=True)
+                sigmas = curve.reshape(-1)[-(total_steps):]
+            return sigmas
+
         steps = sigmas.shape[0] - 1
         total_steps = steps
         if denoise < 1.0:
@@ -187,32 +194,18 @@ def denoise_sigmas_tgb(sigmas, denoise, denoise_method, model, scheduler):
         if denoise is not None and denoise <= 1.0:
             if denoise <= 0.0:
                 return (torch.FloatTensor([]),)
-
-         # Fund the step where denoise = restnoise
             differences = torch.abs(sigmas - denoise)
             closest_step = torch.argmin(differences).item()
-         # Cut the tail of the sigmas starting from closest_step
-            sliced_sigmas = sigmas[closest_step:]
-
-            if sliced_sigmas.shape[0] < 2:
-                # Interpolation needs at least 2 points
-                return (torch.FloatTensor([]),)
-
-            # Reshape for 1D linear interpolation
-            sliced_sigmas = sliced_sigmas.view(1, 1, -1)
-
-            # Interpolate to total_steps
-            
-            interpolated_sigmas = F.interpolate(sliced_sigmas, size=total_steps, mode='linear', align_corners=True).view(-1)
-            # Scale to restnoise = denoise
-            max_sigma = interpolated_sigmas.max()
-            scale_factor = denoise / max_sigma
-            sigmas = interpolated_sigmas * scale_factor
-            # Normalize so that max becomes `denoise`
-            max_sigma = interpolated_sigmas.max()
+            remaining = sigmas.shape[0] - closest_step
+            target_count = total_steps
+            expanded_count = math.ceil(sigmas.shape[0] * target_count / remaining)
+            expanded_steps = max(total_steps - 1, expanded_count - 1)
+            sigmas = comfy.samplers.calculate_sigmas(
+                model.get_model_object("model_sampling"), scheduler, expanded_steps
+            ).cpu()[-target_count:]
+            max_sigma = sigmas.max()
             if max_sigma > 0:
-                scale_factor = denoise / max_sigma
-                sigmas = interpolated_sigmas * scale_factor
+                sigmas = sigmas * (denoise / max_sigma)
             else:
                 return (torch.FloatTensor([]),)
 
@@ -289,33 +282,20 @@ def get_sigmas(model, scheduler, total_steps, denoise, denoise_method):
         if denoise is not None and denoise < 1.0:
             if denoise <= 0.0:
                 return (torch.FloatTensor([]),)
-            sigmas = comfy.samplers.calculate_sigmas(model.get_model_object("model_sampling"), scheduler, total_steps).cpu()
-         # Fund the step where denoise = restnoise
-            differences = torch.abs(sigmas - denoise)
-            closest_step = torch.argmin(differences).item()
-         # Cut the tail of the sigmas starting from closest_step
-            sliced_sigmas = sigmas[closest_step:]
-
-            # Force at least 2 points for interpolation
-            if sliced_sigmas.shape[0] < 2:
-                sliced_sigmas = torch.cat([sliced_sigmas, sliced_sigmas[-1:]])
-
-            # Reshape for 1D linear interpolation
-            sliced_sigmas = sliced_sigmas.view(1, 1, -1)
-
-            # Interpolate to total_steps
-            interpolated_sigmas = F.interpolate(
-                sliced_sigmas, size=total_steps, mode='linear', align_corners=True
-            ).view(-1)
-            # Scale to restnoise = denoise
-            max_sigma = interpolated_sigmas.max()
-            scale_factor = denoise / max_sigma
-            sigmas = interpolated_sigmas * scale_factor
-            # Normalize so that max becomes `denoise`
-            max_sigma = interpolated_sigmas.max()
+            base_sigmas = comfy.samplers.calculate_sigmas(
+                model.get_model_object("model_sampling"), scheduler, total_steps
+            ).cpu()
+            closest_step = torch.argmin(torch.abs(base_sigmas - denoise)).item()
+            remaining = base_sigmas.shape[0] - closest_step
+            target_count = total_steps + 1
+            expanded_count = math.ceil(base_sigmas.shape[0] * target_count / remaining)
+            expanded_steps = max(total_steps, expanded_count - 1)
+            sigmas = comfy.samplers.calculate_sigmas(
+                model.get_model_object("model_sampling"), scheduler, expanded_steps
+            ).cpu()[-target_count:]
+            max_sigma = sigmas.max()
             if max_sigma > 0:
-                scale_factor = denoise / max_sigma
-                sigmas = interpolated_sigmas * scale_factor
+                sigmas = sigmas * (denoise / max_sigma)
             else:
                 return (torch.FloatTensor([]),)
 

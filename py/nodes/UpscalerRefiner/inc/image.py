@@ -1,4 +1,5 @@
 import math
+import comfy.utils
 import comfy_extras
 import cv2
 import copy
@@ -33,10 +34,649 @@ elif hasattr(MaskToImage, "composite"):
 
 from ....vendor.ComfyUI_KJNodes.nodes.image_nodes import ColorMatch, ETURColorMatchV2
 from ....vendor.seedvr2_videoupscaler.src.utils.color_fix  import wavelet_adaptive_color_correction,adaptive_instance_normalization,lab_color_transfer,hsv_saturation_histogram_match,wavelet_reconstruction
+from .tbg_pid import (
+    PID_DEFAULT_OVERLAP,
+    PID_DEFAULT_STITCH_FEATHER,
+    _stabilize_pid_tile_from_reference,
+    gpu_pid_tile_rebuild,
+)
 from .....TBG.SERVERS.COMFYUI_server import register_main_class
 
 @register_main_class
 class TBG_Image():
+    @staticmethod
+    def _refiner_tbg_method_enabled(method):
+        from ..TBG_Refiner import TBG_Refiner_v1
+
+        method_key = str(method or "").strip().lower()
+        return (
+            TBG_Refiner_v1.is_tbg_tile_aware(method)
+            or method_key in getattr(TBG_Refiner_v1, "COLOR_STABILIZER_ALIASES", set())
+        )
+
+    @staticmethod
+    def _tile_edge_mask(tile_w, tile_h, x, y, width, height, border, device, dtype):
+        border = int(max(0, min(border, tile_w // 2, tile_h // 2)))
+        mask = torch.zeros((1, tile_h, tile_w), device=device, dtype=dtype)
+        if border <= 0:
+            return mask
+
+        ramp = torch.linspace(1.0, 0.0, border + 2, device=device, dtype=dtype)[1:-1]
+        if int(x) > 0:
+            mask[:, :, :border] = torch.maximum(mask[:, :, :border], ramp.view(1, 1, border))
+        if int(y) > 0:
+            mask[:, :border, :] = torch.maximum(mask[:, :border, :], ramp.view(1, border, 1))
+        if int(x) + int(tile_w) < int(width):
+            mask[:, :, tile_w - border:tile_w] = torch.maximum(
+                mask[:, :, tile_w - border:tile_w],
+                ramp.flip(0).view(1, 1, border),
+            )
+        if int(y) + int(tile_h) < int(height):
+            mask[:, tile_h - border:tile_h, :] = torch.maximum(
+                mask[:, tile_h - border:tile_h, :],
+                ramp.flip(0).view(1, border, 1),
+            )
+        return mask.clamp(0.0, 1.0)
+
+    @classmethod
+    def _whole_tile_reference_low_frequency_anchor(cls, reference_tile, image_tile, strength=1.0):
+        if reference_tile is None or image_tile is None:
+            return image_tile, None
+        if not torch.is_tensor(reference_tile) or not torch.is_tensor(image_tile):
+            return image_tile, None
+        if reference_tile.ndim != 4 or image_tile.ndim != 4:
+            return image_tile, None
+
+        original_device = image_tile.device
+        original_dtype = image_tile.dtype
+        try:
+            strength = max(0.0, min(1.0, float(strength)))
+        except Exception:
+            strength = 1.0
+        if strength <= 0.0:
+            return image_tile, None
+
+        ref = reference_tile.to(device=original_device, dtype=torch.float32).clamp(0.0, 1.0)
+        target = image_tile.to(device=original_device, dtype=torch.float32).clamp(0.0, 1.0)
+        if int(ref.shape[1]) != int(target.shape[1]) or int(ref.shape[2]) != int(target.shape[2]):
+            ref = nodes.ImageScale().upscale(ref, "lanczos", int(target.shape[2]), int(target.shape[1]), False)[0]
+            ref = ref.to(device=original_device, dtype=torch.float32).clamp(0.0, 1.0)
+
+        ref_bchw = ref.permute(0, 3, 1, 2).contiguous()
+        target_bchw = target.permute(0, 3, 1, 2).contiguous()
+        height = int(target_bchw.shape[-2])
+        width = int(target_bchw.shape[-1])
+        low_h = max(32, min(192, int(round(height / 24.0))))
+        low_w = max(32, min(192, int(round(width / 24.0))))
+        low_ref = F.interpolate(
+            F.interpolate(ref_bchw, size=(low_h, low_w), mode="area"),
+            size=(height, width),
+            mode="bicubic",
+            align_corners=False,
+        )
+        low_target = F.interpolate(
+            F.interpolate(target_bchw, size=(low_h, low_w), mode="area"),
+            size=(height, width),
+            mode="bicubic",
+            align_corners=False,
+        )
+        field = (low_ref - low_target).clamp(-160.0 / 255.0, 160.0 / 255.0)
+        corrected = (target_bchw + field * strength).clamp(0.0, 1.0)
+        before_residual = torch.mean(torch.abs(low_target - low_ref))
+        low_corrected = F.interpolate(
+            F.interpolate(corrected, size=(low_h, low_w), mode="area"),
+            size=(height, width),
+            mode="bicubic",
+            align_corners=False,
+        )
+        after_residual = torch.mean(torch.abs(low_corrected - low_ref))
+        delta = torch.mean(torch.abs(corrected - target_bchw))
+        corrected = corrected.permute(0, 2, 3, 1).contiguous().to(device=original_device, dtype=original_dtype).clamp(0.0, 1.0)
+        return corrected, {
+            "delta": float(delta.detach().cpu()),
+            "low_residual_before": float(before_residual.detach().cpu()),
+            "low_residual_after": float(after_residual.detach().cpu()),
+            "grid": (int(low_w), int(low_h)),
+        }
+
+    @classmethod
+    def _apply_refiner_style_tile_correction(
+        cls,
+        reference_tile,
+        image_tile,
+        color_match_method,
+        color_match_strength,
+        x,
+        y,
+        width,
+        height,
+        border,
+        log_prefix="[TBG Tile]",
+    ):
+        from ..TBG_Refiner import TBG_Refiner_v1
+
+        corrected = image_tile
+        try:
+            strength = max(0.0, min(1.0, float(color_match_strength or 1.0)))
+        except Exception:
+            strength = 1.0
+        if strength <= 0.0:
+            return corrected
+
+        seam_mask = cls._tile_edge_mask(
+            int(corrected.shape[2]),
+            int(corrected.shape[1]),
+            x,
+            y,
+            width,
+            height,
+            border,
+            corrected.device,
+            corrected.dtype,
+        )
+
+        before_full_low = corrected
+        corrected = TBG_Refiner_v1._tile_aware_low_frequency_match(
+            reference_tile,
+            corrected,
+            seam_mask,
+            strength=strength,
+        )
+        full_diff = torch.abs(corrected.to(torch.float32) - before_full_low.to(torch.float32)).mean(
+            dim=-1,
+            keepdim=True,
+        )
+        seam_weight = seam_mask.to(device=full_diff.device, dtype=full_diff.dtype).unsqueeze(-1).clamp(0.0, 1.0)
+        inner_weight = (1.0 - seam_weight).clamp(0.0, 1.0)
+        low_delta = full_diff.mean().detach().cpu()
+        border_delta = ((full_diff * seam_weight).sum() / seam_weight.sum().clamp_min(1e-6)).detach().cpu()
+        inner_delta = ((full_diff * inner_weight).sum() / inner_weight.sum().clamp_min(1e-6)).detach().cpu()
+        print(
+            f"{log_prefix} refiner full-tile edge+inner low-frequency color applied "
+            f"method={color_match_method} strength={strength:.3f} "
+            f"mean_abs_delta={float(low_delta):.8f} "
+            f"border_delta={float(border_delta):.8f} inner_delta={float(inner_delta):.8f}"
+        )
+
+        corrected, anchor_metrics = cls._whole_tile_reference_low_frequency_anchor(
+            reference_tile,
+            corrected,
+            strength=strength,
+        )
+        if anchor_metrics is not None:
+            print(
+                f"{log_prefix} standalone whole-tile reference low-frequency anchor applied "
+                f"strength={strength:.3f} mean_abs_delta={anchor_metrics['delta']:.8f} "
+                f"low_residual_before={anchor_metrics['low_residual_before']:.8f} "
+                f"low_residual_after={anchor_metrics['low_residual_after']:.8f} "
+                f"grid={anchor_metrics['grid'][0]}x{anchor_metrics['grid'][1]}"
+            )
+
+        if float(seam_mask.max().detach().cpu()) > 1e-5:
+            corrected = cls.stabilize_tile_low_frequency_from_reference(
+                reference_tile.to(device=corrected.device, dtype=corrected.dtype),
+                corrected,
+                seam_mask,
+                seam_mask,
+                min(0.60, strength),
+            )[0]
+            print(
+                f"{log_prefix} refiner seam-local low-frequency color applied "
+                f"strength={min(0.60, strength):.3f}"
+            )
+
+        return corrected
+
+    @classmethod
+    def apply_pid_refiner_style_tile_correction(
+        cls,
+        reference_tile,
+        image_tile,
+        color_match_method,
+        color_match_strength,
+        x,
+        y,
+        width,
+        height,
+        border,
+        log_prefix="[TBG PiD]",
+    ):
+        return cls._apply_refiner_style_tile_correction(
+            reference_tile,
+            image_tile,
+            color_match_method,
+            color_match_strength,
+            x,
+            y,
+            width,
+            height,
+            border,
+            log_prefix=log_prefix,
+        )
+
+    @staticmethod
+    def _load_upscale_model_local(upscale_model_name):
+        loader = comfy_extras.nodes_upscale_model.UpscaleModelLoader
+        if hasattr(loader, "execute"):
+            return loader.execute(upscale_model_name)[0]
+        return loader.load_model(loader(), upscale_model_name)[0]
+
+    @staticmethod
+    def _upscale_with_model_cpu_fallback(upscale_model, image):
+        node_cls = comfy_extras.nodes_upscale_model.ImageUpscaleWithModel
+        if hasattr(node_cls, "execute"):
+            return node_cls.execute(upscale_model, image)[0]
+        return node_cls.upscale(node_cls(), upscale_model, image)[0]
+
+    @classmethod
+    def _resize_image_local(cls, image, upscale_method, width, height):
+        if int(image.shape[2]) == int(width) and int(image.shape[1]) == int(height):
+            return image
+
+        method = "bilinear" if upscale_method in (None, "", "with model") else upscale_method
+        samples = image.movedim(-1, 1)
+        resized = comfy.utils.common_upscale(samples, int(width), int(height), method, "disabled")
+        return resized.movedim(1, -1)
+
+    @classmethod
+    def _apply_tile_color_correction(
+        cls,
+        reference_tile,
+        upscaled_tile,
+        color_match_method,
+        color_match_strength,
+    ):
+        if color_match_method is None or str(color_match_method).strip().lower() == "none":
+            return upscaled_tile
+        if float(color_match_strength or 0.0) <= 0.0:
+            return upscaled_tile
+
+        from ..TBG_Nodes_PRO import TBG_ETUR_ColorCorrection
+
+        corrected = TBG_ETUR_ColorCorrection.fn(
+            upscaled_tile,
+            reference_tile,
+            Color_Match=color_match_method,
+            Color_Match_Str=float(color_match_strength),
+            Geometry_Drift_Correction=False,
+        )[0]
+        return corrected
+
+    @classmethod
+    def _apply_tiled_color_correction_large(cls, reference_tile, upscaled_tile, color_match_method, color_match_strength):
+        from ..TBG_Nodes_PRO import TBG_ETUR_ColorCorrection
+
+        reference_tile = cls._normalize_colormatch_image(reference_tile, "reference")
+        upscaled_tile = cls._normalize_colormatch_image(upscaled_tile, "target")
+        full_h = int(upscaled_tile.shape[1])
+        full_w = int(upscaled_tile.shape[2])
+        overlap = max(256, min(1024, int(round(min(full_w, full_h) * 0.04))))
+        rebuild_device = upscaled_tile.device
+
+        def build_specs(cols, rows):
+            tile_w = int(math.ceil(full_w / float(cols)))
+            tile_h = int(math.ceil(full_h / float(rows)))
+            x_starts = cls._esrgan_axis_starts(full_w, tile_w, overlap)
+            y_starts = cls._esrgan_axis_starts(full_h, tile_h, overlap)
+            specs = []
+            index = 0
+            for row, y in enumerate(y_starts):
+                h = min(tile_h, full_h - y)
+                for col, x in enumerate(x_starts):
+                    w = min(tile_w, full_w - x)
+                    specs.append((row, col, index, int(x), int(y), int(w), int(h)))
+                    index += 1
+            return specs
+
+        last_oom = None
+        for cols, rows in ((2, 2), (3, 3), (4, 4)):
+            specs = build_specs(cols, rows)
+            corrected_tiles = []
+            try:
+                print(
+                    f"[TBG ColorCorrection] method={color_match_method} tiled path grid={cols}x{rows} "
+                    f"overlap={overlap}px image={full_w}x{full_h}"
+                )
+                for row, col, index, x, y, w, h in specs:
+                    ref_crop = reference_tile[:, y:y + h, x:x + w, :]
+                    targ_crop = upscaled_tile[:, y:y + h, x:x + w, :]
+                    corrected_crop = TBG_ETUR_ColorCorrection.fn(
+                        targ_crop,
+                        ref_crop,
+                        Color_Match=color_match_method,
+                        Color_Match_Str=float(color_match_strength),
+                        Geometry_Drift_Correction=False,
+                    )[0]
+                    corrected_tiles.append(corrected_crop.to(device=rebuild_device, dtype=upscaled_tile.dtype))
+
+                rebuilt = gpu_pid_tile_rebuild(
+                    corrected_tiles,
+                    specs,
+                    full_w,
+                    full_h,
+                    stitch_feather=max(64, overlap // 2),
+                    label=f"TBG ColorCorrection {color_match_method}",
+                )
+                if rebuilt.device != upscaled_tile.device and upscaled_tile.device.type == "cuda":
+                    print(
+                        f"[TBG ColorCorrection] keeping large-image rebuild on {rebuilt.device} "
+                        f"after GPU OOM fallback instead of moving {full_w}x{full_h} canvas back to CUDA"
+                    )
+                    return rebuilt.to(dtype=upscaled_tile.dtype)
+                return rebuilt.to(device=upscaled_tile.device, dtype=upscaled_tile.dtype)
+            except Exception as exc:
+                if model_management.is_oom(exc):
+                    last_oom = exc
+                    model_management.soft_empty_cache()
+                    print(f"[TBG ColorCorrection] tiled color correction OOM grid={cols}x{rows}; retrying with smaller tiles")
+                    continue
+                raise
+
+        if last_oom is not None:
+            raise last_oom
+        raise RuntimeError("Tiled color correction failed without an OOM exception.")
+
+    @staticmethod
+    def _pid_gpu_rebuild_tiles(tiles, specs, width, height, stitch_feather, label):
+        return gpu_pid_tile_rebuild(
+            tiles,
+            specs,
+            width,
+            height,
+            stitch_feather=stitch_feather,
+            label=label,
+        )
+
+    @classmethod
+    def _esrgan_axis_starts(cls, length, tile_size, overlap):
+        length = int(length)
+        tile_size = max(1, int(tile_size))
+        overlap = max(0, min(int(overlap), tile_size - 1))
+        if length <= tile_size:
+            return [0]
+
+        stride = max(1, tile_size - overlap)
+        starts = list(range(0, max(1, length - tile_size + 1), stride))
+        last = max(0, length - tile_size)
+        if starts[-1] != last:
+            starts.append(last)
+        return starts
+
+    @classmethod
+    def _esrgan_tile_specs(cls, width, height, tile, overlap, scale):
+        specs = []
+        y_starts = cls._esrgan_axis_starts(height, tile, overlap)
+        x_starts = cls._esrgan_axis_starts(width, tile, overlap)
+        scale = float(scale)
+        index = 0
+        for row, y in enumerate(y_starts):
+            tile_h = min(int(tile), int(height) - int(y))
+            for col, x in enumerate(x_starts):
+                tile_w = min(int(tile), int(width) - int(x))
+                out_x = int(round(int(x) * scale))
+                out_y = int(round(int(y) * scale))
+                out_w = int(round(int(tile_w) * scale))
+                out_h = int(round(int(tile_h) * scale))
+                specs.append((row, col, index, out_x, out_y, out_w, out_h, int(x), int(y), int(tile_w), int(tile_h)))
+                index += 1
+        return specs
+
+    @classmethod
+    def _esrgan_upscale_reference_tile(cls, source_tile_bchw, out_w, out_h, device, dtype):
+        return comfy.utils.common_upscale(
+            source_tile_bchw,
+            int(out_w),
+            int(out_h),
+            "bilinear",
+            "disabled",
+        ).movedim(1, -1).to(device=device, dtype=dtype)
+
+    @classmethod
+    def _estimate_gpu_esrgan_tile_size(cls, in_img, upscale_model):
+        device = model_management.get_torch_device()
+        image_h = int(in_img.shape[2])
+        image_w = int(in_img.shape[3])
+        max_tile = max(128, min(image_w, image_h))
+
+        if model_management.is_device_cpu(device):
+            return max(128, min(512, max_tile))
+
+        free_mem = model_management.get_free_memory(device)
+        if isinstance(free_mem, tuple):
+            free_mem = free_mem[0]
+
+        gib = float(free_mem) / float(1024 ** 3)
+        scale = float(max(getattr(upscale_model, "scale", 1.0), 1.0))
+        tile_candidates = [2048, 1536, 1280, 1024, 896, 768, 640, 512, 384, 256, 128]
+
+        if gib >= 24.0:
+            tile = 1536
+        elif gib >= 16.0:
+            tile = 1280
+        elif gib >= 12.0:
+            tile = 1024
+        elif gib >= 8.0:
+            tile = 768
+        elif gib >= 6.0:
+            tile = 640
+        elif gib >= 4.0:
+            tile = 512
+        elif gib >= 2.5:
+            tile = 384
+        else:
+            tile = 256
+
+        if scale >= 4.0:
+            tile = max(256, tile // 2)
+        elif scale >= 3.0:
+            tile = max(384, int(round(tile * 0.75 / 64.0)) * 64)
+        elif scale <= 2.0:
+            tile = min(2048, int(round(tile * 1.25 / 64.0)) * 64)
+
+        tile = min(tile, max_tile)
+        tile = max(128, int(math.floor(tile / 64.0)) * 64)
+
+        selected = 128
+        for candidate in tile_candidates:
+            if candidate <= tile and candidate <= max_tile:
+                selected = candidate
+                break
+
+        print(
+            f"[TBG ESRGAN] adaptive tile selection free_vram={gib:.2f} GiB "
+            f"scale={scale:.2f} tile={selected}px image={image_w}x{image_h}"
+        )
+        return selected
+
+    @classmethod
+    def _estimate_gpu_esrgan_overlap(cls, tile):
+        tile = int(tile)
+        base = int(PID_DEFAULT_OVERLAP)
+        overlap = max(base * 2, tile // 3)
+        overlap = min(overlap, max(64, tile - 32))
+        overlap = max(base, int(math.floor(overlap / 32.0)) * 32)
+        print(f"[TBG ESRGAN] adaptive overlap tile={tile}px overlap={overlap}px")
+        return overlap
+
+    @classmethod
+    def _upscale_with_model_tiled_color_corrected(cls, in_img, upscale_model, output_device, color_match_method=None, color_match_strength=1.0):
+        tile = cls._estimate_gpu_esrgan_tile_size(in_img, upscale_model)
+        overlap = cls._estimate_gpu_esrgan_overlap(tile)
+        while True:
+            try:
+                scale = float(max(getattr(upscale_model, "scale", 1.0), 1.0))
+                output_width = int(round(int(in_img.shape[3]) * scale))
+                output_height = int(round(int(in_img.shape[2]) * scale))
+                tile_specs = cls._esrgan_tile_specs(in_img.shape[3], in_img.shape[2], tile, overlap, scale)
+                steps = max(1, int(in_img.shape[0]) * len(tile_specs))
+                pbar = comfy.utils.ProgressBar(steps)
+                output_batches = []
+                rebuild_specs = [spec[:7] for spec in tile_specs]
+                stitch_feather = int(round(PID_DEFAULT_STITCH_FEATHER * scale))
+                allow_region_color_lock = (
+                    color_match_method is not None
+                    and str(color_match_method).strip().lower() != "none"
+                    and len(tile_specs) == 1
+                )
+
+                for b in range(in_img.shape[0]):
+                    s = in_img[b:b + 1]
+                    rebuilt_tiles = []
+                    for row, col, index, out_x, out_y, out_w, out_h, src_x, src_y, src_w, src_h in tile_specs:
+                        s_in = s.narrow(2, src_y, src_h).narrow(3, src_x, src_w)
+                        with torch.inference_mode():
+                            ps = upscale_model(s_in.float())
+                        tile_device = ps.device
+                        tile_dtype = ps.dtype
+                        ps_bhwc = ps.movedim(1, -1).clamp(0.0, 1.0)
+                        ref_tile = cls._esrgan_upscale_reference_tile(s_in, out_w, out_h, tile_device, tile_dtype)
+                        if allow_region_color_lock:
+                            ps_bhwc = cls._apply_tile_color_correction(
+                                ref_tile,
+                                ps_bhwc,
+                                color_match_method,
+                                color_match_strength,
+                            )
+                        ps_bhwc = _stabilize_pid_tile_from_reference(
+                            ps_bhwc,
+                            ref_tile,
+                            out_x,
+                            out_y,
+                            output_width,
+                            output_height,
+                            int(round(PID_DEFAULT_OVERLAP * scale)),
+                        )
+                        rebuilt_tiles.append(ps_bhwc.to(device=output_device, dtype=model_management.intermediate_dtype() if output_device == model_management.intermediate_device() else ps_bhwc.dtype))
+                        pbar.update(1)
+
+                    rebuilt = gpu_pid_tile_rebuild(
+                        rebuilt_tiles,
+                        rebuild_specs,
+                        output_width,
+                        output_height,
+                        stitch_feather=stitch_feather,
+                        label="TBG ESRGAN",
+                    )
+                    if (
+                        not allow_region_color_lock
+                        and color_match_method is not None
+                        and str(color_match_method).strip().lower() != "none"
+                    ):
+                        rebuilt_ref = cls._esrgan_upscale_reference_tile(
+                            s,
+                            output_width,
+                            output_height,
+                            rebuilt.device,
+                            rebuilt.dtype,
+                        )
+                        rebuilt = cls._apply_tile_color_correction(
+                            rebuilt_ref,
+                            rebuilt,
+                            color_match_method,
+                            color_match_strength,
+                        )
+                    output_batches.append(rebuilt.movedim(-1, 1))
+
+                return torch.cat(output_batches, dim=0)
+            except Exception as e:
+                model_management.raise_non_oom(e)
+                prev_tile = tile
+                tile //= 2
+                if tile < 128:
+                    raise
+                overlap = cls._estimate_gpu_esrgan_overlap(tile)
+                print(f"[TBG ESRGAN] OOM at tile={prev_tile}px; retrying with tile={tile}px")
+
+    @classmethod
+    def _should_skip_direct_gpu_upscale(cls, image, upscale_model):
+        try:
+            scale = float(max(getattr(upscale_model, "scale", 1.0), 1.0))
+        except Exception:
+            scale = 1.0
+
+        height = int(image.shape[1])
+        width = int(image.shape[2])
+        input_pixels = height * width
+        output_pixels = int(round(height * scale)) * int(round(width * scale))
+
+        if scale >= 4.0 and input_pixels >= 1_000_000:
+            return True
+        if output_pixels >= 16_000_000:
+            return True
+        if max(height, width) >= 2048:
+            return True
+        return False
+
+    @classmethod
+    def upscale_with_model_gpu_first(cls, image, upscale_model_name, target_width=None, target_height=None, color_match_method=None, color_match_strength=1.0):
+        device = model_management.get_torch_device()
+        fallback_output_device = model_management.intermediate_device()
+        upscale_model = cls._load_upscale_model_local(upscale_model_name)
+
+        try:
+            memory_required = model_management.module_size(upscale_model.model)
+            batch_probe = image[:1] if torch.is_tensor(image) and image.ndim == 4 and image.shape[0] > 0 else image
+            memory_required += (512 * 512 * 3) * image.element_size() * max(upscale_model.scale, 1.0) * 384.0
+            memory_required += batch_probe.nelement() * batch_probe.element_size()
+            model_management.free_memory(memory_required, device)
+
+            upscale_model.to(device)
+            output_batches = []
+            batch_count = int(image.shape[0]) if torch.is_tensor(image) and image.ndim == 4 else 1
+
+            for b in range(batch_count):
+                image_bhwc = image[b:b + 1] if batch_count > 1 else image
+                in_img = image_bhwc.movedim(-1, -3).to(device)
+
+                if cls._should_skip_direct_gpu_upscale(image_bhwc, upscale_model):
+                    scaled = cls._upscale_with_model_tiled_color_corrected(
+                        in_img,
+                        upscale_model,
+                        fallback_output_device,
+                        color_match_method=color_match_method,
+                        color_match_strength=color_match_strength,
+                    )
+                else:
+                    try:
+                        with torch.inference_mode():
+                            scaled = upscale_model(in_img.float())
+                    except Exception as direct_error:
+                        if not model_management.is_oom(direct_error):
+                            raise
+                        model_management.soft_empty_cache()
+                        scaled = cls._upscale_with_model_tiled_color_corrected(
+                            in_img,
+                            upscale_model,
+                            fallback_output_device,
+                            color_match_method=color_match_method,
+                            color_match_strength=color_match_strength,
+                        )
+
+                scaled = torch.clamp(scaled.movedim(-3, -1), min=0, max=1.0).to(
+                    device=model_management.intermediate_device(),
+                    dtype=model_management.intermediate_dtype(),
+                )
+                if target_width is not None and target_height is not None:
+                    scaled = cls._resize_image_local(scaled, "bilinear", int(target_width), int(target_height))
+                output_batches.append(scaled)
+
+                del in_img
+                if batch_count > 1:
+                    model_management.soft_empty_cache()
+        finally:
+            try:
+                upscale_model.to("cpu")
+            except Exception:
+                pass
+
+        return torch.cat(output_batches, dim=0)
+
+    @classmethod
+    def _default_model_tile_color_match(cls):
+        from ..TBG_Refiner import TBG_Refiner_v1
+
+        return TBG_Refiner_v1.COLOR_STABILIZER_METHOD
+
     @staticmethod
     def _normalize_colormatch_image(image, name):
         if not isinstance(image, torch.Tensor):
@@ -269,9 +909,100 @@ class TBG_Image():
     def upscale(self, image, upscale_method, width, height, crop):
         return nodes.ImageScale().upscale(image, upscale_method, width, height, crop)[0]
 
+    @staticmethod
+    def _should_tile_lab_colormatch(image_target):
+        if not isinstance(image_target, torch.Tensor) or image_target.ndim != 4:
+            return False
+        pixels = int(image_target.shape[0]) * int(image_target.shape[1]) * int(image_target.shape[2])
+        return pixels >= 64_000_000
+
+    @classmethod
+    def _lab_colormatch_tiled(cls, image_ref, image_target, method, strength=1.0, force_cpu=False):
+        image_ref, image_target = cls._normalize_colormatch_batches(image_ref, image_target)
+        if force_cpu:
+            image_ref = image_ref.to(device="cpu")
+            image_target = image_target.to(device="cpu")
+        target_device = image_target.device
+        rebuild_device = target_device
+        processing_device = target_device
+        if not force_cpu and processing_device.type == "cpu" and torch.cuda.is_available():
+            processing_device = model_management.get_torch_device()
+
+        ref = image_ref.to(device=target_device, dtype=torch.float32).clone()
+        targ = image_target.to(device=target_device, dtype=torch.float32).clone()
+        if int(ref.shape[1]) != int(targ.shape[1]) or int(ref.shape[2]) != int(targ.shape[2]):
+            ref = nodes.ImageScale().upscale(ref, "bilinear", int(targ.shape[2]), int(targ.shape[1]), False)[0]
+            ref = ref.to(device=target_device, dtype=torch.float32)
+
+        full_h = int(targ.shape[1])
+        full_w = int(targ.shape[2])
+        overlap = max(256, min(1024, int(round(min(full_w, full_h) * 0.04))))
+
+        def build_specs(cols, rows):
+            tile_w = int(math.ceil(full_w / float(cols)))
+            tile_h = int(math.ceil(full_h / float(rows)))
+            x_starts = cls._esrgan_axis_starts(full_w, tile_w, overlap)
+            y_starts = cls._esrgan_axis_starts(full_h, tile_h, overlap)
+            specs = []
+            index = 0
+            for row, y in enumerate(y_starts):
+                h = min(tile_h, full_h - y)
+                for col, x in enumerate(x_starts):
+                    w = min(tile_w, full_w - x)
+                    specs.append((row, col, index, int(x), int(y), int(w), int(h)))
+                    index += 1
+            return specs
+
+        last_oom = None
+        for cols, rows in ((2, 2), (3, 3), (4, 4)):
+            specs = build_specs(cols, rows)
+            tiles = []
+            try:
+                print(f"[TBG ColorMatch] method={method} tiled GPU LAB path grid={cols}x{rows} overlap={overlap}px image={full_w}x{full_h}")
+                for row, col, index, x, y, w, h in specs:
+                    ref_tile = ref[:, y:y + h, x:x + w, :].to(device=processing_device, dtype=torch.float32)
+                    targ_tile = targ[:, y:y + h, x:x + w, :].to(device=processing_device, dtype=torch.float32)
+
+                    ti = targ_tile.permute(0, 3, 1, 2).contiguous().mul(2.0).sub(1.0)
+                    ri = ref_tile.permute(0, 3, 1, 2).contiguous().mul(2.0).sub(1.0)
+                    with torch.inference_mode():
+                        if method == "lab color match+detail preservation":
+                            out = lab_color_transfer(ti, ri, None, luminance_weight=0.8)
+                        else:
+                            out = lab_color_transfer(ti, ri, None, luminance_weight=0.0)
+                    out = out.add(1.0).mul(0.5).clamp_(0.0, 1.0).permute(0, 2, 3, 1).contiguous()
+                    tiles.append(out.to(device=rebuild_device, dtype=image_target.dtype))
+
+                rebuilt = gpu_pid_tile_rebuild(
+                    tiles,
+                    specs,
+                    full_w,
+                    full_h,
+                    stitch_feather=max(64, overlap // 2),
+                    label=f"TBG LAB {method}",
+                )
+                if rebuilt.device != target_device and target_device.type == "cuda":
+                    print(
+                        f"[TBG ColorMatch] keeping LAB rebuild on {rebuilt.device} "
+                        f"after GPU OOM fallback instead of moving {full_w}x{full_h} canvas back to CUDA"
+                    )
+                    return rebuilt.to(dtype=image_target.dtype)
+                return rebuilt.to(device=target_device, dtype=image_target.dtype)
+            except Exception as exc:
+                if model_management.is_oom(exc):
+                    last_oom = exc
+                    model_management.soft_empty_cache()
+                    print(f"[TBG ColorMatch] tiled GPU LAB OOM grid={cols}x{rows}; retrying with smaller tiles")
+                    continue
+                raise
+
+        if last_oom is not None:
+            raise last_oom
+        raise RuntimeError("Tiled LAB color match failed without an OOM exception.")
+
     # LOCAL POSTPROCESSING
     @classmethod
-    def colormatch(self, image_ref, image_target, method, strength=1.0):
+    def colormatch(self, image_ref, image_target, method, strength=1.0, force_cpu=False):
         """
         image_ref, image_target: BHWC, float in [0,1] (Comfy-style)
         Returns: BHWC, float in [0,1]
@@ -280,6 +1011,13 @@ class TBG_Image():
         assert isinstance(image_ref, torch.Tensor)
         assert isinstance(image_target, torch.Tensor)
         image_ref, image_target = self._normalize_colormatch_batches(image_ref, image_target)
+        force_cpu_large = self._should_tile_lab_colormatch(image_target)
+        if force_cpu_large and not force_cpu:
+            print(
+                f"[TBG ColorMatch] method={method} large image detected; "
+                "using full-image CPU path instead of tiled GPU path"
+            )
+        force_cpu = bool(force_cpu or force_cpu_large)
 
         # Branch: ColorMatch V2 family works on BHWC in [0,1]
         if method in ('mkl', 'hm', 'reinhard', 'mvgd', 'hm-mvgd-hm', 'hm-mkl-hm', 'reinhard_lab_gpu'):
@@ -287,8 +1025,11 @@ class TBG_Image():
             targ = image_target.to(torch.float32).clone()
             try:
                 print(f"[TBG ColorMatch] using ETUR ColorMatchV2 method={method} strength={strength}")
-                out = ETURColorMatchV2().colormatch(ref, targ, method, strength, True)[0]
+                out = ETURColorMatchV2().colormatch(ref, targ, method, strength, True, force_cpu=force_cpu)[0]
             except Exception as exc:
+                if model_management.is_oom(exc) and not force_cpu:
+                    print(f"[TBG ColorMatch] method={method} hit GPU OOM in ETURColorMatchV2; moving image_ref and image_target to CPU")
+                    return self.colormatch(image_ref, image_target, method, strength=strength, force_cpu=True)
                 print(f"[TBG ColorMatch] ETUR ColorMatchV2 failed method={method}: {exc}; falling back to legacy ColorMatch")
                 out = ColorMatch().colormatch(ref, targ, method, strength)[0]
             return (out,)
@@ -296,7 +1037,12 @@ class TBG_Image():
         # --- New methods expect BCHW in [-1,1] ---
         target_device = image_target.device
         processing_device = target_device
-        if processing_device.type == "cpu" and torch.cuda.is_available():
+        if force_cpu:
+            image_ref = image_ref.to(device="cpu")
+            image_target = image_target.to(device="cpu")
+            target_device = image_target.device
+            processing_device = target_device
+        if not force_cpu and processing_device.type == "cpu" and torch.cuda.is_available():
             processing_device = model_management.get_torch_device()
 
         ref = image_ref.to(device=processing_device, dtype=torch.float32).clone()
@@ -311,21 +1057,28 @@ class TBG_Image():
         ri = ri.mul(2.0).sub(1.0)
 
         # Apply selected method
-        if method == "lab color match+detail preservation":
-            out = lab_color_transfer(ti, ri, None, luminance_weight=0.8)
-        elif method == "lab full color match":
-            out = lab_color_transfer(ti, ri, None, luminance_weight=0.0)
-        elif method == "wavelet_adaptive":
-            out = wavelet_adaptive_color_correction(ti, ri, None)
-        elif method == "wavelet":
-            out = wavelet_reconstruction(ti, ri, None)
-        elif method == "hsv":
-            out = hsv_saturation_histogram_match(ti, ri, None)
-        elif method == "adain":
-            out = adaptive_instance_normalization(ti, ri)
-        else:
-            # Fallback: no correction
-            out = ti
+        try:
+            if method == "lab color match+detail preservation":
+                out = lab_color_transfer(ti, ri, None, luminance_weight=0.8)
+            elif method == "lab full color match":
+                out = lab_color_transfer(ti, ri, None, luminance_weight=0.0)
+            elif method == "wavelet_adaptive":
+                out = wavelet_adaptive_color_correction(ti, ri, None)
+            elif method == "wavelet":
+                out = wavelet_reconstruction(ti, ri, None)
+            elif method == "hsv":
+                out = hsv_saturation_histogram_match(ti, ri, None)
+            elif method == "adain":
+                out = adaptive_instance_normalization(ti, ri)
+            else:
+                # Fallback: no correction
+                out = ti
+        except Exception as exc:
+            if model_management.is_oom(exc) and not force_cpu:
+                print(f"[TBG ColorMatch] method={method} hit GPU OOM; retrying on full-image CPU path")
+                return self.colormatch(image_ref, image_target, method, strength=strength, force_cpu=True)
+            else:
+                raise
 
         # [-1,1] -> [0,1]
         out = out.add(1.0).mul(0.5).clamp_(0.0, 1.0)
@@ -904,13 +1657,41 @@ class TBG_Image():
 
     # LOCAL used in Refiner
     def helper_upscaleimage(self, image, upscale_method="bilinear", upscale_model_name=None, scale_factor=1, width=0, height=0):
+        # Support the legacy positional form helper_upscaleimage(image, width, height, method, model).
+        if isinstance(upscale_method, (int, float)) and isinstance(upscale_model_name, (int, float)):
+            legacy_width = int(upscale_method)
+            legacy_height = int(upscale_model_name)
+            legacy_method = scale_factor if isinstance(scale_factor, str) else "bilinear"
+            legacy_model = width if isinstance(width, str) else None
+            width = legacy_width
+            height = legacy_height
+            upscale_method = legacy_method
+            upscale_model_name = legacy_model
+            scale_factor = 0
         if scale_factor != 0:
             width = int(image.shape[2] * scale_factor)
             height = int(image.shape[1] * scale_factor)
         if upscale_method == "with model":
-            upscale_model = comfy_extras.nodes_upscale_model.UpscaleModelLoader.load_model(self, upscale_model_name)[0]
-            image = comfy_extras.nodes_upscale_model.ImageUpscaleWithModel.upscale(self, upscale_model, image)[0]
-        image = nodes.ImageScale().upscale(image, upscale_method, width, height, False)[0]
+            default_color_method = self._default_model_tile_color_match()
+            try:
+                image = self.upscale_with_model_gpu_first(
+                    image,
+                    upscale_model_name,
+                    target_width=width,
+                    target_height=height,
+                    color_match_method=default_color_method,
+                    color_match_strength=1.0,
+                )
+            except Exception as e:
+                try:
+                    print(f"[TBG Upscale] GPU-first model upscale fallback for '{upscale_model_name}': {e}")
+                    upscale_model = self._load_upscale_model_local(upscale_model_name)
+                    image = self._upscale_with_model_cpu_fallback(upscale_model, image)
+                    image = self._resize_image_local(image, "bilinear", width, height)
+                except Exception:
+                    raise
+        else:
+            image = nodes.ImageScale().upscale(image, upscale_method, width, height, False)[0]
 
         return image
 

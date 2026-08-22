@@ -218,8 +218,8 @@ class TBG_ETUR_Refiner_CE():
 
                 "seed": ("INT", {"label": "Seed", "default": 4, "min": 0, "max": 0xffffffffffffffff}),
                 "Flux_Guidance": ("FLOAT",{"label": "Flux Guidance for Tiles", "default": 3.5, "min": -100.0, "max": 100.0,"step": 0.1, "round": 0.01,  "tooltip": "All Fusion Modes benefit from high Guidance, so if you notice that certain areas aren't blending well, try increasing the Guidance value."}),
-                "sampler_name": (comfy.samplers.KSampler.SAMPLERS, {"label": "Sampler Name"}),
-                "basic_scheduler": (comfy.samplers.KSampler.SCHEDULERS, {"label": "Basic Scheduler"}),
+                "sampler_name": (comfy.samplers.SAMPLER_NAMES, {"label": "Sampler Name"}),
+                "basic_scheduler": (comfy.samplers.SCHEDULER_NAMES, {"label": "Basic Scheduler"}),
 
 
                 "vae_encode": ("BOOLEAN", {"label": "VAE Encode type", "default": True, "label_on": "tiled slow","label_off": "tbg Color-preserving fast",  "tooltip": self.VAE_ENCODE_TOOLTIP}),

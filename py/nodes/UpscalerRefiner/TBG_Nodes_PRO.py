@@ -3,6 +3,8 @@ ________________________________________________________________________________
 ______________________________________TBG_Enhanced Tiled Upscaler and Refiner FLUX PRO_________________________________________________________
 
 """
+import math
+
 import comfy
 import comfy.latent_formats
 import comfy.model_sampling
@@ -15,8 +17,13 @@ import comfy.supported_models
 import folder_paths
 import torch
 import torch.nn.functional as F
+from comfy import model_management
 
-from ..UpscalerRefiner.TBG_Refiner import TBG_Refiner_v1
+from ..UpscalerRefiner.TBG_Refiner import (
+    INPAINT_CONDITIONING_MODES,
+    TBG_Refiner_v1,
+    normalize_inpaint_conditioning_mode,
+)
 from ..UpscalerRefiner.TBG_Tiler import TBG_Upscaler_v1
 from ..UpscalerRefiner.inc.image import TBG_Image
 from ..UpscalerRefiner.inc.sift_drift import DRIFT_CORRECTION_MODES, apply_sift_drift_correction
@@ -25,7 +32,21 @@ from ..UpscalerRefiner.inc.tbg_pid import (
     PID_VAE_COMPATIBLE_MODEL_TYPES,
     get_pid_upscale_options,
 )
+from ..UpscalerRefiner.inc.TBG_sampler_split_aware import apply_spatial_2d_per_depth
+from ..UpscalerRefiner.inc.refiner_pipeline import LEGACY_STAGE_ALIASES
 from ...vendor.ComfyUI_Impact_Pack.masktoseg import MaskToSEGS
+
+
+class _InpaintConditioningOptions(list):
+    """Visible string choices with backend acceptance for legacy booleans."""
+
+    def __contains__(self, value):
+        if isinstance(value, bool):
+            return True
+        return super().__contains__(value)
+
+
+INPAINT_CONDITIONING_OPTIONS = _InpaintConditioningOptions(INPAINT_CONDITIONING_MODES)
 
 
 
@@ -356,6 +377,7 @@ class TBG_ETUR_Refiner_PRO():
         'FLUX2': 2048,
         'Ideogram4': 2048,
         'FLUX1 Kontext': 1024,
+        'Krea2': 2048,
         'Qwen Image': 1328,
         'Qwen Image Edit': 1328,
         'SDXL': 1024,
@@ -454,8 +476,8 @@ class TBG_ETUR_Refiner_PRO():
 
                 "seed": ("INT", {"label": "Seed", "default": 4, "min": 0, "max": 0xffffffffffffffff, "control_after_generate": True, "fixed": True}),
                 "Flux_Guidance": ("FLOAT",{"label": "Flux Guidance for Tiles", "default": 3.5, "min": -100.0, "max": 100.0,"step": 0.1, "round": 0.01,  "tooltip": "All Fusion Modes benefit from high Guidance, so if you notice that certain areas aren't blending well, try increasing the Guidance value."}),
-                "sampler_name": (comfy.samplers.KSampler.SAMPLERS, {"label": "Sampler Name"}),
-                "basic_scheduler": (comfy.samplers.KSampler.SCHEDULERS, {"label": "Basic Scheduler"}),
+                "sampler_name": (comfy.samplers.SAMPLER_NAMES, {"label": "Sampler Name"}),
+                "basic_scheduler": (comfy.samplers.SCHEDULER_NAMES, {"label": "Basic Scheduler"}),
 
 
                 "vae_encode": (self.VAE_ENCODE_TYPES, {"label": "VAE Encode type", "default": "tiled slow", "tooltip": self.VAE_ENCODE_TOOLTIP}),
@@ -476,8 +498,8 @@ class TBG_ETUR_Refiner_PRO():
                                                "tooltip": "0=OFF. Dual-stage adaptive sharpening. At high sigma (early steps), adds structured noise for detail invention. At low sigma (late steps), applies high-pass edge sharpening. Positive values sharpen and add details. Negative values soften and blur. Zero disables sharpening. Higher absolute values create stronger effects."}),
                 "Detail_Enhancer": ("FLOAT", {"default": 0, "min": -1.0, "max": 1.0, "display": "slider",
                                               "tooltip": "0=OFF. Substep evaluation for detail control. Positive values (0.1-1.0): lookahead to next sigma, adds coherent details and refinement, reduces variation. Negative values (-0.1 to -1.0): lookback to previous sigma, adds creative variation and texture complexity. Zero = disabled (single pass, fastest). Performance cost: 2x slower on affected steps."}),
-                "Redux_strength": ("FLOAT", {"display": "slider", "default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001, "round": 0.001,
-                                             "tooltip": "0=OFF. It's a Redux multiplier value applied uniformly to all Tiles"}),
+                "FLux_Redux_Krea2VL_strength": ("FLOAT", {"display": "slider", "label": "VL Style Transfer (Flux Redux/Krea2/Qwen)", "default": 0.5, "min": 0.0, "max": 1.0, "step": 0.001, "round": 0.001,
+                                             "tooltip": "Controls how strongly visual information is transferred. 0 disables VL style transfer; 1.0 applies full strength."}),
                 "Controlnet_Pipe_strength": ("FLOAT", {"display": "slider", "label": "Controlnet_Pipe_strength", "default": 1.00, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
                                                        "tooltip": "0=OFF. It's a multiplier value applied uniformly to all ControlNets from CnetPipe, scaling their combined influence."}),
                 "Color_Match": (self.COLOR_MATCH_METHODS, {
@@ -487,10 +509,18 @@ class TBG_ETUR_Refiner_PRO():
                 }),
                 "Scale-Invariant Feature Transform": ("BOOLEAN", {
                     "label": "Geometry Drift Correction",
-                    "default": True,
+                    "default": False,
                     "label_on": "On",
                     "label_off": "Off",
                     "tooltip": "After a tile is generated, aligns it back to the reference tile. Off disables it. On uses the strongest x4 drift-correction path.",
+                }),
+                "Fusion Extra Steps": ("INT", {
+                    "label": "Fusion Internal Steps",
+                    "default": 0,
+                    "min": 0,
+                    "max": 20,
+                    "step": 1,
+                    "tooltip": "0 is the default and is recommended. If you need better tile fusion use Values from 1-20 this adds extra fusion steps to generate a better tile fusion, stay between 1 and 5. Each extra step adds one model call per outer sampler step and increases sampling time.",
                 }),
                 "Fast_1_Tile_Preview": ("BOOLEAN", {"label": "Fast_1_Tile_Preview", "default": False, "label_on": "Preview Single Tile", "label_off": "Disabled",
                                                     "tooltip": "The first Selected_Tiles_By_Number are processed at full scale as a preview, allowing a quick check of settings before processing the entire set."}),
@@ -579,11 +609,18 @@ class TBG_ETUR_ColorMatch_Debug():
         "12_PID_Final_ColorMatch_4x": "Near final output. PiD final rebuild container. Color_Match=TBG Detail-Preserving Color Stabilizer routes to stage 14 unless protected tile/segment overrides require stage 13.",
         "13_Final_PerArea_SegmentOverrides": "Final protected/per-area path. Runs when a normal Color_Match method is selected, or when protected tile/segment overrides substitute the global RGB/luma pass. Protect/origin/off masks override global settings.",
         "14_Final_Global_ColorMode": "Final full/global path. Runs only when Color_Match is a TBG detail-preserving stabilizer and no protected tile/segment overrides exist. Uses global RGB/luma, not an old ColorMatch model.",
+        "Neighbor_Fusion_Inner_Tile_Composite": "Neighbor fusion input preparation. ON composites the accumulated neighboring background with the current inner tile before sampling; OFF sends the current inner tile directly to the sampler.",
     }
 
     @classmethod
     def INPUT_TYPES(cls):
         required = {
+            "Enabled_Stages": ("STRING", {
+                "default": ",".join(TBG_Refiner_v1.STAGE_IDS),
+                "multiline": True,
+                "label": "Enabled ETUR stages",
+                "tooltip": "Comma-separated ordered ETUR stages. Legacy per-stage gates below remain compatible and can disable stages.",
+            }),
             "Override_Normal_Gates": ("BOOLEAN", {
                 "label": "Override Normal Gates",
                 "default": False,
@@ -604,6 +641,13 @@ class TBG_ETUR_ColorMatch_Debug():
     def fn(cls, **kwargs):
         values = {"_connected": True}
         values["Override_Normal_Gates"] = bool(kwargs.get("Override_Normal_Gates", False))
+        raw_stages = kwargs.get("Enabled_Stages", "")
+        if isinstance(raw_stages, str):
+            values["enabled"] = [
+                stage.strip() for stage in raw_stages.replace("\n", ",").split(",")
+                if stage.strip() in TBG_Refiner_v1.STAGE_IDS
+                or stage.strip() in LEGACY_STAGE_ALIASES
+            ]
         for key in cls.SWITCHES:
             values[key] = bool(kwargs.get(key, True))
         return (values,)
@@ -706,6 +750,154 @@ class TBG_ETUR_ColorCorrection():
                 align_corners=False,
             )
         return mask.permute(0, 2, 3, 1).contiguous().clamp(0.0, 1.0)
+
+    @staticmethod
+    def _should_tile_large_color_correction(target):
+        if target is None or not torch.is_tensor(target) or target.ndim != 4:
+            return False
+        pixels = int(target.shape[0]) * int(target.shape[1]) * int(target.shape[2])
+        return pixels >= 64_000_000
+
+    @staticmethod
+    def _tile_axis_starts(length, tile_size, overlap):
+        length = int(length)
+        tile_size = max(1, int(tile_size))
+        overlap = max(0, min(int(overlap), tile_size - 1))
+        if length <= tile_size:
+            return [0]
+
+        stride = max(1, tile_size - overlap)
+        starts = list(range(0, max(1, length - tile_size + 1), stride))
+        last = max(0, length - tile_size)
+        if starts[-1] != last:
+            starts.append(last)
+        return starts
+
+    @classmethod
+    def _tiled_large_color_correction(cls, reference, target, Color_Match, Color_Match_Str=1.0, Geometry_Drift_Correction=True, mask=None, force_cpu=False):
+        reference = cls._resize_like(reference, target)
+        target = cls._ensure_bhwc(target)
+        if reference is None or target is None:
+            return target
+
+        full_h = int(target.shape[1])
+        full_w = int(target.shape[2])
+        overlap = max(256, min(1024, int(round(min(full_w, full_h) * 0.04))))
+        if force_cpu and target.device.type != "cpu":
+            reference = reference.to(device="cpu")
+            target = target.to(device="cpu")
+        rebuild_device = target.device
+        target_dtype = target.dtype
+        reference = reference.to(device=rebuild_device, dtype=target_dtype)
+        target = target.to(device=rebuild_device, dtype=target_dtype)
+        mask = cls._mask_like(mask, target)
+
+        def build_specs(cols, rows):
+            tile_w = int(math.ceil(full_w / float(cols)))
+            tile_h = int(math.ceil(full_h / float(rows)))
+            x_starts = cls._tile_axis_starts(full_w, tile_w, overlap)
+            y_starts = cls._tile_axis_starts(full_h, tile_h, overlap)
+            specs = []
+            index = 0
+            for row, y in enumerate(y_starts):
+                h = min(tile_h, full_h - y)
+                for col, x in enumerate(x_starts):
+                    w = min(tile_w, full_w - x)
+                    specs.append((row, col, index, int(x), int(y), int(w), int(h)))
+                    index += 1
+            return specs
+
+        last_oom = None
+        for cols, rows in ((2, 2), (3, 3), (4, 4)):
+            specs = build_specs(cols, rows)
+            corrected_tiles = []
+            try:
+                print(
+                    f"[TBG ColorCorrection] large-image tiled fn path method={Color_Match} "
+                    f"grid={cols}x{rows} overlap={overlap}px image={full_w}x{full_h}"
+                )
+                for row, col, index, x, y, w, h in specs:
+                    ref_crop = reference[:, y:y + h, x:x + w, :]
+                    targ_crop = target[:, y:y + h, x:x + w, :]
+                    mask_crop = None if mask is None else mask[:, y:y + h, x:x + w, :]
+                    corrected_crop = cls._color_correction_single(
+                        targ_crop,
+                        ref_crop,
+                        Color_Match=Color_Match,
+                        Color_Match_Str=Color_Match_Str,
+                        Geometry_Drift_Correction=Geometry_Drift_Correction,
+                        mask=mask_crop,
+                    )
+                    corrected_tiles.append(corrected_crop.to(device=rebuild_device, dtype=target_dtype))
+
+                rebuilt = TBG_Image._pid_gpu_rebuild_tiles(
+                    corrected_tiles,
+                    specs,
+                    full_w,
+                    full_h,
+                    stitch_feather=max(64, overlap // 2),
+                    label=f"TBG_ETUR_ColorCorrection {Color_Match}",
+                )
+                if rebuilt.device != target.device and target.device.type == "cuda":
+                    print(
+                        f"[TBG ColorCorrection] keeping large-image rebuild on {rebuilt.device} "
+                        f"after GPU OOM fallback instead of moving {full_w}x{full_h} canvas back to CUDA"
+                    )
+                    return rebuilt.to(dtype=target.dtype)
+                return rebuilt.to(device=target.device, dtype=target.dtype)
+            except Exception as exc:
+                if model_management.is_oom(exc):
+                    last_oom = exc
+                    model_management.soft_empty_cache()
+                    print(f"[TBG ColorCorrection] tiled fn path OOM grid={cols}x{rows}; retrying with smaller tiles")
+                    continue
+                raise
+
+        if last_oom is not None:
+            print("[TBG ColorCorrection] GPU LAB retries exhausted; falling back to CPU-safe color correction")
+            cpu_reference = reference.to(device="cpu")
+            cpu_target = target.to(device="cpu")
+            cpu_mask = None if mask is None else mask.to(device="cpu")
+            return cls._color_correction_single(
+                cpu_target,
+                cpu_reference,
+                Color_Match=Color_Match,
+                Color_Match_Str=Color_Match_Str,
+                Geometry_Drift_Correction=Geometry_Drift_Correction,
+                mask=cpu_mask,
+                force_cpu=True,
+            )
+        raise RuntimeError("Large-image tiled color correction failed without an OOM exception.")
+
+    @classmethod
+    def _color_correction_single(cls, image, reference, Color_Match=None, Color_Match_Str=1.0, Geometry_Drift_Correction=True, mask=None, force_cpu=False):
+        if Color_Match is None:
+            Color_Match = TBG_Refiner_v1.COLOR_STABILIZER_METHOD
+        target = cls._ensure_bhwc(image)
+        if target is None:
+            return image
+        reference = cls._resize_like(reference, target)
+        if reference is None:
+            return target
+        if force_cpu:
+            target = target.to(device="cpu")
+            reference = reference.to(device="cpu")
+        try:
+            target, _ = apply_sift_drift_correction(reference, target, mode=Geometry_Drift_Correction)
+            result_device = torch.device("cpu") if force_cpu else image.device
+            target = cls._ensure_bhwc(target).to(device=result_device, dtype=image.dtype).clamp(0.0, 1.0)
+        except Exception:
+            target = cls._ensure_bhwc(target)
+        strength = float(Color_Match_Str if Color_Match_Str is not None else 1.0)
+        color_match_key = str(Color_Match or "").strip().lower()
+        if color_match_key in cls.RGB_LUMA_ALIASES:
+            return cls._global_rgb_luma_match(reference, target, strength=strength, mask=mask)
+        if Color_Match is None or str(Color_Match).lower() == "none":
+            return target
+
+        corrected = TBG_Image.colormatch(reference, target, Color_Match, strength, force_cpu=force_cpu)[0]
+        corrected = cls._ensure_bhwc(corrected).to(device=target.device, dtype=target.dtype).clamp(0.0, 1.0)
+        return corrected
 
     @staticmethod
     def _masked_mean(image, mask=None):
@@ -887,29 +1079,35 @@ class TBG_ETUR_ColorCorrection():
 
     @classmethod
     def fn(cls, image, reference, Color_Match=None, Color_Match_Str=1.0, Geometry_Drift_Correction=True, mask=None):
-        if Color_Match is None:
-            Color_Match = TBG_Refiner_v1.COLOR_STABILIZER_METHOD
         target = cls._ensure_bhwc(image)
         if target is None:
             return (image,)
-        reference = cls._resize_like(reference, target)
-        if reference is None:
-            return (target,)
-        try:
-            target, _ = apply_sift_drift_correction(reference, target, mode=Geometry_Drift_Correction)
-            target = cls._ensure_bhwc(target).to(device=image.device, dtype=image.dtype).clamp(0.0, 1.0)
-        except Exception:
-            target = cls._ensure_bhwc(target)
-        strength = float(Color_Match_Str if Color_Match_Str is not None else 1.0)
-        color_match_key = str(Color_Match or "").strip().lower()
-        if color_match_key in cls.RGB_LUMA_ALIASES:
-            return (cls._global_rgb_luma_match(reference, target, strength=strength, mask=None),)
-        if Color_Match is None or str(Color_Match).lower() == "none":
-            return (target,)
-
-        corrected = TBG_Image.colormatch(reference, target, Color_Match, strength)[0]
-        corrected = cls._ensure_bhwc(corrected).to(device=target.device, dtype=target.dtype).clamp(0.0, 1.0)
-        return (corrected,)
+        if cls._should_tile_large_color_correction(target):
+            print(
+                "[TBG ColorCorrection] large image detected; "
+                "using full-image CPU path instead of tiled GPU path"
+            )
+            return (
+                cls._color_correction_single(
+                    target,
+                    reference,
+                    Color_Match=Color_Match,
+                    Color_Match_Str=Color_Match_Str,
+                    Geometry_Drift_Correction=Geometry_Drift_Correction,
+                    mask=mask,
+                    force_cpu=True,
+                ),
+            )
+        return (
+            cls._color_correction_single(
+                image,
+                reference,
+                Color_Match=Color_Match,
+                Color_Match_Str=Color_Match_Str,
+                Geometry_Drift_Correction=Geometry_Drift_Correction,
+                mask=mask,
+            ),
+        )
 
 
 class TBG_Model_Agnostic_Color_Anchor():
@@ -982,9 +1180,9 @@ class TBG_Model_Agnostic_Color_Anchor():
 
     @staticmethod
     def _capture_ref_means_from_latent(latent_image):
-        if not torch.is_tensor(latent_image) or latent_image.ndim != 4 or int(latent_image.shape[1]) <= 0:
+        if not torch.is_tensor(latent_image) or latent_image.ndim not in (4, 5) or int(latent_image.shape[1]) <= 0:
             return None
-        return latent_image.detach().float().mean(dim=(-2, -1), keepdim=True).to(device="cpu")
+        return latent_image.detach().float().mean(dim=tuple(range(2, latent_image.ndim)), keepdim=True).to(device="cpu")
 
     @staticmethod
     def _rf_state_from_model_chain(model):
@@ -1103,7 +1301,7 @@ class TBG_Model_Agnostic_Color_Anchor():
                     state["window_skip_logged"] = True
                 return denoised
 
-            if denoised.ndim != 4 or int(denoised.shape[1]) != int(ref_means.shape[1]):
+            if denoised.ndim not in (4, 5) or denoised.ndim != ref_means.ndim or int(denoised.shape[1]) != int(ref_means.shape[1]):
                 if debug and not state["shape_skip_logged"]:
                     print(
                         f"[TBG ModelAgnosticColorAnchor] skipped: "
@@ -1125,8 +1323,9 @@ class TBG_Model_Agnostic_Color_Anchor():
 
             ref = ref_means.to(device=denoised.device, dtype=denoised.dtype)
             if int(ref.shape[0]) != int(denoised.shape[0]):
-                ref = ref.mean(dim=0, keepdim=True).expand(int(denoised.shape[0]), -1, -1, -1)
-            cur = denoised.mean(dim=(-2, -1), keepdim=True)
+                ref = ref.mean(dim=0, keepdim=True)
+                ref = ref.expand(int(denoised.shape[0]), *ref.shape[1:])
+            cur = denoised.mean(dim=tuple(range(2, denoised.ndim)), keepdim=True)
             correction = ref - cur
             corrected = denoised + correction * effective
 
@@ -1225,7 +1424,7 @@ class TBG_Model_Agnostic_Latent_Anchor():
 
     @staticmethod
     def _capture_ref_latent(latent_image):
-        if not torch.is_tensor(latent_image) or latent_image.ndim != 4 or int(latent_image.shape[1]) <= 0:
+        if not torch.is_tensor(latent_image) or latent_image.ndim not in (4, 5) or int(latent_image.shape[1]) <= 0:
             return None
         ref = latent_image.detach()
         try:
@@ -1241,22 +1440,47 @@ class TBG_Model_Agnostic_Latent_Anchor():
     def _match_ref_latent_shape(reference_latent, denoised):
         ref = reference_latent.to(device=denoised.device, dtype=denoised.dtype)
 
+        if ref.ndim != denoised.ndim or ref.ndim not in (4, 5):
+            return None
+
         if int(ref.shape[0]) != int(denoised.shape[0]):
-            ref = ref[:1].expand(int(denoised.shape[0]), -1, -1, -1)
+            if ref.ndim == 4:
+                ref = ref[:1].expand(int(denoised.shape[0]), -1, -1, -1)
+            else:
+                ref = ref[:1].expand(int(denoised.shape[0]), -1, -1, -1, -1)
+
+        if ref.ndim == 5 and int(ref.shape[2]) != int(denoised.shape[2]):
+            if int(ref.shape[2]) == 1:
+                ref = ref.expand(-1, -1, int(denoised.shape[2]), -1, -1)
+            else:
+                return None
 
         if ref.shape[2:] != denoised.shape[2:]:
-            ref = F.interpolate(
-                ref,
-                size=denoised.shape[2:],
-                mode="bilinear",
-                align_corners=False,
-            )
+            if ref.ndim == 4:
+                ref = F.interpolate(
+                    ref,
+                    size=denoised.shape[2:],
+                    mode="bilinear",
+                    align_corners=False,
+                )
+            else:
+                ref = apply_spatial_2d_per_depth(
+                    ref,
+                    lambda value: F.interpolate(
+                        value,
+                        size=denoised.shape[-2:],
+                        mode="bilinear",
+                        align_corners=False,
+                    ),
+                )
 
         if int(ref.shape[1]) != int(denoised.shape[1]):
             if int(ref.shape[1]) > int(denoised.shape[1]):
                 ref = ref[:, :int(denoised.shape[1])]
             else:
-                ref = F.pad(ref, (0, 0, 0, 0, 0, int(denoised.shape[1]) - int(ref.shape[1])))
+                padding_shape = list(ref.shape)
+                padding_shape[1] = int(denoised.shape[1]) - int(ref.shape[1])
+                ref = torch.cat((ref, torch.zeros(padding_shape, device=ref.device, dtype=ref.dtype)), dim=1)
 
         return ref
 
@@ -1362,7 +1586,7 @@ class TBG_Model_Agnostic_Latent_Anchor():
                     state["window_skip_logged"] = True
                 return denoised
 
-            if denoised.ndim != 4 or ref_latent.ndim != 4:
+            if denoised.ndim not in (4, 5) or ref_latent.ndim != denoised.ndim:
                 if debug and not state["shape_skip_logged"]:
                     print(
                         f"[TBG ModelAgnosticLatentAnchor] skipped: "
@@ -1383,6 +1607,15 @@ class TBG_Model_Agnostic_Latent_Anchor():
                 return denoised
 
             ref = cls._match_ref_latent_shape(ref_latent, denoised)
+            if ref is None:
+                if debug and not state["shape_skip_logged"]:
+                    print(
+                        f"[TBG ModelAgnosticLatentAnchor] skipped: "
+                        f"incompatible anchor shapes denoised={tuple(denoised.shape)} "
+                        f"reference={tuple(ref_latent.shape)}."
+                    )
+                    state["shape_skip_logged"] = True
+                return denoised
             correction = ref - denoised
             corrected = denoised + correction * effective
 
@@ -1463,17 +1696,28 @@ class TBG_ETUR_Labs_Refiner():
             },
             "required": {
 
-               "Tile_Fusion_Blend": ("FLOAT", {"label": "Tile_Fusion_Blend", "default": 0.5, "min": 0, "max": 1, "step": 0.01, "round": 0.01,
-                                                "tooltip": "Fusion margin with neighboring tiles (default: 0.5 = same value as Fusion Margin), lower values reduce risk of overlapping artifacts; higher values create more diffused blending but may risk visible seams."}),
+               "Tile_Fusion_Blend": ("FLOAT", {"label": "Tile_Fusion_Blend", "default": 1.0, "min": -1.0, "max": 1.0, "step": 0.01, "round": 0.01,
+                                                "tooltip": "Adjusts the pre-sampling border-correction mask as a fraction of Fusion Blur. 0.0 keeps the original mask; positive values move the transition inward; negative values move it outward. 1.0 equals one full Fusion Blur width."}),
                 "Fusion_end": ("INT", {"display": "slider", "default": 0, "min": -50, "max": 0,
                                         "tooltip": "Step number from the end after which fusion is skipped. For example, with 20 total steps, setting -10 means fusion runs only from step 1 to 10."}),
 
-                "Fusion_conditioning": ("BOOLEAN", {"label": "inpaint_conditioning", "default": True,
-                                                     "tooltip":"If true, fusion works with both conditioning and noise_mask; if false, it works only with noise_mask."}),
-                "LanPaint": ("BOOLEAN", {"label": "LanPaint", "default": True,
-                                         "tooltip": "LanPaint: Universal Inpainting Sampler with Think Mode"}),
+                "Fusion_conditioning": (INPAINT_CONDITIONING_OPTIONS, {
+                                                     "label": "Inpainting Mode",
+                                                     "default": "Inpainting On with Noise Mask and Conditioning",
+                                                     "tooltip": "Select whether fusion uses inpainting conditioning, a noise mask, both, or neither. With the ETUR/LanPaint split-aware sampler, the inpaint mask also drives sigma-aware original-latent injection to preserve protected tile context."}),
                 "Differential_Diffusion": ("BOOLEAN", {"label": "Differential_Diffusion", "default": True,
-                                         "tooltip": "Differential_Diffusion: ON OFF"}),
+                                         "tooltip": "Controls the denoise mask dynamically across sampling steps based on sigma. It decides where denoising is allowed; it does not itself restore the original latent. ETUR/LanPaint split-aware injection can use this changing mask to preserve protected tile context, so the two features are complementary."}),
+                "Sigma_Jump_Enabled": ("BOOLEAN", {"label": "Experimental Sigma Jump", "default": False,
+                                         "tooltip": "Experimental ETUR split-aware feature: deliberately lets the sampler use a modified sigma curve while TBG's internal sigma logic keeps the original curve. OFF preserves normal sampling."}),
+                "Sigma_Jump_Strength": ("FLOAT", {"label": "Sigma Jump Strength", "default": 0.0,
+                                         "min": -1.0, "max": 1.0, "step": 0.01, "round": 0.01,
+                                         "tooltip": "Experimental sigma mismatch intensity. Positive values raise sampler sigmas and add noise; negative values lower them. The effect is applied proportionally within the selected window."}),
+                "Sigma_Jump_Start": ("FLOAT", {"label": "Sigma Jump Start", "default": 0.0,
+                                         "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01,
+                                         "tooltip": "Normalized sampling position where the experimental sigma mismatch begins: 0.0 is the first step and 1.0 is the last."}),
+                "Sigma_Jump_End": ("FLOAT", {"label": "Sigma Jump End", "default": 1.0,
+                                         "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01,
+                                         "tooltip": "Normalized sampling position where the experimental sigma mismatch ends: 0.0 is the first step and 1.0 is the last."}),
                 "Flux2_Tile_Color_Correction": ("BOOLEAN", {"label": "Tile Color Correction", "default": True,
                                          "tooltip": "Enable the selected Color Match correction for all refiner model types. If this Labs node is not connected, the refiner keeps this enabled by default."}),
                 "Flux2_Sampler_Hook": ("BOOLEAN", {"label": "Flux2 Sampler Hook", "default": False,
@@ -1485,6 +1729,10 @@ class TBG_ETUR_Labs_Refiner():
                 "Save_Tiles_in_Temp_Folder": ("BOOLEAN", {"label": "Preview_Tiles_in_Temp_Folder", "default": False, "label_on": "Save Tiles to /temp/TBG/", "label_off": "Disabled",
                                               "tooltip": "For full-resolution in-process previews, tiles are saved to temp/TBG/compareTiles/"}),
                 "stitch_blending": (cls.STICHTYPE, {"label": "stich_blending", "default": "gpupyramid"}),
+                "Content_Aware_Laplacian_Seam": ("BOOLEAN", {"label": "Content-Aware Laplacian Seam", "default": True,
+                                                               "label_on": "ON", "label_off": "OFF",
+                                                               "tooltip": "Route the Laplacian feather seam through the minimum-difference path between the tile and its processed neighbors."}),
+                "VL_Encoding_Mode": (["Off", "Global Embedding", "Tile Embedding", "Tile + Global Embedding", "Inner Tile + Global Embedding"], {"label": "VL Encoding Mode", "default": "Inner Tile + Global Embedding"}),
                 "max_upscale_size_segment": ("INT", {"label": "max_upscale_size_segment", "default": 2048, "min": 256,
                                                      "max": 4096, "step": 8}),
             }
@@ -1501,6 +1749,9 @@ class TBG_ETUR_Labs_Refiner():
                 kwargs["max_upscale_size_segment"] = shifted_max
         kwargs.setdefault("Segment_Background_Harmonization", True)
         kwargs.setdefault("Flux2_Sampler_Hook", False)
+        kwargs["Fusion_conditioning"] = normalize_inpaint_conditioning_mode(
+            kwargs.get("Fusion_conditioning", INPAINT_CONDITIONING_MODES[-1])
+        )
         if "ColorMatch_Debug" in kwargs and kwargs["ColorMatch_Debug"] is not None:
             kwargs["ColorMatch_Debug"] = dict(kwargs["ColorMatch_Debug"])
         return (kwargs,)
@@ -1602,8 +1853,3 @@ class TBG_ETUR_Labs_Upscaler():
     @classmethod
     def fn(self, **kwargs):
         return (kwargs,)
-
-
-
-
-

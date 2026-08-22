@@ -49,7 +49,7 @@ class ETURColorMatchV2:
 
     METHODS = ('mkl', 'hm', 'reinhard', 'mvgd', 'hm-mvgd-hm', 'hm-mkl-hm', 'reinhard_lab_gpu')
 
-    def colormatch(self, image_ref, image_target, method, strength=1.0, multithread=True):
+    def colormatch(self, image_ref, image_target, method, strength=1.0, multithread=True, force_cpu=False):
         if strength == 0:
             return (image_target,)
         if method not in self.METHODS:
@@ -62,34 +62,40 @@ class ETURColorMatchV2:
             except ImportError as e:
                 raise ImportError("ETURColorMatchV2 reinhard_lab_gpu requires kornia") from e
 
-            device = model_management.get_torch_device()
-            target_device = image_target.device
-            image_target_device = image_target.to(device=device, dtype=torch.float32)
-            image_ref_device = image_ref.to(device=device, dtype=torch.float32)
-            batch_size, height, width, channels = image_target_device.shape
-            if channels != 3:
-                image_target_device = image_target_device[..., :3]
-                image_ref_device = image_ref_device[..., :3]
+            try:
+                device = torch.device("cpu") if force_cpu else model_management.get_torch_device()
+                target_device = image_target.device
+                image_target_device = image_target.to(device=device, dtype=torch.float32)
+                image_ref_device = image_ref.to(device=device, dtype=torch.float32)
+                batch_size, height, width, channels = image_target_device.shape
+                if channels != 3:
+                    image_target_device = image_target_device[..., :3]
+                    image_ref_device = image_ref_device[..., :3]
 
-            src_bchw = image_target_device.permute(0, 3, 1, 2).contiguous()
-            ref_bchw = image_ref_device.permute(0, 3, 1, 2).contiguous()
-            src_lab = kornia.color.rgb_to_lab(src_bchw)
-            ref_lab = kornia.color.rgb_to_lab(ref_bchw)
+                src_bchw = image_target_device.permute(0, 3, 1, 2).contiguous()
+                ref_bchw = image_ref_device.permute(0, 3, 1, 2).contiguous()
+                src_lab = kornia.color.rgb_to_lab(src_bchw)
+                ref_lab = kornia.color.rgb_to_lab(ref_bchw)
 
-            src_flat = src_lab.view(batch_size, 3, -1)
-            ref_flat = ref_lab.view(ref_lab.shape[0], 3, -1)
-            src_std, src_mean = torch.std_mean(src_flat, dim=-1, keepdim=True, unbiased=False)
-            ref_std, ref_mean = torch.std_mean(ref_flat, dim=-1, keepdim=True, unbiased=False)
-            src_std = src_std.clamp_min_(1e-6)
-            if ref_lab.shape[0] == 1 and batch_size > 1:
-                ref_mean = ref_mean.expand(batch_size, -1, -1)
-                ref_std = ref_std.expand(batch_size, -1, -1)
+                src_flat = src_lab.view(batch_size, 3, -1)
+                ref_flat = ref_lab.view(ref_lab.shape[0], 3, -1)
+                src_std, src_mean = torch.std_mean(src_flat, dim=-1, keepdim=True, unbiased=False)
+                ref_std, ref_mean = torch.std_mean(ref_flat, dim=-1, keepdim=True, unbiased=False)
+                src_std = src_std.clamp_min_(1e-6)
+                if ref_lab.shape[0] == 1 and batch_size > 1:
+                    ref_mean = ref_mean.expand(batch_size, -1, -1)
+                    ref_std = ref_std.expand(batch_size, -1, -1)
 
-            corrected_lab = ((src_flat - src_mean) * (ref_std / src_std) + ref_mean).view(batch_size, 3, height, width)
-            corrected_rgb = kornia.color.lab_to_rgb(corrected_lab)
-            out = (1.0 - float(strength)) * src_bchw + float(strength) * corrected_rgb
-            out = out.permute(0, 2, 3, 1).contiguous().to(target_device).float().clamp_(0, 1)
-            return (out,)
+                corrected_lab = ((src_flat - src_mean) * (ref_std / src_std) + ref_mean).view(batch_size, 3, height, width)
+                corrected_rgb = kornia.color.lab_to_rgb(corrected_lab)
+                out = (1.0 - float(strength)) * src_bchw + float(strength) * corrected_rgb
+                out = out.permute(0, 2, 3, 1).contiguous().to(target_device).float().clamp_(0, 1)
+                return (out,)
+            except Exception as exc:
+                if not force_cpu and model_management.is_oom(exc):
+                    print("[TBG ColorMatch] method=reinhard_lab_gpu hit GPU OOM; moving image_ref and image_target to CPU")
+                    return self.colormatch(image_ref, image_target, method, strength, multithread=multithread, force_cpu=True)
+                raise
 
         try:
             from color_matcher import ColorMatcher

@@ -1,8 +1,8 @@
 {
   "id": "78e117ed-0d9a-411f-880a-200fe0e75ce9",
   "revision": 0,
-  "last_node_id": 61,
-  "last_link_id": 90,
+  "last_node_id": 70,
+  "last_link_id": 117,
   "nodes": [
     {
       "id": 1,
@@ -182,7 +182,7 @@
         60
       ],
       "flags": {},
-      "order": 24,
+      "order": 27,
       "mode": 2,
       "inputs": [
         {
@@ -236,10 +236,10 @@
       ],
       "size": [
         290,
-        60
+        82
       ],
       "flags": {},
-      "order": 32,
+      "order": 35,
       "mode": 2,
       "inputs": [
         {
@@ -279,7 +279,8 @@
         }
       },
       "widgets_values": [
-        1
+        1,
+        false
       ],
       "color": "#223",
       "bgcolor": "#335"
@@ -339,7 +340,7 @@
         82
       ],
       "flags": {},
-      "order": 25,
+      "order": 28,
       "mode": 2,
       "inputs": [
         {
@@ -489,8 +490,8 @@
       "id": 27,
       "type": "ControlNetLoader",
       "pos": [
-        1142.2324587271357,
-        2989.7569976020754
+        1150.2586086384715,
+        3447.2475425482035
       ],
       "size": [
         315,
@@ -524,8 +525,8 @@
       "id": 30,
       "type": "ControlNetLoader",
       "pos": [
-        1948.1114032628243,
-        3032.2317301571197
+        1956.13755317416,
+        3489.7222751032477
       ],
       "size": [
         315,
@@ -560,8 +561,8 @@
       "id": 31,
       "type": "SetUnionControlNetType",
       "pos": [
-        1727.1818566985487,
-        2700.5549251810876
+        1735.2080066098845,
+        3158.0454701272156
       ],
       "size": [
         334.72272338867197,
@@ -570,7 +571,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 28,
+      "order": 31,
       "mode": 0,
       "inputs": [
         {
@@ -601,8 +602,8 @@
       "id": 34,
       "type": "ControlNetLoader",
       "pos": [
-        1873.1112190476263,
-        2152.464002773419
+        1881.137368958962,
+        2609.954547719547
       ],
       "size": [
         280,
@@ -634,15 +635,15 @@
       "id": 35,
       "type": "ConditioningZeroOut",
       "pos": [
-        1586.0404626555808,
-        1991.6559527911727
+        1594.0666125669165,
+        2449.1464977373003
       ],
       "size": [
         284.525390625,
         26
       ],
       "flags": {},
-      "order": 29,
+      "order": 32,
       "mode": 4,
       "inputs": [
         {
@@ -671,8 +672,8 @@
       "id": 39,
       "type": "Note",
       "pos": [
-        1076.7991477895346,
-        3147.241737769866
+        1084.8252977008704,
+        3604.732282715994
       ],
       "size": [
         450,
@@ -692,30 +693,6 @@
       "bgcolor": "#653"
     },
     {
-      "id": 41,
-      "type": "Note",
-      "pos": [
-        359.3583273074897,
-        2298.263824480699
-      ],
-      "size": [
-        306.7492776665806,
-        276.93293800038737
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "ControlNets",
-      "properties": {},
-      "widgets_values": [
-        "Set the Lab Node to Only Upscale to turn this into a fully functional Tiled Upscaler.\nWe fine-tuned SeedVR2, Waifu, FlashVR, and others into a new multi-step Upscaler and Refiner with adaptive sigmas.\nGive them a try — they’re not the fastest option, but for consistent, high-quality upscaling, this is a solid solution.\n\nFor more details on what’s changed, please read the text field shown when creating the node and have a look into the Tooltips."
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
       "id": 44,
       "type": "DualCLIPLoader",
       "pos": [
@@ -729,7 +706,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 12,
+      "order": 11,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -756,184 +733,18 @@
       "bgcolor": "#653"
     },
     {
-      "id": 46,
-      "type": "TBG ETUR Tile Overrides",
-      "pos": [
-        2754.6962892403817,
-        1774.1020612409382
-      ],
-      "size": [
-        708.1223892040512,
-        4940.000000000001
-      ],
-      "flags": {},
-      "order": 40,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 90
-        }
-      ],
-      "outputs": [
-        {
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "links": [
-            74
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Tile Overrides",
-        "Filter by Indexes": "",
-        "Prompt": "",
-        "Denoise": "unchanged",
-        "Seed": "",
-        "CNet Strength": "unchanged",
-        "Reset": false,
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
-        "tile_edits_json": "{\"prompts\":[\"The image shows a woman looking at her cell phone while standing in front of a white wall. She is wearing a white shirt and blue jeans, and her hair is pulled back in a ponytail. The wall behind her is plain white, and the cell phone is held in her hand.\",\"The image shows a woman with long black hair standing in front of a wall. Her face is in the foreground, and the wall is visible in the background.\",\"The image shows a woman with long black hair standing in front of a cream-colored wall. Her face is visible, and she appears to be looking off into the distance.\",\"The image shows a close up of a window with a beige awning, which is a replacement shade for a porch. Through the glass window, we can see trees outside, providing a view of the outside.\",\"The image shows a woman with long black hair and brown eyes looking at the camera in the foreground, while in the background there is a wall, a door, and a plant.\",\"The image shows a woman with long black hair and brown eyes, her face in the foreground, and a wall in the background.\",\"The image shows a woman with long black hair and earrings standing in front of a building with trees on the right side and a ceiling at the top.\",\"The image shows a woman standing in front of a house with trees in the background. She is wearing a white shirt and blue jeans, and her hair is pulled back in a ponytail. The house is a two-story structure with a red roof and white walls. The trees are lush and green, and the sky is a bright blue.\",\"The image shows a woman sitting at a table with a man and a woman in the background. On the table there are cups, saucers, and other objects. The background is slightly blurred, giving the image a dreamy feel.\",\"The image shows a woman wearing a white t-shirt and earrings, with her lips slightly parted.\",\"The image shows a woman wearing a white dress and a pair of earrings with a shell on it. In the background, there is another woman wearing goggles, and on the right side of the image there are flower pots. The background is slightly blurred, giving the image a dreamy feel.\",\"The image shows a woman walking down a sidewalk next to potted plants, with a tree in the background. The image is slightly blurred, giving it a dreamy quality.\",\"The image shows a woman sitting at a table with a white table cloth draped over her shoulders. On the table in front of her are various objects, and in the background there is another person.\",\"The image shows a woman wearing a white t-shirt against a black background. Her face is visible, with her eyes looking directly at the viewer. Her hair is pulled back in a neat bun, and her lips are slightly parted. She has a slight smile on her lips, and her hands are clasped in front of her.\",\"The image shows a man in a white tank top standing next to a woman in a blue shirt, both of them standing in front of a table with a mobile phone on it. In the background, there is a plant in a pot, adding a touch of greenery to the scene.\",\"The image shows a man sitting at a table with a potted plant in front of him. On the table there is a mobile phone, and the background is slightly blurred.\",\"The image shows a close up of a person wearing a white linen shirt. The shirt is made of a lightweight, breathable fabric and has a classic collar, long sleeves, and a button-down front. The fabric has a subtle sheen, giving it a luxurious look.\",\"The image shows a close up of a white fabric on a table. The fabric has a delicate texture and a subtle sheen, giving it a luxurious look. The white color of the fabric stands out against the neutral background, making it the focal point of the image.\",\"The image shows a person sitting in a chair with their legs crossed, wearing a white shirt and footwear. The background is slightly blurred, giving the image a dreamy feel.\",\"The image shows a man sitting on a bus with his legs crossed, wearing a white t-shirt and blue pants. He is sitting on the seat of the bus, with a road visible at the bottom of the image.\",\"The image shows a woman in a white shirt with her arm outstretched, standing in front of a wall. Her hand is visible, and she has a determined expression on her face. The wall behind her is plain and unadorned, with no other objects in the frame.\",\"The image shows a person sitting at a table with a cup of coffee in front of them. The person's leg is visible, and there is a cloth in the background.\",\"The image shows a person sitting at a table with a cup of coffee in front of them. Their hands are clasped together, and there is a chair in the background.\",\"The image shows a person sitting at a table with their hands clasped together, holding a cup of coffee. On the table there is a mobile phone and a bowl of food.\",\"The image shows a woman's arm with a tattoo on it, resting on a wooden surface.\",\"The image shows a person sitting at a table with a cup of coffee in front of them. The cup is filled with a steaming hot beverage, likely coffee, and the person's arm is visible in the background.\",\"The image shows a person sitting at a table with a cup of coffee in front of them. The cup is filled with a steaming hot beverage, likely coffee, and the person's hand is resting on the edge of the cup.\",\"The image shows a person sitting at a table with a cup of coffee and a mobile phone in front of them. The person's hand is visible, and the coffee cup is filled with a steaming hot beverage.\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}",
-        "prompt_0": "The image shows a woman looking at her cell phone while standing in front of a white wall. She is wearing a white shirt and blue jeans, and her hair is pulled back in a ponytail. The wall behind her is plain white, and the cell phone is held in her hand.",
-        "prompt_1": "The image shows a woman with long black hair standing in front of a wall. Her face is in the foreground, and the wall is visible in the background.",
-        "prompt_2": "The image shows a woman with long black hair standing in front of a cream-colored wall. Her face is visible, and she appears to be looking off into the distance.",
-        "prompt_3": "The image shows a close up of a window with a beige awning, which is a replacement shade for a porch. Through the glass window, we can see trees outside, providing a view of the outside.",
-        "prompt_4": "The image shows a woman with long black hair and brown eyes looking at the camera in the foreground, while in the background there is a wall, a door, and a plant.",
-        "prompt_5": "The image shows a woman with long black hair and brown eyes, her face in the foreground, and a wall in the background.",
-        "prompt_6": "The image shows a woman with long black hair and earrings standing in front of a building with trees on the right side and a ceiling at the top.",
-        "prompt_7": "The image shows a woman standing in front of a house with trees in the background. She is wearing a white shirt and blue jeans, and her hair is pulled back in a ponytail. The house is a two-story structure with a red roof and white walls. The trees are lush and green, and the sky is a bright blue.",
-        "prompt_8": "The image shows a woman sitting at a table with a man and a woman in the background. On the table there are cups, saucers, and other objects. The background is slightly blurred, giving the image a dreamy feel.",
-        "prompt_9": "The image shows a woman wearing a white t-shirt and earrings, with her lips slightly parted.",
-        "prompt_10": "The image shows a woman wearing a white dress and a pair of earrings with a shell on it. In the background, there is another woman wearing goggles, and on the right side of the image there are flower pots. The background is slightly blurred, giving the image a dreamy feel.",
-        "prompt_11": "The image shows a woman walking down a sidewalk next to potted plants, with a tree in the background. The image is slightly blurred, giving it a dreamy quality.",
-        "denoise_0": "",
-        "seed_0": "",
-        "cnet_strength_0": "",
-        "denoise_1": "",
-        "seed_1": "",
-        "cnet_strength_1": "",
-        "denoise_2": "",
-        "seed_2": "",
-        "cnet_strength_2": "",
-        "denoise_3": "",
-        "seed_3": "",
-        "cnet_strength_3": "",
-        "denoise_4": "",
-        "seed_4": "",
-        "cnet_strength_4": "",
-        "denoise_5": "",
-        "seed_5": "",
-        "cnet_strength_5": "",
-        "denoise_6": "",
-        "seed_6": "",
-        "cnet_strength_6": "",
-        "denoise_7": "",
-        "seed_7": "",
-        "cnet_strength_7": "",
-        "denoise_8": "",
-        "seed_8": "",
-        "cnet_strength_8": "",
-        "denoise_9": "",
-        "seed_9": "",
-        "cnet_strength_9": "",
-        "denoise_10": "",
-        "seed_10": "",
-        "cnet_strength_10": "",
-        "denoise_11": "",
-        "seed_11": "",
-        "cnet_strength_11": "",
-        "prompt_12": "The image shows a woman sitting at a table with a white table cloth draped over her shoulders. On the table in front of her are various objects, and in the background there is another person.",
-        "prompt_13": "The image shows a woman wearing a white t-shirt against a black background. Her face is visible, with her eyes looking directly at the viewer. Her hair is pulled back in a neat bun, and her lips are slightly parted. She has a slight smile on her lips, and her hands are clasped in front of her.",
-        "prompt_14": "The image shows a man in a white tank top standing next to a woman in a blue shirt, both of them standing in front of a table with a mobile phone on it. In the background, there is a plant in a pot, adding a touch of greenery to the scene.",
-        "prompt_15": "The image shows a man sitting at a table with a potted plant in front of him. On the table there is a mobile phone, and the background is slightly blurred.",
-        "prompt_16": "The image shows a close up of a person wearing a white linen shirt. The shirt is made of a lightweight, breathable fabric and has a classic collar, long sleeves, and a button-down front. The fabric has a subtle sheen, giving it a luxurious look.",
-        "prompt_17": "The image shows a close up of a white fabric on a table. The fabric has a delicate texture and a subtle sheen, giving it a luxurious look. The white color of the fabric stands out against the neutral background, making it the focal point of the image.",
-        "prompt_18": "The image shows a person sitting in a chair with their legs crossed, wearing a white shirt and footwear. The background is slightly blurred, giving the image a dreamy feel.",
-        "prompt_19": "The image shows a man sitting on a bus with his legs crossed, wearing a white t-shirt and blue pants. He is sitting on the seat of the bus, with a road visible at the bottom of the image.",
-        "prompt_20": "The image shows a woman in a white shirt with her arm outstretched, standing in front of a wall. Her hand is visible, and she has a determined expression on her face. The wall behind her is plain and unadorned, with no other objects in the frame.",
-        "prompt_21": "The image shows a person sitting at a table with a cup of coffee in front of them. The person's leg is visible, and there is a cloth in the background.",
-        "prompt_22": "The image shows a person sitting at a table with a cup of coffee in front of them. Their hands are clasped together, and there is a chair in the background.",
-        "prompt_23": "The image shows a person sitting at a table with their hands clasped together, holding a cup of coffee. On the table there is a mobile phone and a bowl of food.",
-        "prompt_24": "The image shows a woman's arm with a tattoo on it, resting on a wooden surface.",
-        "prompt_25": "The image shows a person sitting at a table with a cup of coffee in front of them. The cup is filled with a steaming hot beverage, likely coffee, and the person's arm is visible in the background.",
-        "prompt_26": "The image shows a person sitting at a table with a cup of coffee in front of them. The cup is filled with a steaming hot beverage, likely coffee, and the person's hand is resting on the edge of the cup.",
-        "prompt_27": "The image shows a person sitting at a table with a cup of coffee and a mobile phone in front of them. The person's hand is visible, and the coffee cup is filled with a steaming hot beverage.",
-        "denoise_12": "",
-        "seed_12": "",
-        "cnet_strength_12": "",
-        "denoise_13": "",
-        "seed_13": "",
-        "cnet_strength_13": "",
-        "denoise_14": "",
-        "seed_14": "",
-        "cnet_strength_14": "",
-        "denoise_15": "",
-        "seed_15": "",
-        "cnet_strength_15": "",
-        "denoise_16": "",
-        "seed_16": "",
-        "cnet_strength_16": "",
-        "denoise_17": "",
-        "seed_17": "",
-        "cnet_strength_17": "",
-        "denoise_18": "",
-        "seed_18": "",
-        "cnet_strength_18": "",
-        "denoise_19": "",
-        "seed_19": "",
-        "cnet_strength_19": "",
-        "denoise_20": "",
-        "seed_20": "",
-        "cnet_strength_20": "",
-        "denoise_21": "",
-        "seed_21": "",
-        "cnet_strength_21": "",
-        "denoise_22": "",
-        "seed_22": "",
-        "cnet_strength_22": "",
-        "denoise_23": "",
-        "seed_23": "",
-        "cnet_strength_23": "",
-        "denoise_24": "",
-        "seed_24": "",
-        "cnet_strength_24": "",
-        "denoise_25": "",
-        "seed_25": "",
-        "cnet_strength_25": "",
-        "denoise_26": "",
-        "seed_26": "",
-        "cnet_strength_26": "",
-        "denoise_27": "",
-        "seed_27": "",
-        "cnet_strength_27": ""
-      },
-      "widgets_values": [
-        true,
-        0,
-        "",
-        "",
-        "unchanged",
-        "",
-        "unchanged",
-        false
-      ]
-    },
-    {
       "id": 47,
       "type": "ControlNetApplyAdvanced",
       "pos": [
-        1875.8082627266024,
-        1909.8377815154277
+        1883.8344126379382,
+        2367.328326461555
       ],
       "size": [
         270,
         186
       ],
       "flags": {},
-      "order": 36,
+      "order": 39,
       "mode": 4,
       "inputs": [
         {
@@ -954,7 +765,7 @@
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 40
+          "link": 94
         },
         {
           "name": "vae",
@@ -968,14 +779,14 @@
           "name": "positive",
           "type": "CONDITIONING",
           "links": [
-            42
+            99
           ]
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
           "links": [
-            43
+            100
           ]
         }
       ],
@@ -1004,16 +815,22 @@
       "flags": {
         "collapsed": false
       },
-      "order": 44,
+      "order": 47,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 82
+          "link": 113
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "title": "TILES",
       "properties": {
         "cnr_id": "comfy-core",
@@ -1036,16 +853,22 @@
       "flags": {
         "collapsed": true
       },
-      "order": 43,
+      "order": 46,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 81
+          "link": 112
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.44",
@@ -1067,7 +890,7 @@
         126
       ],
       "flags": {},
-      "order": 30,
+      "order": 33,
       "mode": 0,
       "inputs": [
         {
@@ -1093,7 +916,7 @@
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            72
+            103
           ]
         }
       ],
@@ -1124,7 +947,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 13,
+      "order": 12,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1134,7 +957,7 @@
           "slot_index": 0,
           "links": [
             58,
-            73
+            104
           ]
         }
       ],
@@ -1153,15 +976,15 @@
       "id": 33,
       "type": "CLIPTextEncodeFlux",
       "pos": [
-        1114.8990358755734,
-        1902.6458678413333
+        1122.9251857869092,
+        2360.136412787461
       ],
       "size": [
         400,
         340
       ],
       "flags": {},
-      "order": 14,
+      "order": 13,
       "mode": 4,
       "inputs": [
         {
@@ -1197,15 +1020,15 @@
       "id": 52,
       "type": "StyleModelLoader",
       "pos": [
-        2230.5545332298566,
-        1936.495766784666
+        2238.5806831411924,
+        2393.9863117307937
       ],
       "size": [
         315,
         58
       ],
       "flags": {},
-      "order": 15,
+      "order": 14,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1213,7 +1036,7 @@
           "name": "STYLE_MODEL",
           "type": "STYLE_MODEL",
           "links": [
-            77
+            108
           ]
         }
       ],
@@ -1232,15 +1055,15 @@
       "id": 51,
       "type": "CLIPVisionLoader",
       "pos": [
-        2230.3384436230317,
-        2098.865246451932
+        2238.3645935343675,
+        2556.35579139806
       ],
       "size": [
         315,
         58
       ],
       "flags": {},
-      "order": 16,
+      "order": 15,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1248,7 +1071,7 @@
           "name": "CLIP_VISION",
           "type": "CLIP_VISION",
           "links": [
-            78
+            109
           ]
         }
       ],
@@ -1264,60 +1087,6 @@
       "bgcolor": "#353"
     },
     {
-      "id": 40,
-      "type": "TBG ETUR Labs Upscaler",
-      "pos": [
-        694.8330168655447,
-        2370.6944904451207
-      ],
-      "size": [
-        345.013671875,
-        246
-      ],
-      "flags": {},
-      "order": 17,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "SEEDVR2_DIT",
-          "shape": 7,
-          "type": "SEEDVR2_DIT",
-          "link": null
-        },
-        {
-          "name": "SEEDVR2_VAE",
-          "shape": 7,
-          "type": "SEEDVR2_VAE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output_1",
-          "type": "labs_upscaler",
-          "links": [
-            30
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Labs Upscaler",
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
-      },
-      "widgets_values": [
-        "Close with Comfyui",
-        true,
-        true,
-        0,
-        0,
-        16,
-        0,
-        16
-      ]
-    },
-    {
       "id": 4,
       "type": "PreviewImage",
       "pos": [
@@ -1331,16 +1100,22 @@
       "flags": {
         "collapsed": false
       },
-      "order": 42,
+      "order": 45,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 80
+          "link": 111
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "title": "Refined Image",
       "properties": {
         "cnr_id": "comfy-core",
@@ -1361,16 +1136,22 @@
         571.6408474701262
       ],
       "flags": {},
-      "order": 35,
+      "order": 38,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 28
+          "link": 93
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.7.0",
@@ -1390,7 +1171,7 @@
         82
       ],
       "flags": {},
-      "order": 18,
+      "order": 16,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1427,7 +1208,7 @@
         130
       ],
       "flags": {},
-      "order": 34,
+      "order": 37,
       "mode": 0,
       "inputs": [
         {
@@ -1441,7 +1222,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            71
+            102
           ]
         }
       ],
@@ -1463,15 +1244,15 @@
       "id": 54,
       "type": "TBG ETUR Control Net Pipeline",
       "pos": [
-        1133.0606533153803,
-        2690.519449431686
+        1141.086803226716,
+        3148.009994377814
       ],
       "size": [
         340.359375,
         262
       ],
       "flags": {},
-      "order": 26,
+      "order": 29,
       "mode": 0,
       "inputs": [
         {
@@ -1534,15 +1315,15 @@
       "id": 55,
       "type": "TBG ETUR Control Net Pipeline",
       "pos": [
-        1620.2819782423394,
-        2680.181900427013
+        1628.3081281536752,
+        3137.672445373141
       ],
       "size": [
         340.359375,
         262
       ],
       "flags": {},
-      "order": 33,
+      "order": 36,
       "mode": 0,
       "inputs": [
         {
@@ -1605,15 +1386,15 @@
       "id": 56,
       "type": "TBG ETUR Control Net Pipeline",
       "pos": [
-        2183.443743601004,
-        2665.969734455777
+        2191.4698935123397,
+        3123.460279401905
       ],
       "size": [
         340.359375,
         262
       ],
       "flags": {},
-      "order": 38,
+      "order": 41,
       "mode": 0,
       "inputs": [
         {
@@ -1647,7 +1428,7 @@
           "name": "Controlnet_Pipe",
           "type": "Controlnet_Pipe",
           "links": [
-            75
+            106
           ]
         },
         {
@@ -1673,24 +1454,155 @@
       ]
     },
     {
-      "id": 37,
+      "id": 23,
+      "type": "Note",
+      "pos": [
+        1162.1474453083936,
+        2865.9141868353136
+      ],
+      "size": [
+        590,
+        140
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "Why use Redux?",
+      "properties": {},
+      "widgets_values": [
+        "Why use Redux?\nRedux regenerates the image while preserving its overall composition and style.\nA value of 1 means full reconstruction with strict adherence to the original\nLower values allow more creative freedom in the output\nA value of 0 disables Redux entirely\nIf neither a Redux Clip nor a Style Model is connected, Redux will automatically be disabled\nRedux is particularly useful for preserving fine materials, textures, and structural composition. In many cases, it can serve as a lightweight alternative to ControlNets.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 60,
+      "type": "LoadImage",
+      "pos": [
+        -465.87870460294204,
+        928.4236418891841
+      ],
+      "size": [
+        282.798828125,
+        314
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            91
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            115
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.22.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ]
+    },
+    {
+      "id": 29,
+      "type": "SetUnionControlNetType",
+      "pos": [
+        1631.5312016338557,
+        3467.4192671797723
+      ],
+      "size": [
+        335.9449157714844,
+        58
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONTROL_NET",
+          "type": "CONTROL_NET",
+          "links": [
+            65
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.44",
+        "Node name for S&R": "SetUnionControlNetType"
+      },
+      "widgets_values": [
+        "canny/lineart/anime_lineart/mlsd"
+      ]
+    },
+    {
+      "id": 41,
+      "type": "Note",
+      "pos": [
+        366.6675906037158,
+        2345.7741613784674
+      ],
+      "size": [
+        306.7492776665806,
+        276.93293800038737
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "ControlNets",
+      "properties": {},
+      "widgets_values": [
+        "Set the Lab Node to Only Upscale to turn this into a fully functional Tiled Upscaler.\nWe fine-tuned SeedVR2, Waifu, FlashVR, and others into a new multi-step Upscaler and Refiner with adaptive sigmas.\nGive them a try — they’re not the fastest option, but for consistent, high-quality upscaling, this is a solid solution.\n\nFor more details on what’s changed, please read the text field shown when creating the node and have a look into the Tooltips."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 62,
       "type": "TBG ETUR Upscaler and Tile Generator PRO",
       "pos": [
-        401.8428498566191,
-        1512.6718231021632
+        400.0154712964131,
+        1472.4707076765212
       ],
       "size": [
         568.2088440661621,
-        744
+        798
       ],
       "flags": {},
-      "order": 31,
+      "order": 34,
       "mode": 4,
       "inputs": [
         {
+          "label": "Image",
           "name": "image",
           "type": "IMAGE",
-          "link": 85
+          "link": 91
         },
         {
           "name": "Segment_Mask",
@@ -1705,25 +1617,26 @@
           "link": null
         },
         {
+          "label": "TBG ETUR Labs",
           "name": "labs_upscaler",
           "shape": 7,
           "type": "labs_upscaler",
-          "link": 30
+          "link": 96
         }
       ],
       "outputs": [
         {
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
-          "links": []
+          "links": null
         },
         {
           "name": "Upscaled Image",
           "type": "IMAGE",
           "links": [
-            28,
-            40,
-            87
+            93,
+            94,
+            114
           ]
         }
       ],
@@ -1738,8 +1651,9 @@
         1,
         1024,
         1024,
-        "SuperResolution/Tiled-SeedVR2 Standard",
+        "NONE",
         2,
+        false,
         "NONE",
         "None (FP16)",
         "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
@@ -1748,80 +1662,440 @@
         0,
         "fixed",
         "Neuro_Generative_Tile_Fusion",
+        0,
         64,
         0.95,
         16,
-        "",
         "",
         ""
       ]
     },
     {
-      "id": 49,
-      "type": "TBG ETUR Labs for Refiner",
+      "id": 63,
+      "type": "TBG ETUR Labs Upscaler",
       "pos": [
-        3738.0494754528677,
-        2374.288525721991
+        694.8330168655447,
+        2370.6944904451207
       ],
       "size": [
-        698.4978711547847,
-        334
+        345.013671875,
+        354
       ],
       "flags": {},
-      "order": 39,
+      "order": 20,
       "mode": 4,
       "inputs": [
         {
-          "name": "Custom_Sigmas_!DENOISE=1",
+          "name": "SEEDVR2_DIT",
           "shape": 7,
-          "type": "SIGMAS",
+          "type": "SEEDVR2_DIT",
           "link": null
         },
         {
-          "name": "Sampler",
+          "name": "SEEDVR2_VAE",
           "shape": 7,
-          "type": "SAMPLER",
+          "type": "SEEDVR2_VAE",
           "link": null
         },
         {
-          "name": "cropped_positive",
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
           "shape": 7,
-          "type": "CONDITIONING",
-          "link": 42
+          "type": "MODEL",
+          "link": null
         },
         {
-          "name": "cropped_negative",
+          "label": "PID CLIP",
+          "name": "PID_CLIP",
           "shape": 7,
-          "type": "CONDITIONING",
-          "link": 43
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "label": "PID Source VAE",
+          "name": "PID_Source_VAE",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
         }
       ],
       "outputs": [
         {
           "name": "output_1",
-          "type": "labs_refiner",
+          "type": "labs_upscaler",
           "links": [
-            79
+            96
           ]
         }
       ],
       "properties": {
         "cnr_id": "tbg-etur",
         "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Labs for Refiner",
+        "Node name for S&R": "TBG ETUR Labs Upscaler",
         "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
       },
       "widgets_values": [
-        0.5,
-        0,
+        "Close with Comfyui",
+        "dev debug on",
         true,
-        true,
-        true,
-        0,
         false,
-        "gpupyramid",
-        2048,
-        2048
+        "http://127.0.0.1:8080/v1",
+        "",
+        "FLUX1",
+        0.1,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 64,
+      "type": "TBG ETUR Tile Overrides",
+      "pos": [
+        2754.6962892403817,
+        1774.1020612409382
+      ],
+      "size": [
+        708.1223892040512,
+        1106
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Tile Prompt Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 117
+        },
+        {
+          "label": "model 1 override",
+          "name": "Model_1",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "model 2 override",
+          "name": "Model_2",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "model 3 override",
+          "name": "Model_3",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 1 override",
+          "name": "CnetPipe_1",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 2 override",
+          "name": "CnetPipe_2",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        },
+        {
+          "label": "cnetpipe 3 override",
+          "name": "CnetPipe_3",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "links": [
+            105
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Tile Overrides",
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false,
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR",
+        "tile_edits_json": "{\"prompts\":[\"The image shows a woman looking at her cell phone while standing in front of a white wall. She is wearing a white shirt and blue jeans, and her hair is pulled back in a ponytail. The wall behind her is plain white, and the cell phone is held in her hand.\",\"The image shows a woman with long black hair standing in front of a wall. Her face is in the foreground, and the wall is visible in the background.\",\"The image shows a woman with long black hair standing in front of a cream-colored wall. Her face is visible, and she appears to be looking off into the distance.\",\"The image shows a close up of a window with a beige awning, which is a replacement shade for a porch. Through the glass window, we can see trees outside, providing a view of the outside.\"],\"denoises\":[\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\"],\"cfg_overrides\":[\"\",\"\",\"\",\"\"],\"model_overrides\":[\"\",\"\",\"\",\"\"],\"cnetpipe_overrides\":[\"\",\"\",\"\",\"\"],\"color_match_overrides\":[\"\",\"\",\"\",\"\"],\"ignore_general_prompts\":[false,false,false,false],\"_tbg_tiler_context_key\":\"1,9,f,a,7,5,b,9,9,3,2,e,8,3,1,a,2,c,f,c,6,9,f,7,f,8,9,4,a,b,3,e\"}",
+        "prompt_0": "The image shows a woman looking at her cell phone while standing in front of a white wall. She is wearing a white shirt and blue jeans, and her hair is pulled back in a ponytail. The wall behind her is plain white, and the cell phone is held in her hand.",
+        "prompt_1": "The image shows a woman with long black hair standing in front of a wall. Her face is in the foreground, and the wall is visible in the background.",
+        "prompt_2": "The image shows a woman with long black hair standing in front of a cream-colored wall. Her face is visible, and she appears to be looking off into the distance.",
+        "prompt_3": "The image shows a close up of a window with a beige awning, which is a replacement shade for a porch. Through the glass window, we can see trees outside, providing a view of the outside.",
+        "denoise_0": "",
+        "seed_0": "",
+        "cnet_strength_0": "",
+        "denoise_1": "",
+        "seed_1": "",
+        "cnet_strength_1": "",
+        "denoise_2": "",
+        "seed_2": "",
+        "cnet_strength_2": "",
+        "denoise_3": "",
+        "seed_3": "",
+        "cnet_strength_3": "",
+        "cfg_override_0": "",
+        "model_override_0": "",
+        "cnetpipe_override_0": "",
+        "color_match_override_0": "",
+        "ignore_general_prompt_0": "",
+        "cfg_override_1": "",
+        "model_override_1": "",
+        "cnetpipe_override_1": "",
+        "color_match_override_1": "",
+        "ignore_general_prompt_1": "",
+        "cfg_override_2": "",
+        "model_override_2": "",
+        "cnetpipe_override_2": "",
+        "color_match_override_2": "",
+        "ignore_general_prompt_2": "",
+        "cfg_override_3": "",
+        "model_override_3": "",
+        "cnetpipe_override_3": "",
+        "color_match_override_3": "",
+        "ignore_general_prompt_3": ""
+      },
+      "widgets_values": [
+        true,
+        0,
+        "",
+        "",
+        "unchanged",
+        "",
+        "unchanged",
+        false
+      ]
+    },
+    {
+      "id": 58,
+      "type": "TBG ETUR Labs Upscaler",
+      "pos": [
+        2143.265484833081,
+        796.7485070995378
+      ],
+      "size": [
+        532.4184718749993,
+        354
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "SEEDVR2_DIT",
+          "shape": 7,
+          "type": "SEEDVR2_DIT",
+          "link": null
+        },
+        {
+          "name": "SEEDVR2_VAE",
+          "shape": 7,
+          "type": "SEEDVR2_VAE",
+          "link": null
+        },
+        {
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "PID CLIP",
+          "name": "PID_CLIP",
+          "shape": 7,
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "label": "PID Source VAE",
+          "name": "PID_Source_VAE",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output_1",
+          "type": "labs_upscaler",
+          "links": [
+            116
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Labs Upscaler",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
+      },
+      "widgets_values": [
+        "Close with Comfyui",
+        true,
+        false,
+        "http://127.0.0.1:8080/v1",
+        "",
+        0,
+        0,
+        16,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 59,
+      "type": "Note",
+      "pos": [
+        2139.1972882745845,
+        1208.1907045116027
+      ],
+      "size": [
+        538.7564999999995,
+        183.923
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [],
+      "title": "VLM",
+      "properties": {},
+      "widgets_values": [
+        "We have three ways to load VLMs:\n\n1. **Standard** – Fully automatic setup. Supports all models except GGUF.\n\n2. **GGUF** – Often requires a manual llama.cpp server installation, which can be complicated for some configurations. We provide prebuilt wheels, and installation is only required if you select the GGUF option.\n\n3. **Fastest and Best Option: OpenAI-Compatible (Labs Server)** – Connect the Labs_upscaler node and enter the URL, port, and model name of your local or API-based Ollama or llama.cpp server with the Qwen GGUF model loaded.\n\n4. Florence has now been fixed to run on Transformer versions 5 and above.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 66,
+      "type": "CLIPLoader",
+      "pos": [
+        1128.7970024678398,
+        1984.042680689262
+      ],
+      "size": [
+        446.9796087006507,
+        106
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.25.0",
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "qwen3vl_4b_fp8_scaled.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "Krea\\qwen3-vl-4b-heretic_int8.safetensors",
+        "krea2",
+        "default"
+      ]
+    },
+    {
+      "id": 67,
+      "type": "VAELoader",
+      "pos": [
+        1138.0549651160457,
+        2142.860367164605
+      ],
+      "size": [
+        413.755580930781,
+        58
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.25.0",
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "qwen_image_vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "Wan2.1_VAE.pth"
+      ]
+    },
+    {
+      "id": 65,
+      "type": "UNETLoader",
+      "pos": [
+        1106.7155409665572,
+        1861.0620712113518
+      ],
+      "size": [
+        487.75458015352206,
+        82
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.25.0",
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "krea2_turbo_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_turbo_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "krea2\\raw.safetensors",
+        "default"
       ]
     },
     {
@@ -1836,7 +2110,7 @@
         632.9232045354411
       ],
       "flags": {},
-      "order": 19,
+      "order": 26,
       "mode": 4,
       "inputs": [],
       "outputs": [
@@ -1844,7 +2118,7 @@
           "name": "Enrichment_Pipe",
           "type": "Enrichment_Pipe",
           "links": [
-            76
+            107
           ]
         },
         {
@@ -1886,7 +2160,101 @@
       ]
     },
     {
-      "id": 57,
+      "id": 68,
+      "type": "TBG ETUR Labs for Refiner",
+      "pos": [
+        3736.039359036641,
+        2350.1678648314255
+      ],
+      "size": [
+        698.4978711547847,
+        466
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 4,
+      "inputs": [
+        {
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "ColorMatch Debug Gates",
+          "name": "ColorMatch_Debug",
+          "shape": 7,
+          "type": "tbg_colormatch_debug",
+          "link": null
+        },
+        {
+          "label": "Sigmas with denoise 1",
+          "name": "Custom_Sigmas_!DENOISE=1",
+          "shape": 7,
+          "type": "SIGMAS",
+          "link": null
+        },
+        {
+          "label": "Overwrites the Sampler Name field",
+          "name": "Sampler",
+          "shape": 7,
+          "type": "SAMPLER",
+          "link": null
+        },
+        {
+          "label": "Ideogram4 Guider",
+          "name": "Ideogram4_Guider",
+          "shape": 7,
+          "type": "GUIDER",
+          "link": null
+        },
+        {
+          "name": "cropped_positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 99
+        },
+        {
+          "name": "cropped_negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 100
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output_1",
+          "type": "labs_refiner",
+          "links": [
+            110
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Labs for Refiner",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
+      },
+      "widgets_values": [
+        1,
+        0,
+        "Inpainting On with Noise Mask and Conditioning",
+        true,
+        true,
+        false,
+        0,
+        false,
+        "gpupyramid",
+        true,
+        "Inner Tile + Global Embedding",
+        2048,
+        true
+      ]
+    },
+    {
+      "id": 69,
       "type": "TBG ETUR Refiner PRO",
       "pos": [
         3750.2431751497834,
@@ -1897,46 +2265,53 @@
         1443.8972025000005
       ],
       "flags": {},
-      "order": 41,
+      "order": 44,
       "mode": 0,
       "inputs": [
         {
           "label": "Model",
           "name": "model",
           "type": "MODEL",
-          "link": 71
+          "link": 102
         },
         {
           "label": "Clip",
           "name": "clip",
           "type": "CLIP",
-          "link": 72
+          "link": 103
         },
         {
           "label": "VAE",
           "name": "vae",
           "type": "VAE",
-          "link": 73
+          "link": 104
         },
         {
           "label": "TBG Pipe",
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
-          "link": 74
+          "link": 105
         },
         {
           "label": "TBG ControlNet Pipe",
           "name": "Controlnet_Pipe",
           "shape": 7,
           "type": "Controlnet_Pipe",
-          "link": 75
+          "link": 106
         },
         {
           "label": "TBG enrichment Pipe",
           "name": "Enrichment_Pipe",
           "shape": 7,
           "type": "Enrichment_Pipe",
-          "link": 76
+          "link": 107
+        },
+        {
+          "label": "TBG RF UntwistingRoPE",
+          "name": "RF_UntwistingRoPE",
+          "shape": 7,
+          "type": "RF_UntwistingRoPE_Pipe",
+          "link": null
         },
         {
           "name": "denoise_mask",
@@ -1949,21 +2324,21 @@
           "name": "Redux_Style_Model",
           "shape": 7,
           "type": "STYLE_MODEL",
-          "link": 77
+          "link": 108
         },
         {
           "label": "Redux_Clip_Vision",
           "name": "Redux_Clip_Vision",
           "shape": 7,
           "type": "CLIP_VISION",
-          "link": 78
+          "link": 109
         },
         {
           "label": "TBG ETUR Labs",
           "name": "labs_refiner",
           "shape": 7,
           "type": "labs_refiner",
-          "link": 79
+          "link": 110
         }
       ],
       "outputs": [
@@ -1971,8 +2346,8 @@
           "name": "Refined",
           "type": "IMAGE",
           "links": [
-            80,
-            81
+            111,
+            112
           ]
         },
         {
@@ -1999,7 +2374,7 @@
           "name": "Tiles",
           "type": "IMAGE",
           "links": [
-            82
+            113
           ]
         }
       ],
@@ -2018,7 +2393,7 @@
         3.5,
         "euler",
         "simple",
-        true,
+        "tiled slow",
         1024,
         "",
         "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
@@ -2028,226 +2403,44 @@
         0,
         0,
         0,
-        0,
+        0.5,
         1,
-        "none",
+        "TBG ETUR Detail-Preserving Tile Stabilizer",
+        true,
+        0,
         false,
         false,
         "",
-        "Fast Cache (Max Speed)",
+        "Low VRAM Cache (Unload Models)",
         ""
       ]
     },
     {
-      "id": 23,
-      "type": "Note",
-      "pos": [
-        1154.1212953970578,
-        2408.4236418891855
-      ],
-      "size": [
-        590,
-        140
-      ],
-      "flags": {},
-      "order": 20,
-      "mode": 2,
-      "inputs": [],
-      "outputs": [],
-      "title": "Why use Redux?",
-      "properties": {},
-      "widgets_values": [
-        "Why use Redux?\nRedux regenerates the image while preserving its overall composition and style.\nA value of 1 means full reconstruction with strict adherence to the original\nLower values allow more creative freedom in the output\nA value of 0 disables Redux entirely\nIf neither a Redux Clip nor a Style Model is connected, Redux will automatically be disabled\nRedux is particularly useful for preserving fine materials, textures, and structural composition. In many cases, it can serve as a lightweight alternative to ControlNets.\n"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 59,
-      "type": "Note",
-      "pos": [
-        2135.0713524787384,
-        1174.1519938906233
-      ],
-      "size": [
-        538.7564999999995,
-        183.923
-      ],
-      "flags": {},
-      "order": 21,
-      "mode": 2,
-      "inputs": [],
-      "outputs": [],
-      "title": "VLM",
-      "properties": {},
-      "widgets_values": [
-        "We have three ways to load VLMs:\n\n1. **Standard** – Fully automatic setup. Supports all models except GGUF.\n\n2. **GGUF** – Often requires a manual llama.cpp server installation, which can be complicated for some configurations. We provide prebuilt wheels, and installation is only required if you select the GGUF option.\n\n3. **Fastest and Best Option: OpenAI-Compatible (Labs Server)** – Connect the Labs_upscaler node and enter the URL, port, and model name of your local or API-based Ollama or llama.cpp server with the Qwen GGUF model loaded.\n\n4. Florence has now been fixed to run on Transformer versions 5 and above.\n"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 58,
-      "type": "TBG ETUR Labs Upscaler",
-      "pos": [
-        2128.824803982074,
-        874.1092130563094
-      ],
-      "size": [
-        532.4184718749993,
-        246
-      ],
-      "flags": {},
-      "order": 22,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "SEEDVR2_DIT",
-          "shape": 7,
-          "type": "SEEDVR2_DIT",
-          "link": null
-        },
-        {
-          "name": "SEEDVR2_VAE",
-          "shape": 7,
-          "type": "SEEDVR2_VAE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output_1",
-          "type": "labs_upscaler",
-          "links": [
-            89
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Labs Upscaler",
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
-      },
-      "widgets_values": [
-        "Close with Comfyui",
-        true,
-        false,
-        "http://127.0.0.1:8080/v1",
-        "",
-        0,
-        0,
-        16
-      ]
-    },
-    {
-      "id": 60,
-      "type": "LoadImage",
-      "pos": [
-        -465.87870460294204,
-        928.4236418891841
-      ],
-      "size": [
-        282.798828125,
-        314
-      ],
-      "flags": {},
-      "order": 23,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            85
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": [
-            88
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.22.0",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "example.png",
-        "image"
-      ]
-    },
-    {
-      "id": 29,
-      "type": "SetUnionControlNetType",
-      "pos": [
-        1623.50505172252,
-        3009.9287222336443
-      ],
-      "size": [
-        335.9449157714844,
-        58
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 27,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "control_net",
-          "type": "CONTROL_NET",
-          "link": 23
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONTROL_NET",
-          "type": "CONTROL_NET",
-          "links": [
-            65
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.44",
-        "Node name for S&R": "SetUnionControlNetType"
-      },
-      "widgets_values": [
-        "canny/lineart/anime_lineart/mlsd"
-      ]
-    },
-    {
-      "id": 61,
+      "id": 70,
       "type": "TBG ETUR Upscaler and Tile Generator PRO",
       "pos": [
-        2746.120967256009,
-        808.9525281851745
+        2770.241628146574,
+        746.6408055490447
       ],
       "size": [
         678.6919432092695,
-        752.0274230701068
+        798
       ],
       "flags": {},
-      "order": 37,
+      "order": 40,
       "mode": 0,
       "inputs": [
         {
           "label": "Image",
           "name": "image",
           "type": "IMAGE",
-          "link": 87
+          "link": 114
         },
         {
           "name": "Segment_Mask",
           "shape": 7,
           "type": "MASK",
-          "link": 88
+          "link": 115
         },
         {
           "name": "PRO_segs",
@@ -2260,7 +2453,7 @@
           "name": "labs_upscaler",
           "shape": 7,
           "type": "labs_upscaler",
-          "link": 89
+          "link": 116
         }
       ],
       "outputs": [
@@ -2268,7 +2461,7 @@
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
           "links": [
-            90
+            117
           ]
         },
         {
@@ -2287,8 +2480,9 @@
         1,
         1024,
         1024,
-        "NONE",
+        "FAST/_bilinear",
         2,
+        false,
         "NONE",
         "None (FP16)",
         "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
@@ -2356,22 +2550,6 @@
       "CONDITIONING"
     ],
     [
-      28,
-      37,
-      1,
-      36,
-      0,
-      "IMAGE"
-    ],
-    [
-      30,
-      40,
-      0,
-      37,
-      3,
-      "labs_upscaler"
-    ],
-    [
       31,
       43,
       0,
@@ -2418,30 +2596,6 @@
       47,
       2,
       "CONTROL_NET"
-    ],
-    [
-      40,
-      37,
-      1,
-      47,
-      3,
-      "IMAGE"
-    ],
-    [
-      42,
-      47,
-      0,
-      49,
-      2,
-      "CONDITIONING"
-    ],
-    [
-      43,
-      47,
-      1,
-      49,
-      3,
-      "CONDITIONING"
     ],
     [
       58,
@@ -2492,138 +2646,178 @@
       "Controlnet_Pipe"
     ],
     [
-      71,
+      91,
+      60,
+      0,
+      62,
+      0,
+      "IMAGE"
+    ],
+    [
+      93,
+      62,
+      1,
+      36,
+      0,
+      "IMAGE"
+    ],
+    [
+      94,
+      62,
+      1,
+      47,
+      3,
+      "IMAGE"
+    ],
+    [
+      96,
+      63,
+      0,
+      62,
+      3,
+      "labs_upscaler"
+    ],
+    [
+      99,
+      47,
+      0,
+      68,
+      5,
+      "CONDITIONING"
+    ],
+    [
+      100,
+      47,
+      1,
+      68,
+      6,
+      "CONDITIONING"
+    ],
+    [
+      102,
       42,
       0,
-      57,
+      69,
       0,
       "MODEL"
     ],
     [
-      72,
+      103,
       43,
       1,
-      57,
+      69,
       1,
       "CLIP"
     ],
     [
-      73,
+      104,
       11,
       0,
-      57,
+      69,
       2,
       "VAE"
     ],
     [
-      74,
-      46,
+      105,
+      64,
       0,
-      57,
+      69,
       3,
       "TBG_Pipe"
     ],
     [
-      75,
+      106,
       56,
       0,
-      57,
+      69,
       4,
       "Controlnet_Pipe"
     ],
     [
-      76,
+      107,
       48,
       0,
-      57,
+      69,
       5,
       "Enrichment_Pipe"
     ],
     [
-      77,
+      108,
       52,
       0,
-      57,
-      7,
+      69,
+      8,
       "STYLE_MODEL"
     ],
     [
-      78,
+      109,
       51,
       0,
-      57,
-      8,
+      69,
+      9,
       "CLIP_VISION"
     ],
     [
-      79,
-      49,
+      110,
+      68,
       0,
-      57,
-      9,
+      69,
+      10,
       "labs_refiner"
     ],
     [
-      80,
-      57,
+      111,
+      69,
       0,
       4,
       0,
       "IMAGE"
     ],
     [
-      81,
-      57,
+      112,
+      69,
       0,
       2,
       0,
       "IMAGE"
     ],
     [
-      82,
-      57,
+      113,
+      69,
       5,
       53,
       0,
       "IMAGE"
     ],
     [
-      85,
-      60,
-      0,
-      37,
+      114,
+      62,
+      1,
+      70,
       0,
       "IMAGE"
     ],
     [
-      87,
-      37,
-      1,
-      61,
-      0,
-      "IMAGE"
-    ],
-    [
-      88,
+      115,
       60,
       1,
-      61,
+      70,
       1,
       "MASK"
     ],
     [
-      89,
+      116,
       58,
       0,
-      61,
+      70,
       3,
       "labs_upscaler"
     ],
     [
-      90,
-      61,
+      117,
+      70,
       0,
-      46,
+      64,
       0,
       "TBG_Pipe"
     ]
@@ -2633,8 +2827,8 @@
       "id": 1,
       "title": "Redux Style Transfer",
       "bounding": [
-        1074.1212953970578,
-        2328.4236418891855,
+        1082.1474453083936,
+        2785.9141868353136,
         1540,
         240
       ],
@@ -2645,8 +2839,8 @@
       "id": 2,
       "title": "Controlnet Pipe depth",
       "bounding": [
-        2114.1212953970576,
-        2588.4236418891855,
+        2122.1474453083933,
+        3045.9141868353136,
         500,
         500
       ],
@@ -2657,8 +2851,8 @@
       "id": 3,
       "title": "Controlnet Pipe Canny",
       "bounding": [
-        1556.3940226697857,
-        2596.150914616459,
+        1564.4201725811215,
+        3053.641459562587,
         520,
         500
       ],
@@ -2669,8 +2863,8 @@
       "id": 4,
       "title": "Controlnet Pipe Upscale",
       "bounding": [
-        1074.1212953970578,
-        2588.4236418891855,
+        1082.1474453083936,
+        3045.9141868353136,
         480,
         500
       ],
@@ -2751,7 +2945,7 @@
     },
     {
       "id": 11,
-      "title": "TBG_ETUR PRO  V 1.1.0  – More Muscle, More Speed, Less VRAM",
+      "title": "TBG_ETUR PRO  V 1.2.12",
       "bounding": [
         -480.62358673042957,
         256.30239137114995,
@@ -2789,8 +2983,8 @@
       "id": 14,
       "title": "Cropped or tiled ControlNet. The ControlNet input is based on the full image and then cropped to the tile space -ideal for pose",
       "bounding": [
-        1074.1212953970578,
-        1788.4236418891846,
+        1082.1474453083936,
+        2245.9141868353117,
         1540,
         520
       ],
@@ -2856,19 +3050,35 @@
       ],
       "color": "#b58b2a",
       "flags": {}
+    },
+    {
+      "id": 22,
+      "title": "KREA 2",
+      "bounding": [
+        1096.7155409665572,
+        1791.0620712113518,
+        507.75458015352206,
+        419.7982959532533
+      ],
+      "color": "#3f789e",
+      "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.6633317417209902,
+      "scale": 0.34039406834424124,
       "offset": [
-        -1670.2354623076571,
-        -793.7075085495986
+        1035.529080760525,
+        2.3745533712958267
       ]
     },
     "workflowRendererVersion": "LG",
-    "frontendVersion": "1.43.18"
+    "frontendVersion": "1.48.7",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }

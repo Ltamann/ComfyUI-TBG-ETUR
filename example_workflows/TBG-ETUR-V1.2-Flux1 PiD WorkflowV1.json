@@ -1,8 +1,8 @@
 {
   "id": "c78cfdd3-2bd3-4e53-8af0-fd08fec6d829",
   "revision": 0,
-  "last_node_id": 339,
-  "last_link_id": 472,
+  "last_node_id": 342,
+  "last_link_id": 485,
   "nodes": [
     {
       "id": 65,
@@ -16,7 +16,7 @@
         2056
       ],
       "flags": {},
-      "order": 37,
+      "order": 36,
       "mode": 0,
       "inputs": [
         {
@@ -73,11 +73,13 @@
           "name": "TBG_Pipe",
           "type": "TBG_Pipe",
           "links": [
-            419
+            476
           ]
         }
       ],
       "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
         "Node name for S&R": "TBG ETUR Tile Overrides",
         "Filter by Indexes": "",
         "Prompt": "",
@@ -85,10 +87,8 @@
         "Seed": "",
         "CNet Strength": "unchanged",
         "Reset": false,
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
         "requeue": 342,
-        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cfg_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"model_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnetpipe_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"color_match_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"ignore_general_prompts\":[false,false,false,false,false,false,false,false,false],\"_tbg_tiler_context_key\":\"5,6,c,0,c,f,3,f,e,f,a,8,a,9,f,3,6,c,0,6,a,6,c,1,6,8,3,6,b,1,0,0\"}",
+        "tile_edits_json": "{\"prompts\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"denoises\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"seeds\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnet_strength\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cfg_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"model_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"cnetpipe_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"color_match_overrides\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"],\"ignore_general_prompts\":[false,false,false,false,false,false,false,false,false],\"_tbg_tiler_context_key\":\"6,2,8,f,3,1,5,d,8,e,c,0,9,8,a,3,6,9,3,7,b,7,3,6,0,f,d,2,4,0,6,b\"}",
         "prompt_0": "",
         "denoise_0": "",
         "seed_0": "",
@@ -185,57 +185,6 @@
       "bgcolor": "#353"
     },
     {
-      "id": 83,
-      "type": "Image Comparer (rgthree)",
-      "pos": [
-        4650,
-        800
-      ],
-      "size": [
-        2850,
-        2200
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 39,
-      "mode": 0,
-      "inputs": [
-        {
-          "dir": 3,
-          "name": "image_a",
-          "type": "IMAGE",
-          "link": 425
-        },
-        {
-          "dir": 3,
-          "name": "image_b",
-          "type": "IMAGE",
-          "link": 234
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "rgthree-comfy",
-        "ver": "1.0.2605082257",
-        "comparer_mode": "Slide"
-      },
-      "widgets_values": [
-        [
-          {
-            "name": "A",
-            "selected": true,
-            "url": "/api/view?filename=rgthree.compare._temp_unctd_00001_.png&type=temp&subfolder=&rand=0.23306619950126728"
-          },
-          {
-            "name": "B",
-            "selected": true,
-            "url": "/api/view?filename=rgthree.compare._temp_unctd_00002_.png&type=temp&subfolder=&rand=0.1526493645095809"
-          }
-        ]
-      ]
-    },
-    {
       "id": 111,
       "type": "TBG ETUR Control Net Pipeline",
       "pos": [
@@ -247,7 +196,7 @@
         300
       ],
       "flags": {},
-      "order": 26,
+      "order": 28,
       "mode": 0,
       "inputs": [
         {
@@ -292,9 +241,9 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG ETUR Control Net Pipeline",
         "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
       },
       "widgets_values": [
         0.3,
@@ -329,7 +278,13 @@
           "link": 232
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.22.0",
@@ -351,7 +306,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 7,
+      "order": 0,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -359,7 +314,7 @@
           "name": "STRING",
           "type": "STRING",
           "links": [
-            423
+            481
           ]
         }
       ],
@@ -387,7 +342,7 @@
         100
       ],
       "flags": {},
-      "order": 8,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -395,7 +350,7 @@
           "name": "STRING",
           "type": "STRING",
           "links": [
-            424
+            482
           ]
         }
       ],
@@ -467,9 +422,9 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO",
         "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Upscaler and Tile Generator PRO"
       },
       "widgets_values": [
         "NONE",
@@ -509,7 +464,7 @@
         200
       ],
       "flags": {},
-      "order": 5,
+      "order": 2,
       "mode": 4,
       "inputs": [
         {
@@ -530,7 +485,7 @@
           "name": "sampler",
           "type": "SAMPLER",
           "links": [
-            427
+            484
           ]
         }
       ],
@@ -568,7 +523,13 @@
           "link": 235
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.24.0",
@@ -588,7 +549,7 @@
         150
       ],
       "flags": {},
-      "order": 24,
+      "order": 25,
       "mode": 0,
       "inputs": [
         {
@@ -616,9 +577,9 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "AISourcePatternCleanup",
         "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "AISourcePatternCleanup"
       },
       "widgets_values": [
         0.63,
@@ -640,7 +601,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 0,
+      "order": 3,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -683,7 +644,7 @@
         500
       ],
       "flags": {},
-      "order": 2,
+      "order": 4,
       "mode": 4,
       "inputs": [],
       "outputs": [
@@ -718,7 +679,7 @@
         300
       ],
       "flags": {},
-      "order": 36,
+      "order": 37,
       "mode": 4,
       "inputs": [
         {
@@ -752,7 +713,7 @@
           "name": "Controlnet_Pipe",
           "type": "Controlnet_Pipe",
           "links": [
-            451
+            477
           ]
         },
         {
@@ -762,9 +723,9 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG ETUR Control Net Pipeline",
         "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
       },
       "widgets_values": [
         0.5,
@@ -790,7 +751,7 @@
         300
       ],
       "flags": {},
-      "order": 34,
+      "order": 35,
       "mode": 4,
       "inputs": [
         {
@@ -834,9 +795,9 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG ETUR Control Net Pipeline",
         "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Control Net Pipeline"
       },
       "widgets_values": [
         0.4,
@@ -864,7 +825,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 35,
+      "order": 34,
       "mode": 4,
       "inputs": [
         {
@@ -878,17 +839,17 @@
           "name": "model",
           "type": "MODEL",
           "links": [
-            416,
             440,
             471,
-            472
+            472,
+            473
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG Model Agnostic Color Anchor",
         "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG Model Agnostic Color Anchor"
       },
       "widgets_values": [
         0.73,
@@ -909,7 +870,7 @@
         200
       ],
       "flags": {},
-      "order": 30,
+      "order": 27,
       "mode": 4,
       "inputs": [
         {
@@ -928,9 +889,9 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG Model Agnostic Latent Anchor",
         "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG Model Agnostic Latent Anchor"
       },
       "widgets_values": [
         0,
@@ -953,7 +914,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 9,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -987,7 +948,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 19,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1021,7 +982,7 @@
         400
       ],
       "flags": {},
-      "order": 4,
+      "order": 7,
       "mode": 4,
       "inputs": [
         {
@@ -1068,9 +1029,9 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TBG ETUR Labs Upscaler",
         "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Labs Upscaler"
       },
       "widgets_values": [
         "Close with Comfyui",
@@ -1086,266 +1047,6 @@
       ]
     },
     {
-      "id": 307,
-      "type": "TBG ETUR Refiner PRO",
-      "pos": [
-        4100,
-        850
-      ],
-      "size": [
-        450,
-        1250
-      ],
-      "flags": {},
-      "order": 38,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "Model",
-          "name": "model",
-          "type": "MODEL",
-          "link": 416
-        },
-        {
-          "label": "Clip",
-          "name": "clip",
-          "type": "CLIP",
-          "link": 462
-        },
-        {
-          "label": "VAE",
-          "name": "vae",
-          "type": "VAE",
-          "link": 461
-        },
-        {
-          "label": "TBG Pipe",
-          "name": "TBG_Pipe",
-          "type": "TBG_Pipe",
-          "link": 419
-        },
-        {
-          "label": "TBG ControlNet Pipe",
-          "name": "Controlnet_Pipe",
-          "shape": 7,
-          "type": "Controlnet_Pipe",
-          "link": 451
-        },
-        {
-          "label": "TBG enrichment Pipe",
-          "name": "Enrichment_Pipe",
-          "shape": 7,
-          "type": "Enrichment_Pipe",
-          "link": null
-        },
-        {
-          "label": "TBG RF UntwistingRoPE",
-          "name": "RF_UntwistingRoPE",
-          "shape": 7,
-          "type": "RF_UntwistingRoPE_Pipe",
-          "link": null
-        },
-        {
-          "name": "denoise_mask",
-          "shape": 7,
-          "type": "MASK",
-          "link": null
-        },
-        {
-          "label": "Redux_Style_Model",
-          "name": "Redux_Style_Model",
-          "shape": 7,
-          "type": "STYLE_MODEL",
-          "link": 464
-        },
-        {
-          "label": "Redux_Clip_Vision",
-          "name": "Redux_Clip_Vision",
-          "shape": 7,
-          "type": "CLIP_VISION",
-          "link": 463
-        },
-        {
-          "label": "TBG ETUR Labs",
-          "name": "labs_refiner",
-          "shape": 7,
-          "type": "labs_refiner",
-          "link": 428
-        },
-        {
-          "name": "General_Prompt_Positive",
-          "type": "STRING",
-          "widget": {
-            "name": "General_Prompt_Positive"
-          },
-          "link": 423
-        },
-        {
-          "name": "General_Prompt_Negative",
-          "type": "STRING",
-          "widget": {
-            "name": "General_Prompt_Negative"
-          },
-          "link": 424
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Refined",
-          "type": "IMAGE",
-          "links": [
-            425
-          ]
-        },
-        {
-          "name": "Refined without Segs",
-          "type": "IMAGE",
-          "links": null
-        },
-        {
-          "name": "Refined without ColorCorrection",
-          "type": "IMAGE",
-          "links": null
-        },
-        {
-          "name": "Original Upscaled",
-          "type": "IMAGE",
-          "links": null
-        },
-        {
-          "name": "Original",
-          "type": "IMAGE",
-          "links": null
-        },
-        {
-          "name": "Tiles",
-          "type": "IMAGE",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TBG ETUR Refiner PRO",
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
-      },
-      "widgets_values": [
-        "FLUX1",
-        1,
-        20,
-        4,
-        "fixed",
-        3.5,
-        "euler",
-        "simple",
-        "Nvidia PiD 4x",
-        1024,
-        "",
-        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
-        0.5,
-        "normalized advanced",
-        1,
-        0.29,
-        0,
-        0,
-        1,
-        1,
-        "TBG ETUR Detail-Preserving Tile Stabilizer",
-        "On",
-        false,
-        false,
-        "",
-        "Low VRAM Cache (Unload Models)",
-        ""
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
-      "id": 308,
-      "type": "TBG ETUR Labs for Refiner",
-      "pos": [
-        4050,
-        2250
-      ],
-      "size": [
-        500,
-        450
-      ],
-      "flags": {},
-      "order": 29,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "PID Diffusion Model",
-          "name": "PID_Model",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "ColorMatch Debug Gates",
-          "name": "ColorMatch_Debug",
-          "shape": 7,
-          "type": "tbg_colormatch_debug",
-          "link": null
-        },
-        {
-          "label": "Sigmas with denoise 1",
-          "name": "Custom_Sigmas_!DENOISE=1",
-          "shape": 7,
-          "type": "SIGMAS",
-          "link": null
-        },
-        {
-          "label": "Overwrites the Sampler Name field",
-          "name": "Sampler",
-          "shape": 7,
-          "type": "SAMPLER",
-          "link": 427
-        },
-        {
-          "name": "cropped_positive",
-          "shape": 7,
-          "type": "CONDITIONING",
-          "link": null
-        },
-        {
-          "name": "cropped_negative",
-          "shape": 7,
-          "type": "CONDITIONING",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output_1",
-          "type": "labs_refiner",
-          "links": [
-            428
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TBG ETUR Labs for Refiner",
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12"
-      },
-      "widgets_values": [
-        0.5,
-        0,
-        true,
-        true,
-        true,
-        true,
-        false,
-        0,
-        false,
-        "gpupyramid",
-        2048,
-        true
-      ]
-    },
-    {
       "id": 316,
       "type": "Note",
       "pos": [
@@ -1357,7 +1058,7 @@
         250
       ],
       "flags": {},
-      "order": 1,
+      "order": 8,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1381,7 +1082,7 @@
         550
       ],
       "flags": {},
-      "order": 23,
+      "order": 9,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1402,10 +1103,10 @@
       ],
       "size": [
         300,
-        150
+        126
       ],
       "flags": {},
-      "order": 25,
+      "order": 26,
       "mode": 4,
       "inputs": [
         {
@@ -1452,7 +1153,7 @@
         350
       ],
       "flags": {},
-      "order": 3,
+      "order": 10,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1476,7 +1177,7 @@
         300
       ],
       "flags": {},
-      "order": 18,
+      "order": 11,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1500,7 +1201,7 @@
         700
       ],
       "flags": {},
-      "order": 5,
+      "order": 12,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1524,7 +1225,7 @@
         250
       ],
       "flags": {},
-      "order": 6,
+      "order": 13,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1548,7 +1249,7 @@
         1100
       ],
       "flags": {},
-      "order": 10,
+      "order": 14,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1572,7 +1273,7 @@
         500
       ],
       "flags": {},
-      "order": 11,
+      "order": 15,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1596,7 +1297,7 @@
         150
       ],
       "flags": {},
-      "order": 13,
+      "order": 16,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1604,7 +1305,7 @@
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            462
+            474
           ]
         }
       ],
@@ -1632,7 +1333,7 @@
         100
       ],
       "flags": {},
-      "order": 12,
+      "order": 17,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1640,7 +1341,7 @@
           "name": "VAE",
           "type": "VAE",
           "links": [
-            461
+            475
           ]
         }
       ],
@@ -1665,7 +1366,7 @@
         100
       ],
       "flags": {},
-      "order": 22,
+      "order": 18,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1699,7 +1400,7 @@
         100
       ],
       "flags": {},
-      "order": 16,
+      "order": 19,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1732,7 +1433,7 @@
         100
       ],
       "flags": {},
-      "order": 15,
+      "order": 20,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1740,7 +1441,7 @@
           "name": "CLIP_VISION",
           "type": "CLIP_VISION",
           "links": [
-            463
+            479
           ]
         }
       ],
@@ -1765,7 +1466,7 @@
         100
       ],
       "flags": {},
-      "order": 14,
+      "order": 21,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1773,7 +1474,7 @@
           "name": "STYLE_MODEL",
           "type": "STYLE_MODEL",
           "links": [
-            464
+            478
           ]
         }
       ],
@@ -1798,7 +1499,7 @@
         100
       ],
       "flags": {},
-      "order": 17,
+      "order": 22,
       "mode": 4,
       "inputs": [],
       "outputs": [
@@ -1832,7 +1533,7 @@
         100
       ],
       "flags": {},
-      "order": 27,
+      "order": 29,
       "mode": 4,
       "inputs": [
         {
@@ -1871,7 +1572,7 @@
         100
       ],
       "flags": {},
-      "order": 28,
+      "order": 30,
       "mode": 4,
       "inputs": [
         {
@@ -1912,7 +1613,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 20,
+      "order": 23,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1933,6 +1634,334 @@
       ],
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 341,
+      "type": "TBG ETUR Refiner PRO",
+      "pos": [
+        4100,
+        850
+      ],
+      "size": [
+        450,
+        1250
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "Model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 473
+        },
+        {
+          "label": "Clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 474
+        },
+        {
+          "label": "VAE",
+          "name": "vae",
+          "type": "VAE",
+          "link": 475
+        },
+        {
+          "label": "TBG Pipe",
+          "name": "TBG_Pipe",
+          "type": "TBG_Pipe",
+          "link": 476
+        },
+        {
+          "label": "TBG ControlNet Pipe",
+          "name": "Controlnet_Pipe",
+          "shape": 7,
+          "type": "Controlnet_Pipe",
+          "link": 477
+        },
+        {
+          "label": "TBG enrichment Pipe",
+          "name": "Enrichment_Pipe",
+          "shape": 7,
+          "type": "Enrichment_Pipe",
+          "link": null
+        },
+        {
+          "label": "TBG RF UntwistingRoPE",
+          "name": "RF_UntwistingRoPE",
+          "shape": 7,
+          "type": "RF_UntwistingRoPE_Pipe",
+          "link": null
+        },
+        {
+          "name": "denoise_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "label": "Redux_Style_Model",
+          "name": "Redux_Style_Model",
+          "shape": 7,
+          "type": "STYLE_MODEL",
+          "link": 478
+        },
+        {
+          "label": "Redux_Clip_Vision",
+          "name": "Redux_Clip_Vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": 479
+        },
+        {
+          "label": "TBG ETUR Labs",
+          "name": "labs_refiner",
+          "shape": 7,
+          "type": "labs_refiner",
+          "link": 485
+        },
+        {
+          "name": "General_Prompt_Positive",
+          "type": "STRING",
+          "widget": {
+            "name": "General_Prompt_Positive"
+          },
+          "link": 481
+        },
+        {
+          "name": "General_Prompt_Negative",
+          "type": "STRING",
+          "widget": {
+            "name": "General_Prompt_Negative"
+          },
+          "link": 482
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Refined",
+          "type": "IMAGE",
+          "links": [
+            483
+          ]
+        },
+        {
+          "name": "Refined without Segs",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "Refined without ColorCorrection",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "Original Upscaled",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "Original",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "Tiles",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Refiner PRO"
+      },
+      "widgets_values": [
+        "FLUX1",
+        1,
+        20,
+        4,
+        "fixed",
+        3.5,
+        "euler",
+        "simple",
+        "Nvidia PiD 4x",
+        1024,
+        "",
+        "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        0.5,
+        "normalized advanced",
+        1,
+        0.2,
+        0,
+        0,
+        1,
+        1,
+        "TBG ETUR Detail-Preserving Tile Stabilizer",
+        true,
+        0,
+        false,
+        false,
+        "",
+        "Low VRAM Cache (Unload Models)",
+        ""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 83,
+      "type": "Image Comparer (rgthree)",
+      "pos": [
+        4700.575464094104,
+        843.2475299968456
+      ],
+      "size": [
+        2850,
+        2200
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "dir": 3,
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 483
+        },
+        {
+          "dir": 3,
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 234
+        }
+      ],
+      "outputs": [
+        {
+          "dir": 4,
+          "name": "images",
+          "shape": 3,
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "rgthree-comfy",
+        "ver": "1.0.2605082257",
+        "comparer_mode": "Slide"
+      },
+      "widgets_values": [
+        [
+          {
+            "name": "A",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_pkapj_00001_.png&type=temp&subfolder=&rand=0.3221469386569742"
+          },
+          {
+            "name": "B",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_pkapj_00002_.png&type=temp&subfolder=&rand=0.809610326853258"
+          }
+        ]
+      ]
+    },
+    {
+      "id": 342,
+      "type": "TBG ETUR Labs for Refiner",
+      "pos": [
+        4052.559323768083,
+        2195.9997914820533
+      ],
+      "size": [
+        500,
+        466
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "ColorMatch Debug Gates",
+          "name": "ColorMatch_Debug",
+          "shape": 7,
+          "type": "tbg_colormatch_debug",
+          "link": null
+        },
+        {
+          "label": "Sigmas with denoise 1",
+          "name": "Custom_Sigmas_!DENOISE=1",
+          "shape": 7,
+          "type": "SIGMAS",
+          "link": null
+        },
+        {
+          "label": "Overwrites the Sampler Name field",
+          "name": "Sampler",
+          "shape": 7,
+          "type": "SAMPLER",
+          "link": 484
+        },
+        {
+          "label": "Ideogram4 Guider",
+          "name": "Ideogram4_Guider",
+          "shape": 7,
+          "type": "GUIDER",
+          "link": null
+        },
+        {
+          "name": "cropped_positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "cropped_negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output_1",
+          "type": "labs_refiner",
+          "links": [
+            485
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Labs for Refiner"
+      },
+      "widgets_values": [
+        1,
+        0,
+        "Inpainting On with Noise Mask and Conditioning",
+        true,
+        true,
+        false,
+        0,
+        false,
+        "gpupyramid",
+        true,
+        "Inner Tile + Global Embedding",
+        2048,
+        true
+      ]
     }
   ],
   "links": [
@@ -2009,62 +2038,6 @@
       "labs_upscaler"
     ],
     [
-      416,
-      278,
-      0,
-      307,
-      0,
-      "MODEL"
-    ],
-    [
-      419,
-      65,
-      0,
-      307,
-      3,
-      "TBG_Pipe"
-    ],
-    [
-      423,
-      137,
-      0,
-      307,
-      11,
-      "STRING"
-    ],
-    [
-      424,
-      139,
-      0,
-      307,
-      12,
-      "STRING"
-    ],
-    [
-      425,
-      307,
-      0,
-      83,
-      0,
-      "IMAGE"
-    ],
-    [
-      427,
-      180,
-      0,
-      308,
-      3,
-      "SAMPLER"
-    ],
-    [
-      428,
-      308,
-      0,
-      307,
-      10,
-      "labs_refiner"
-    ],
-    [
       436,
       282,
       0,
@@ -2105,52 +2078,12 @@
       "MASK"
     ],
     [
-      451,
-      225,
-      0,
-      307,
-      4,
-      "Controlnet_Pipe"
-    ],
-    [
       460,
       331,
       0,
       282,
       0,
       "MODEL"
-    ],
-    [
-      461,
-      330,
-      0,
-      307,
-      2,
-      "VAE"
-    ],
-    [
-      462,
-      329,
-      0,
-      307,
-      1,
-      "CLIP"
-    ],
-    [
-      463,
-      333,
-      0,
-      307,
-      9,
-      "CLIP_VISION"
-    ],
-    [
-      464,
-      334,
-      0,
-      307,
-      8,
-      "STYLE_MODEL"
     ],
     [
       465,
@@ -2215,6 +2148,102 @@
       65,
       2,
       "MODEL"
+    ],
+    [
+      473,
+      278,
+      0,
+      341,
+      0,
+      "MODEL"
+    ],
+    [
+      474,
+      329,
+      0,
+      341,
+      1,
+      "CLIP"
+    ],
+    [
+      475,
+      330,
+      0,
+      341,
+      2,
+      "VAE"
+    ],
+    [
+      476,
+      65,
+      0,
+      341,
+      3,
+      "TBG_Pipe"
+    ],
+    [
+      477,
+      225,
+      0,
+      341,
+      4,
+      "Controlnet_Pipe"
+    ],
+    [
+      478,
+      334,
+      0,
+      341,
+      8,
+      "STYLE_MODEL"
+    ],
+    [
+      479,
+      333,
+      0,
+      341,
+      9,
+      "CLIP_VISION"
+    ],
+    [
+      481,
+      137,
+      0,
+      341,
+      11,
+      "STRING"
+    ],
+    [
+      482,
+      139,
+      0,
+      341,
+      12,
+      "STRING"
+    ],
+    [
+      483,
+      341,
+      0,
+      83,
+      0,
+      "IMAGE"
+    ],
+    [
+      484,
+      180,
+      0,
+      342,
+      3,
+      "SAMPLER"
+    ],
+    [
+      485,
+      342,
+      0,
+      341,
+      10,
+      "labs_refiner"
     ]
   ],
   "groups": [
@@ -2318,13 +2347,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.18260271200148795,
+      "scale": 0.18260271200148956,
       "offset": [
-        2228.0185595872604,
-        1368.5657532216492
+        2584.410270274321,
+        764.6763672646101
       ]
     },
-    "frontendVersion": "1.44.19",
+    "frontendVersion": "1.48.7",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,

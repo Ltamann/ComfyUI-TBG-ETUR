@@ -30,6 +30,7 @@ HILDEGARD_GRAY_FILL = (128, 128, 128)
 HILDEGARD_MARKER_COLOR = (0, 255, 255)
 HILDEGARD_MARKER_THICKNESS = 6
 HILDEGARD_MARKER_ARM_RATIO = 0.16
+KREA2_CONTROL_LATENT_KEY = "krea2_control_latent"
 
 
 def normalize_controlnet_mode(control):
@@ -62,6 +63,8 @@ def normalize_controlnet_mode(control):
         m = mode.strip().lower()
         if m in ("model_patch", "model patch", "patch"):
             return "Model_Patch"
+        if m in ("krea2_depth_lora", "krea2 depth lora", "krea2 depth"):
+            return "Krea2_Depth_LoRA"
         if m in (
             "42lux-hildegard ref.img + cfg hook",
             "42lux hildegard ref.img + cfg hook",
@@ -105,6 +108,45 @@ def _control_value(control, key, default=None):
     if isinstance(control, dict):
         return control.get(key, default)
     return getattr(control, key, default)
+
+
+def prepare_krea2_depth_control(self, cnetpipe, tile_image, vae):
+    """Create the Krea2 control latent for the current tile."""
+    for control in cnetpipe or []:
+        if normalize_controlnet_mode(control) != "Krea2_Depth_LoRA":
+            continue
+        if getattr(self.KSAMPLER, "model_type", None) != "Krea2":
+            continue
+        preprocessor = _control_value(control, "preprocessor", "None")
+        if preprocessor != "DepthAnythingV2":
+            raise RuntimeError("Krea2_Depth_LoRA requires the DepthAnythingV2 preprocessor.")
+        model = DepthAnythingV2Detector.from_pretrained(filename="depth_anything_v2_vitl.pth").to(model_management.get_torch_device())
+        depth_image = common_annotator_call(model, tile_image, resolution=1024, max_depth=1)
+        del model
+        samples = vae.encode(depth_image.clamp(0.0, 1.0))
+        model = getattr(self.KSAMPLER.model, "model", None)
+        if model is not None and hasattr(model, "process_latent_in"):
+            samples = model.process_latent_in(samples)
+        strength = _float_or_default(_control_value(control, "strength", 1.0), 1.0)
+        strength *= _float_or_default(getattr(self.KSAMPLER, "cnet_multiply", 1.0), 1.0)
+        samples = samples * strength
+        return samples
+    return None
+
+
+def set_krea2_control_latent(model, control_latent):
+    options = model.model_options.setdefault("transformer_options", {})
+    previous = options.get(KREA2_CONTROL_LATENT_KEY, None)
+    if control_latent is None:
+        options.pop(KREA2_CONTROL_LATENT_KEY, None)
+    else:
+        options[KREA2_CONTROL_LATENT_KEY] = control_latent
+    return previous
+
+
+def clear_krea2_control_latent(model):
+    options = model.model_options.get("transformer_options", {})
+    options.pop(KREA2_CONTROL_LATENT_KEY, None)
 
 
 def _float_or_default(value, default=1.0):
@@ -178,9 +220,19 @@ def _reference_effective_strength(self, control, default=0.5):
 
 
 def _reference_dev_log(self, message):
+    if not _reference_debug_enabled(self):
+        return
     api = getattr(self, "API", None)
     if getattr(api, "status", None) == "Dev":
         log(message, None, None, f"Node {getattr(getattr(self, 'INFO', None), 'id', '?')}")
+
+
+def _reference_debug_enabled(self):
+    api = getattr(self, "API", None)
+    return bool(
+        getattr(api, "status", None) == "Dev"
+        and getattr(api, "dev_debug_enabled", True)
+    )
 
 
 def _reference_debug_safe_label(label):
@@ -217,8 +269,7 @@ def _next_reference_debug_slot(self):
 
 
 def _save_reference_slot_debug(self, slot, source_label, reference_image, reference_latent):
-    api = getattr(self, "API", None)
-    if getattr(api, "status", None) != "Dev":
+    if not _reference_debug_enabled(self):
         return
     tile_index = getattr(getattr(self, "TEMP", None), "latent_index", "?")
     label = _reference_debug_safe_label(source_label)
