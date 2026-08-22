@@ -1,8 +1,8 @@
 {
   "id": "e38aab7f-ee14-40ba-9dd7-87a899386300",
   "revision": 0,
-  "last_node_id": 332,
-  "last_link_id": 465,
+  "last_node_id": 333,
+  "last_link_id": 467,
   "nodes": [
     {
       "id": 66,
@@ -36,7 +36,11 @@
       "widgets_values": [
         "FLUX\\flux-2-klein-base-9b.safetensors",
         "default"
-      ]
+      ],
+      "widgets_values_named": {
+        "unet_name": "FLUX\\flux-2-klein-base-9b.safetensors",
+        "weight_dtype": "default"
+      }
     },
     {
       "id": 130,
@@ -70,8 +74,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.22.0",
         "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 179,
@@ -106,6 +109,9 @@
       "widgets_values": [
         "freckles, added freckles, new freckles, dark spots, brown spots, skin spots, moles, stippled skin, dotted skin, speckled skin, peppered skin, grainy skin, mottled skin, dirty skin, acne, pores exaggerated, pore field, artificial pores, micro dots, grid, checkerboard, watermark grid, high frequency grid, crosshatch, pixel pattern, resampling artifacts, noisy face, noisy chest, noisy arms, over-sharpened skin, rough skin texture, excessive wrinkles, leather skin, burned skin, blotchy color, dirty texture, compression artifacts"
       ],
+      "widgets_values_named": {
+        "value": "freckles, added freckles, new freckles, dark spots, brown spots, skin spots, moles, stippled skin, dotted skin, speckled skin, peppered skin, grainy skin, mottled skin, dirty skin, acne, pores exaggerated, pore field, artificial pores, micro dots, grid, checkerboard, watermark grid, high frequency grid, crosshatch, pixel pattern, resampling artifacts, noisy face, noisy chest, noisy arms, over-sharpened skin, rough skin texture, excessive wrinkles, leather skin, burned skin, blotchy color, dirty texture, compression artifacts"
+      },
       "color": "#322",
       "bgcolor": "#533"
     },
@@ -142,6 +148,9 @@
       "widgets_values": [
         "RFNTILE. refine and add detail to this upscaled tile. Restore the image quality and resolve it to a sharp, high-resolution result. Remove compression artifacts, banding, and noise, and clarify soft or blurred areas into crisp, clean edges and definition. Enrich existing textures and surfaces with fine, intricate, physically accurate detail, matching the existing grain, focus, and material properties of each surface. Keep in-focus areas crisp and sharp, keep softly blurred areas soft, and leave flat or evenly-toned areas clean and smooth. Recover detail only where detail is already present, and add no new objects, elements, or content — refine only what is already in the tile. Preserve the original lighting, colour, contrast, and composition exactly as shown. Produce a clean, photorealistic result faithful to the source."
       ],
+      "widgets_values_named": {
+        "value": "RFNTILE. refine and add detail to this upscaled tile. Restore the image quality and resolve it to a sharp, high-resolution result. Remove compression artifacts, banding, and noise, and clarify soft or blurred areas into crisp, clean edges and definition. Enrich existing textures and surfaces with fine, intricate, physically accurate detail, matching the existing grain, focus, and material properties of each surface. Keep in-focus areas crisp and sharp, keep softly blurred areas soft, and leave flat or evenly-toned areas clean and smooth. Recover detail only where detail is already present, and add no new objects, elements, or content — refine only what is already in the tile. Preserve the original lighting, colour, contrast, and composition exactly as shown. Produce a clean, photorealistic result faithful to the source."
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -178,6 +187,9 @@
       "widgets_values": [
         "Match the color of image 2 and keep the composition, identity, pose, lighting, expression, clothing, and jungle background exactly. Enhance the source image photorealistically with clean natural skin, smooth continuous skin tone, realistic soft skin texture, natural facial contours, eyelashes, teeth, hair strands, fabric weave, and sharp edges. Remove the OpenAI watermark grid pattern, high-frequency checker texture, compression noise, and resampled micro-patterns. Do not invent new skin marks. Preserve existing natural facial structure and expression. Skin should look enhanced and natural, not plastic, with no dotted freckle field and no grid texture."
       ],
+      "widgets_values_named": {
+        "value": "Match the color of image 2 and keep the composition, identity, pose, lighting, expression, clothing, and jungle background exactly. Enhance the source image photorealistically with clean natural skin, smooth continuous skin tone, realistic soft skin texture, natural facial contours, eyelashes, teeth, hair strands, fabric weave, and sharp edges. Remove the OpenAI watermark grid pattern, high-frequency checker texture, compression noise, and resampled micro-patterns. Do not invent new skin marks. Preserve existing natural facial structure and expression. Skin should look enhanced and natural, not plastic, with no dotted freckle field and no grid texture."
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -214,6 +226,9 @@
       "widgets_values": [
         "Match the color of image 2, Change image 1 to match the style of image 3. \nRefine and add detail to this upscaled tile. Restore the image quality with photorealistic precision and resolve it to a sharp, high-resolution result and keep the composition, identity, pose, lighting, expression, clothing, and background exactly. \n\nEnhance any blurry, undefined, or low-resolution faces with detailed generated photorealistic faces that match the original pose, lighting, and expression — do not simply sharpen;\n\nFor all materials and surfaces found in iamge 2: replace flat or blurry areas with accurate physical textures — woven fabric structure for clothing, individual thread patterns for textiles, grain and weave for leather, brushed surface detail for metal, and organic pore patterns for skin. \n\nRemove all JPEG artifacts, digital compression noise, and motion blur. \n\nEnhance with subtle high-resolution micro-detail while maintaining natural appearance and original lighting. \n\nAdd revealing finer details for conten found in image 2 and 3: hair strands, fabric weave, surface imperfections, material grain, and cleaner edge definition. Every pixel should resolve into a defined physical texture, not smooth interpolation. \n\nPreserve the original composition, subject identity, and scene context exactly.\n\n Preserve existing natural facial structure and expression. Skin should look enhanced and natural, not plastic, with no dotted freckle field and no grid texture. Mantain only existing freckle dont add new freckle."
       ],
+      "widgets_values_named": {
+        "value": "Match the color of image 2, Change image 1 to match the style of image 3. \nRefine and add detail to this upscaled tile. Restore the image quality with photorealistic precision and resolve it to a sharp, high-resolution result and keep the composition, identity, pose, lighting, expression, clothing, and background exactly. \n\nEnhance any blurry, undefined, or low-resolution faces with detailed generated photorealistic faces that match the original pose, lighting, and expression — do not simply sharpen;\n\nFor all materials and surfaces found in iamge 2: replace flat or blurry areas with accurate physical textures — woven fabric structure for clothing, individual thread patterns for textiles, grain and weave for leather, brushed surface detail for metal, and organic pore patterns for skin. \n\nRemove all JPEG artifacts, digital compression noise, and motion blur. \n\nEnhance with subtle high-resolution micro-detail while maintaining natural appearance and original lighting. \n\nAdd revealing finer details for conten found in image 2 and 3: hair strands, fabric weave, surface imperfections, material grain, and cleaner edge definition. Every pixel should resolve into a defined physical texture, not smooth interpolation. \n\nPreserve the original composition, subject identity, and scene context exactly.\n\n Preserve existing natural facial structure and expression. Skin should look enhanced and natural, not plastic, with no dotted freckle field and no grid texture. Mantain only existing freckle dont add new freckle."
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -249,7 +264,10 @@
       },
       "widgets_values": [
         "Match the color characteristics of image 2 and the detail style of image 3 while preserving the subject from image 1 exactly.\n\nRefine and reconstruct this face tile as a natural high-resolution photograph. Preserve identity, facial structure, age, expression, pose, lighting, hairstyle, makeup, clothing, and camera perspective exactly.\n\nReplace blurry or low-resolution facial areas with realistic photographic detail. Reconstruct facial features using natural human anatomy and authentic photographic texture rather than digital sharpening.\n\nSkin must appear like real human skin captured by a professional camera at close viewing distance. Preserve natural skin variation, subtle unevenness, fine transitions, tiny pores, soft facial contours, delicate wrinkles, existing freckles, moles, scars, and naturally occurring skin features.\n\nAvoid beauty-retouching, cosmetic smoothing, artificial pore fields, repetitive skin patterns, waxy skin, plastic skin, airbrushed skin, synthetic texture overlays, dotted pore grids, excessive skin clarity, or magazine-style retouching.\n\nCreate realistic skin depth with subtle translucency, natural oil variation, fine tonal changes, and authentic epidermal texture. Skin should contain imperfect organic detail rather than uniform detail.\n\nRestore realistic eye detail, eyelashes, eyebrows, lip texture, facial hair, and individual hair strands while maintaining the exact identity of the subject.\n\nRemove JPEG artifacts, compression artifacts, pixelation, interpolation artifacts, oversharpening halos, and digital noise.\n\nEnhance only the information that would naturally become visible in a higher-resolution photograph. Do not invent cosmetic features, new freckles, new wrinkles, new pores, new makeup, or changes to facial anatomy.\n\nThe final result should look like the original photograph was captured at significantly higher resolution by a better camera, while remaining the same person, the same face, and the same photograph.\n"
-      ]
+      ],
+      "widgets_values_named": {
+        "value": "Match the color characteristics of image 2 and the detail style of image 3 while preserving the subject from image 1 exactly.\n\nRefine and reconstruct this face tile as a natural high-resolution photograph. Preserve identity, facial structure, age, expression, pose, lighting, hairstyle, makeup, clothing, and camera perspective exactly.\n\nReplace blurry or low-resolution facial areas with realistic photographic detail. Reconstruct facial features using natural human anatomy and authentic photographic texture rather than digital sharpening.\n\nSkin must appear like real human skin captured by a professional camera at close viewing distance. Preserve natural skin variation, subtle unevenness, fine transitions, tiny pores, soft facial contours, delicate wrinkles, existing freckles, moles, scars, and naturally occurring skin features.\n\nAvoid beauty-retouching, cosmetic smoothing, artificial pore fields, repetitive skin patterns, waxy skin, plastic skin, airbrushed skin, synthetic texture overlays, dotted pore grids, excessive skin clarity, or magazine-style retouching.\n\nCreate realistic skin depth with subtle translucency, natural oil variation, fine tonal changes, and authentic epidermal texture. Skin should contain imperfect organic detail rather than uniform detail.\n\nRestore realistic eye detail, eyelashes, eyebrows, lip texture, facial hair, and individual hair strands while maintaining the exact identity of the subject.\n\nRemove JPEG artifacts, compression artifacts, pixelation, interpolation artifacts, oversharpening halos, and digital noise.\n\nEnhance only the information that would naturally become visible in a higher-resolution photograph. Do not invent cosmetic features, new freckles, new wrinkles, new pores, new makeup, or changes to facial anatomy.\n\nThe final result should look like the original photograph was captured at significantly higher resolution by a better camera, while remaining the same person, the same face, and the same photograph.\n"
+      }
     },
     {
       "id": 135,
@@ -284,6 +302,9 @@
       "widgets_values": [
         "Match the color of image 2, Change image 1 to match the style of image 3. \n\nRestore and completely reconstruct this image with photorealistic precision. \n\nReplace any blurry, undefined, or low-resolution faces with newly generated photorealistic faces that match the original pose, lighting, and expression — do not simply sharpen; rebuild facial structure with natural skin texture, visible pores, fine wrinkles, and realistic eye detail. \n\nFor all materials and surfaces: replace flat or blurry areas with accurate physical textures — woven fabric structure for clothing, individual thread patterns for textiles, grain and weave for leather, brushed surface detail for metal, and organic pore patterns for skin. Remove all JPEG artifacts, digital compression noise, and motion blur. Enhance with subtle high-resolution micro-detail while maintaining natural appearance and original lighting. Add revealing finer details: hair strands, fabric weave, surface imperfections, material grain, and cleaner edge definition. Every pixel should resolve into a defined physical texture, not smooth interpolation. Preserve the original composition, subject identity, and scene context exactly."
       ],
+      "widgets_values_named": {
+        "value": "Match the color of image 2, Change image 1 to match the style of image 3. \n\nRestore and completely reconstruct this image with photorealistic precision. \n\nReplace any blurry, undefined, or low-resolution faces with newly generated photorealistic faces that match the original pose, lighting, and expression — do not simply sharpen; rebuild facial structure with natural skin texture, visible pores, fine wrinkles, and realistic eye detail. \n\nFor all materials and surfaces: replace flat or blurry areas with accurate physical textures — woven fabric structure for clothing, individual thread patterns for textiles, grain and weave for leather, brushed surface detail for metal, and organic pore patterns for skin. Remove all JPEG artifacts, digital compression noise, and motion blur. Enhance with subtle high-resolution micro-detail while maintaining natural appearance and original lighting. Add revealing finer details: hair strands, fabric weave, surface imperfections, material grain, and cleaner edge definition. Every pixel should resolve into a defined physical texture, not smooth interpolation. Preserve the original composition, subject identity, and scene context exactly."
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -319,7 +340,10 @@
       },
       "widgets_values": [
         "Task: Restore this photo faithfully. Steps:\n1) Reconstruct ONLY the missing/damaged areas so they match the original scene (no reinterpretation).\n2) Clean and enhance the file: deblur + denoise, histogram equalization, unsharp mask, white balance correction, color grading, micro-contrast, lens distortion correction.\n3) Output must look like modern, professional-quality digital photography: clean, sharp, natural, no artifacts.\n4) If the photo is misframed/tilted, correct the framing (straighten/level/recenter) with the minimum necessary adjustment.\n5) Do NOT change anything else: no new elements, no removals, no style changes beyond restoration and the listed corrections."
-      ]
+      ],
+      "widgets_values_named": {
+        "value": "Task: Restore this photo faithfully. Steps:\n1) Reconstruct ONLY the missing/damaged areas so they match the original scene (no reinterpretation).\n2) Clean and enhance the file: deblur + denoise, histogram equalization, unsharp mask, white balance correction, color grading, micro-contrast, lens distortion correction.\n3) Output must look like modern, professional-quality digital photography: clean, sharp, natural, no artifacts.\n4) If the photo is misframed/tilted, correct the framing (straighten/level/recenter) with the minimum necessary adjustment.\n5) Do NOT change anything else: no new elements, no removals, no style changes beyond restoration and the listed corrections."
+      }
     },
     {
       "id": 177,
@@ -353,7 +377,10 @@
       },
       "widgets_values": [
         "r/StableDiffusion\n•\n5mo ago\nJIGARAYS\n\nFlux.2 Klein (Distilled)/ComfyUI - Use \"File-Level\" prompts to boost quality while maintaining max fidelity\nTutorial - Guide\nThe Problem: If you are using Flux 2 Klein (especially for restoring/upscaling old photos), you've probably noticed that as soon as you describe the subject (e.g., \"beautiful woman,\" \"soft skin\") or even the atmosphere (\"golden hour,\" \"studio lighting\"), the model completely rewrites the person's face. It hallucinates a new identity based on the vibe.\n\nThe Fix: I found that Direct, Technical, Post-Processing Prompts work best. You need to tell the model what action to take on the file, not what to imagine in the scene. Treat the prompt like a Photoshop command list.\n\nIf you stick to these \"File-Level\" prompts, the model acts like a filter rather than a generator, keeping the original facial features intact while fixing the quality.\n\nThe \"Safe\" Prompt List:\n\n1. The Basics (Best for general cleanup)\n\nremove blur and noise\n\nfix exposure and color profile\n\nclean digital file\n\nsource quality\n\n2. The \"Darkroom\" Verbs (Best for realism/sharpness)\n\nhistogram equalization (Works way better than \"fix lighting\")\n\nunsharp mask\n\nmicro-contrast (Better than \"sharp\" because it doesn't add fake wrinkles/lashes)\n\nshadow recovery\n\ngamma correction\n\n3. The \"Lab\" Calibration (Best for color)\n\nwhite balance correction\n\ncolor graded\n\nchromatic aberration removal\n\nsRGB standard\n\nreference monitor calibration\n\n4. The \"Lens\" Fixes\n\nlens distortion correction\n\nanti-aliasing\n\nreduce jpeg artifacts\n\nMy \"Master\" Combo for Restoration:\n\nclean digital file, remove blur and noise, histogram equalization, unsharp mask, color grade, white balance correction, micro-contrast, lens distortion correction.\n\nTL;DR: Stop asking Flux.2 Klein to imagine \"soft lighting.\" Ask it for \"gamma correction\" instead. The face stays the same, the quality goes up."
-      ]
+      ],
+      "widgets_values_named": {
+        "value": "r/StableDiffusion\n•\n5mo ago\nJIGARAYS\n\nFlux.2 Klein (Distilled)/ComfyUI - Use \"File-Level\" prompts to boost quality while maintaining max fidelity\nTutorial - Guide\nThe Problem: If you are using Flux 2 Klein (especially for restoring/upscaling old photos), you've probably noticed that as soon as you describe the subject (e.g., \"beautiful woman,\" \"soft skin\") or even the atmosphere (\"golden hour,\" \"studio lighting\"), the model completely rewrites the person's face. It hallucinates a new identity based on the vibe.\n\nThe Fix: I found that Direct, Technical, Post-Processing Prompts work best. You need to tell the model what action to take on the file, not what to imagine in the scene. Treat the prompt like a Photoshop command list.\n\nIf you stick to these \"File-Level\" prompts, the model acts like a filter rather than a generator, keeping the original facial features intact while fixing the quality.\n\nThe \"Safe\" Prompt List:\n\n1. The Basics (Best for general cleanup)\n\nremove blur and noise\n\nfix exposure and color profile\n\nclean digital file\n\nsource quality\n\n2. The \"Darkroom\" Verbs (Best for realism/sharpness)\n\nhistogram equalization (Works way better than \"fix lighting\")\n\nunsharp mask\n\nmicro-contrast (Better than \"sharp\" because it doesn't add fake wrinkles/lashes)\n\nshadow recovery\n\ngamma correction\n\n3. The \"Lab\" Calibration (Best for color)\n\nwhite balance correction\n\ncolor graded\n\nchromatic aberration removal\n\nsRGB standard\n\nreference monitor calibration\n\n4. The \"Lens\" Fixes\n\nlens distortion correction\n\nanti-aliasing\n\nreduce jpeg artifacts\n\nMy \"Master\" Combo for Restoration:\n\nclean digital file, remove blur and noise, histogram equalization, unsharp mask, color grade, white balance correction, micro-contrast, lens distortion correction.\n\nTL;DR: Stop asking Flux.2 Klein to imagine \"soft lighting.\" Ask it for \"gamma correction\" instead. The face stays the same, the quality goes up."
+      }
     },
     {
       "id": 188,
@@ -387,7 +414,10 @@
       },
       "widgets_values": [
         "EDIT: I haven't tried \"realistic unblemished skin\" yet as it's not what I would ever want, but using the prompt:\n\n... extremely pale translucent ivory skin, fair and milky complexion, realistic tiny moles and ultra fine peach fuzz. ...\n\nHas gotten me a mole density that is realistic and to my taste, I think the thing that pushed down the density mostly is the word \"fair\" but play around with it yourself \"realistic skin with a fair complexion.\" may be a hack to getting no moles, although it will probably also lighten the skin tone to, so if you want tan maybe \"realistic tanned skin with a fair complexion, ... etc\" but I at least answered my own question so at least I'm happy."
-      ]
+      ],
+      "widgets_values_named": {
+        "value": "EDIT: I haven't tried \"realistic unblemished skin\" yet as it's not what I would ever want, but using the prompt:\n\n... extremely pale translucent ivory skin, fair and milky complexion, realistic tiny moles and ultra fine peach fuzz. ...\n\nHas gotten me a mole density that is realistic and to my taste, I think the thing that pushed down the density mostly is the word \"fair\" but play around with it yourself \"realistic skin with a fair complexion.\" may be a hack to getting no moles, although it will probably also lighten the skin tone to, so if you want tan maybe \"realistic tanned skin with a fair complexion, ... etc\" but I at least answered my own question so at least I'm happy."
+      }
     },
     {
       "id": 178,
@@ -421,7 +451,10 @@
       },
       "widgets_values": [
         "Restore this photo, taken using a Canon EOS R camera with a 50mm f/1.8 lens, f/2.2 aperture, shutter speed 1/200s, ISO 100 and natural light, Full Body, Hyper Realistic Photography, Cinematic, Cinema, Hyperdetail, Ultrahd, Color Correction, ultrahd, hdr, color grading, 8k"
-      ]
+      ],
+      "widgets_values_named": {
+        "value": "Restore this photo, taken using a Canon EOS R camera with a 50mm f/1.8 lens, f/2.2 aperture, shutter speed 1/200s, ISO 100 and natural light, Full Body, Hyper Realistic Photography, Cinematic, Cinema, Hyperdetail, Ultrahd, Color Correction, ultrahd, hdr, color grading, 8k"
+      }
     },
     {
       "id": 164,
@@ -456,6 +489,9 @@
       "widgets_values": [
         "Match the color of image 2, Change image 1 to match the style of image 3. \nRefine and add detail to this upscaled tile. Restore the image quality with photorealistic precision , high-resolution result and keep the composition, identity, pose, lighting, expression, clothing, and background exactly. \n\nRemove all JPEG artifacts, digital compression noise, and motion blur. \n\nEnhance with subtle high-resolution micro-detail while maintaining natural appearance and original lighting. \n\nPreserve the original composition, subject identity, and scene context exactly.\n\n Preserve existing natural facial structure and expression. Skin should look enhanced and natural, not plastic, with no dotted freckle field and no grid texture. Mantain only existing freckle dont add new freckle."
       ],
+      "widgets_values_named": {
+        "value": "Match the color of image 2, Change image 1 to match the style of image 3. \nRefine and add detail to this upscaled tile. Restore the image quality with photorealistic precision , high-resolution result and keep the composition, identity, pose, lighting, expression, clothing, and background exactly. \n\nRemove all JPEG artifacts, digital compression noise, and motion blur. \n\nEnhance with subtle high-resolution micro-detail while maintaining natural appearance and original lighting. \n\nPreserve the original composition, subject identity, and scene context exactly.\n\n Preserve existing natural facial structure and expression. Skin should look enhanced and natural, not plastic, with no dotted freckle field and no grid texture. Mantain only existing freckle dont add new freckle."
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -499,7 +535,13 @@
         0,
         1,
         1.5
-      ]
+      ],
+      "widgets_values_named": {
+        "strength": 0,
+        "start_percent": 0,
+        "end_percent": 1,
+        "ramp_curve": 1.5
+      }
     },
     {
       "id": 209,
@@ -543,6 +585,10 @@
         "ChatGPT Image Jun 13, 2026, 03_41_33 PM.png",
         "image"
       ],
+      "widgets_values_named": {
+        "image": "ChatGPT Image Jun 13, 2026, 03_41_33 PM.png",
+        "upload": "image"
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -585,6 +631,10 @@
         "FLUX2KLEIN\\42lux_hildegard-refiner.safetensors",
         1
       ],
+      "widgets_values_named": {
+        "lora_name": "FLUX2KLEIN\\42lux_hildegard-refiner.safetensors",
+        "strength_model": 1
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -609,6 +659,9 @@
       "widgets_values": [
         "07 - Tile Overrides And Per-Tile Model Choices\n\nTBG ETUR Tile Overrides is optional but powerful. It lets you tune individual tiles or segments without changing the standard presets from the Refiner.\n\nThe node accepts three model overrides and three ControlNet pipeline overrides. Each tile can switch to one of those model/CNet choices with the model selector or CNet selector.\n\nPrompt behavior is per tile: you can add text to the general refiner prompt, or ignore the general prompt and write an independent tile prompt. You can also override denoise, seed, CFG, and ControlNet strength per tile.\n\nGrid Tile entries come first. If segment masks are used, segments appear after/with the tiles and show their mask in red below the tile preview. Use this to give faces a skin/detail LoRA, or give difficult drifting tiles the consistency LoRA/model path for a stronger hold."
       ],
+      "widgets_values_named": {
+        "text": "07 - Tile Overrides And Per-Tile Model Choices\n\nTBG ETUR Tile Overrides is optional but powerful. It lets you tune individual tiles or segments without changing the standard presets from the Refiner.\n\nThe node accepts three model overrides and three ControlNet pipeline overrides. Each tile can switch to one of those model/CNet choices with the model selector or CNet selector.\n\nPrompt behavior is per tile: you can add text to the general refiner prompt, or ignore the general prompt and write an independent tile prompt. You can also override denoise, seed, CFG, and ControlNet strength per tile.\n\nGrid Tile entries come first. If segment masks are used, segments appear after/with the tiles and show their mask in red below the tile preview. Use this to give faces a skin/detail LoRA, or give difficult drifting tiles the consistency LoRA/model path for a stronger hold."
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -645,7 +698,12 @@
         "ComfyUI_temp_gpkbr_00001_.png",
         "red",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "ComfyUI_temp_gpkbr_00001_.png",
+        "channel": "red",
+        "upload": "image"
+      }
     },
     {
       "id": 321,
@@ -692,7 +750,12 @@
         "match size",
         "center",
         "area"
-      ]
+      ],
+      "widgets_values_named": {
+        "resize_type": "match size",
+        "resize_type.crop": "center",
+        "scale_method": "area"
+      }
     },
     {
       "id": 320,
@@ -715,6 +778,9 @@
       "widgets_values": [
         "The Hildegard LoRA must be loaded when using the Hildegard modes in the TBG ETUR ControlNet Pipeline. Hildegard teaches Flux 2 Klein how to read special reference latents for tile refinement.\n\nFlux2KleinRefLatentWeight nodes tune the three Hildegard references: the input tile, the tile plus surrounding context, and the full image. Lower freedom gives stronger resemblance; higher freedom allows more creative local rebuilding.\n\n"
       ],
+      "widgets_values_named": {
+        "text": "The Hildegard LoRA must be loaded when using the Hildegard modes in the TBG ETUR ControlNet Pipeline. Hildegard teaches Flux 2 Klein how to read special reference latents for tile refinement.\n\nFlux2KleinRefLatentWeight nodes tune the three Hildegard references: the input tile, the tile plus surrounding context, and the full image. Lower freedom gives stronger resemblance; higher freedom allows more creative local rebuilding.\n\n"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -763,7 +829,13 @@
         1.5,
         false,
         0.1
-      ]
+      ],
+      "widgets_values_named": {
+        "strength": 0.73,
+        "start_percent": 1.5,
+        "end_percent": false,
+        "ramp_curve": 0.1
+      }
     },
     {
       "id": 322,
@@ -786,6 +858,9 @@
       "widgets_values": [
         "TBG Model Agnostic Color Anchor fixes color/content direction across sampling. It differs from Latent Anchor because it is about visual color/structure stability, while Latent Anchor behaves like the Input Tile CFG Hook and pulls the denoising path back toward the input tile.\n\nStart and end values are important. For creative generations, do not hold anchors until the very last step. Let the model spend the final part of sampling without the hook so details can settle naturally instead of looking constrained."
       ],
+      "widgets_values_named": {
+        "text": "TBG Model Agnostic Color Anchor fixes color/content direction across sampling. It differs from Latent Anchor because it is about visual color/structure stability, while Latent Anchor behaves like the Input Tile CFG Hook and pulls the denoising path back toward the input tile.\n\nStart and end values are important. For creative generations, do not hold anchors until the very last step. Let the model spend the final part of sampling without the hook so details can settle naturally instead of looking constrained."
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -810,6 +885,9 @@
       "widgets_values": [
         "Latend, color Identity Transfer, Skin LoRA, or Consistency LoRA\n\nIdentity Feature Transfer Final is used as an additional consistency trigger for selected tile areas. It is helpful for tiles where normal tiled generation can slowly drift.\n\nThe skin/detail LoRA path can be used as a per-tile model overwrite: send face tiles through the BetterSkin trigger LoRA and include the trigger phrase skin with textured detail in the tile prompt when needed.\n\nThe consistency LoRA can be used for complicated drifting tiles where you want stronger source hold. Keep weights modest: too much consistency can make the result stiff or reduce creative detail. (try first all other option's)\n\nStart without them. First try a strong prompt with reference images. Sample the result to see the level of detail Flux can add, then introduce them step by step while keeping control. Make sure Flux continues adding detail, because if the influence becomes too strong it can “get stuck” and stop doing it.\n\n\nUse these as targeted tools, not always-on global fixes. The goal is to help important areas stay coherent while leaving normal texture tiles free to refine naturally.\n\nMore tips here: https://www.patreon.com/TB_LAAR/posts/case-studie-160872216\nand https://www.patreon.com/TB_LAAR/posts/testing-nvidia-159576148\n\nUse these as targeted tools, not always-on global fixes. The goal is to help important areas stay coherent while leaving normal texture tiles free to refine naturally."
       ],
+      "widgets_values_named": {
+        "text": "Latend, color Identity Transfer, Skin LoRA, or Consistency LoRA\n\nIdentity Feature Transfer Final is used as an additional consistency trigger for selected tile areas. It is helpful for tiles where normal tiled generation can slowly drift.\n\nThe skin/detail LoRA path can be used as a per-tile model overwrite: send face tiles through the BetterSkin trigger LoRA and include the trigger phrase skin with textured detail in the tile prompt when needed.\n\nThe consistency LoRA can be used for complicated drifting tiles where you want stronger source hold. Keep weights modest: too much consistency can make the result stiff or reduce creative detail. (try first all other option's)\n\nStart without them. First try a strong prompt with reference images. Sample the result to see the level of detail Flux can add, then introduce them step by step while keeping control. Make sure Flux continues adding detail, because if the influence becomes too strong it can “get stuck” and stop doing it.\n\n\nUse these as targeted tools, not always-on global fixes. The goal is to help important areas stay coherent while leaving normal texture tiles free to refine naturally.\n\nMore tips here: https://www.patreon.com/TB_LAAR/posts/case-studie-160872216\nand https://www.patreon.com/TB_LAAR/posts/testing-nvidia-159576148\n\nUse these as targeted tools, not always-on global fixes. The goal is to help important areas stay coherent while leaving normal texture tiles free to refine naturally."
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -851,7 +929,11 @@
       "widgets_values": [
         "FLUX2KLEIN\\Flux2-Klein-9B-consistency-V2.safetensors",
         0.05
-      ]
+      ],
+      "widgets_values_named": {
+        "lora_name": "FLUX2KLEIN\\Flux2-Klein-9B-consistency-V2.safetensors",
+        "strength_model": 0.05
+      }
     },
     {
       "id": 173,
@@ -892,7 +974,11 @@
       "widgets_values": [
         "FLUX2KLEIN\\BetterSkin_v2_TRIGGER$skin with textured detail$.safetensors",
         1
-      ]
+      ],
+      "widgets_values_named": {
+        "lora_name": "FLUX2KLEIN\\BetterSkin_v2_TRIGGER$skin with textured detail$.safetensors",
+        "strength_model": 1
+      }
     },
     {
       "id": 319,
@@ -915,6 +1001,9 @@
       "widgets_values": [
         "What This Workflow Is And Required Models\n\nThis workflow is a Flux 2 Klein ETUR upscaling and refinement setup. It loads an input image, optionally cleans destructive AI-source grit, splits the image into tiles and optional mask-defined segments, refines each tile with Flux 2 Klein, then fuses the result back into one high-resolution image.\n\nModel and file links found by searching Hugging Face:\n- Main model: FLUX/flux-2-klein-base-9b.safetensors -> https://huggingface.co/black-forest-labs/FLUX.2-klein-base-9B\n- Distilled Klein 9B alternative/info page -> https://huggingface.co/black-forest-labs/FLUX.2-klein-9B\n- Text encoder: qwen_3_8b_fp8mixed.safetensors -> https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-9b/blob/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors\n- VAE: flux2-vae.safetensors -> https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-9b/blob/main/split_files/vae/flux2-vae.safetensors\n- Consistency LoRA: Flux2-Klein-9B-consistency-V2.safetensors -> https://huggingface.co/dx8152/Flux2-Klein-9B-Consistency/blob/main/Flux2-Klein-9B-consistency-V2.safetensors\n- Hildegard node project -> https://github.com/42lux/ComfyUI-42lux-Hildegard-Refiner\n- Hildegard exact HF search -> https://huggingface.co/search/full-text?q=42lux_hildegard-refiner%20safetensors\n- 42lux HF profile currently shows no public models, so no verified HF page was found for 42lux_hildegard-refiner.safetensors: https://huggingface.co/42lux/models\n- BetterSkin_v2_TRIGGER$skin with textured detail$.safetensors: exact HF source not verified. Search link: https://huggingface.co/search/full-text?q=BetterSkin_v2_TRIGGER%20skin%20with%20textured%20detail\n\nInstall model files into the matching ComfyUI model folders used by your loaders, then reopen the workflow if ComfyUI shows missing model warnings."
       ],
+      "widgets_values_named": {
+        "text": "What This Workflow Is And Required Models\n\nThis workflow is a Flux 2 Klein ETUR upscaling and refinement setup. It loads an input image, optionally cleans destructive AI-source grit, splits the image into tiles and optional mask-defined segments, refines each tile with Flux 2 Klein, then fuses the result back into one high-resolution image.\n\nModel and file links found by searching Hugging Face:\n- Main model: FLUX/flux-2-klein-base-9b.safetensors -> https://huggingface.co/black-forest-labs/FLUX.2-klein-base-9B\n- Distilled Klein 9B alternative/info page -> https://huggingface.co/black-forest-labs/FLUX.2-klein-9B\n- Text encoder: qwen_3_8b_fp8mixed.safetensors -> https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-9b/blob/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors\n- VAE: flux2-vae.safetensors -> https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-9b/blob/main/split_files/vae/flux2-vae.safetensors\n- Consistency LoRA: Flux2-Klein-9B-consistency-V2.safetensors -> https://huggingface.co/dx8152/Flux2-Klein-9B-Consistency/blob/main/Flux2-Klein-9B-consistency-V2.safetensors\n- Hildegard node project -> https://github.com/42lux/ComfyUI-42lux-Hildegard-Refiner\n- Hildegard exact HF search -> https://huggingface.co/search/full-text?q=42lux_hildegard-refiner%20safetensors\n- 42lux HF profile currently shows no public models, so no verified HF page was found for 42lux_hildegard-refiner.safetensors: https://huggingface.co/42lux/models\n- BetterSkin_v2_TRIGGER$skin with textured detail$.safetensors: exact HF source not verified. Search link: https://huggingface.co/search/full-text?q=BetterSkin_v2_TRIGGER%20skin%20with%20textured%20detail\n\nInstall model files into the matching ComfyUI model folders used by your loaders, then reopen the workflow if ComfyUI shows missing model warnings."
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -987,6 +1076,15 @@
         "None",
         "Reference_Image"
       ],
+      "widgets_values_named": {
+        "strength": 1,
+        "start": 0,
+        "end": 1,
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 150,
+        "preprocessor": "None",
+        "controlnet_mode": "Reference_Image"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -1059,6 +1157,15 @@
         "None",
         "Reference_Image"
       ],
+      "widgets_values_named": {
+        "strength": 1,
+        "start": 0,
+        "end": 1,
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 150,
+        "preprocessor": "None",
+        "controlnet_mode": "Reference_Image"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -1082,6 +1189,9 @@
       "widgets_values": [
         "04 - ControlNet Pipeline Modes And Hooks\n\nTBG ETUR ControlNet Pipeline for Flux 2 can be used in three practical modes:\n\nReference Image mode adds the input image as a normal reference image. Repeating it can strengthen prompt following and source fidelity; three reference images are stronger than one.\n\n42lux Hildegard mode creates three automatic reference images for each tile: 1) the input tile, 2) the tile with surrounding context, and 3) the full image. This helps Flux 2 Klein understand local detail, nearby continuity, and global composition. \n\nHildegard + Hook creates the three Hildegard references and also activates an input-tile CFG hook. The hook steers the model during sampling so the tile stays structurally tied to the original. Activate it by selecting the Hildegard Ref.Img + CFG Hook mode and loading the Hildegard LoRA upstream. ( so you can inject the input tile with more strength and cnet control )\n\nInput Tile CFG Hook mode is the hook concept by itself: it pulls the tile toward the source while still allowing denoise/detail generation. TBG Model Agnostic Latent Anchor is the same type of idea in model-agnostic form.\n\n! 42lux Hildegard mode will not work if you add more ref images !\n\nThe node can be chained ( for non edit models you can it to add cnets or model_patch and depth canny etc... with it) "
       ],
+      "widgets_values_named": {
+        "text": "04 - ControlNet Pipeline Modes And Hooks\n\nTBG ETUR ControlNet Pipeline for Flux 2 can be used in three practical modes:\n\nReference Image mode adds the input image as a normal reference image. Repeating it can strengthen prompt following and source fidelity; three reference images are stronger than one.\n\n42lux Hildegard mode creates three automatic reference images for each tile: 1) the input tile, 2) the tile with surrounding context, and 3) the full image. This helps Flux 2 Klein understand local detail, nearby continuity, and global composition. \n\nHildegard + Hook creates the three Hildegard references and also activates an input-tile CFG hook. The hook steers the model during sampling so the tile stays structurally tied to the original. Activate it by selecting the Hildegard Ref.Img + CFG Hook mode and loading the Hildegard LoRA upstream. ( so you can inject the input tile with more strength and cnet control )\n\nInput Tile CFG Hook mode is the hook concept by itself: it pulls the tile toward the source while still allowing denoise/detail generation. TBG Model Agnostic Latent Anchor is the same type of idea in model-agnostic form.\n\n! 42lux Hildegard mode will not work if you add more ref images !\n\nThe node can be chained ( for non edit models you can it to add cnets or model_patch and depth canny etc... with it) "
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -1106,6 +1216,9 @@
       "widgets_values": [
         "TBG ETUR Upscaler and Tile Generator PRO is the first part of the ETUR three-node system: \nTiler -> Tile Overrides -> Refiner. \n\nIt can also be used as an independent tiled upscaler. Fastes way switch in TBG ETUR Labs Upscaler \"Only Upscale\" on so it will stop to generate tiles or promts\n\nIt chooses the upscale model/method, target tile size, overlap/context, segment handling, and tile prompt generation. Classical upscale models are fast and deterministic. Superresolution like SeedVR2 ... PiD/NVIDIA PiD 4x style VAE paths can upscale and synthesize detail, but need compatible models and much more VRAM.\n\nIt’s better to use PID in the REFINER stage rather than as an upscaler. PID will load all required models automatically, but you can still override the CLIP and VAE and Model for the tiler using the TBG ETUR Labs Upscaler node.\n\nTile prompt generation can describe each tile with a vision-language model. The prompt in this node is written for edit model Flux2 and QwenVL thinking behavior: short, literal descriptions of what is visible. \n\nEdit models usually need command-like prompts such as restore, remove blur, match color, preserve identity. But this should be part of the general promt of the Refiner node.\n\nFor local or online or local servers, use the Labs Upscaler node. It can point at an OpenAI-compatible endpoint such as Ollama, llama.cpp server, or another local API. Set the base URL, model name, and mode there this will be way faster than using the comftyui models.\n\nFusion modes: Soft Merge is closer to a USDU-style tile blend. NGTF (Neuro Generative Tile Fusion) is a stronger learned/finetuned fusion technique for seamless creative refinements and needs at least a free API key. \n\nReference margin is usfull to give the model more content but will be cut out later. 32\n\nFusion blur controls transition softness for the AI generated fusion area. 64-128\n\nStrength controls how much fusion generation. 0.95 \n\nFeather mask values are critical for Soft Merge, as they define the pyramidal Laplacian blending region where the tiles overlap. So 64-126 on soft merge and way lower in NGTF 0 to 16\n\nSoft Merge uses only a feather mask and the Magnific reference; all other settings belong to NGTF.\n\nVLM Process Selected Tile Only” means that if you don’t want to regenerate all prompts, but only need a new prompt for one or two tiles, you can simply enable this option and apply it just to those selected tiles.\n\nUse Optimize upscale factor to match full tile sizes to avoid excessively large tile overlaps.\n\nPreset if you dont need tiles set it to Full iamge\n\nFragmentation is a multiplyer for tile size so 0.5 is 50% tile-size 2 is 200% tile-size.\n\n\nSet your API keys not in the Node - it will be copyed into the workflow and iamges. Use a enviroment variable for it and leave the field empty."
       ],
+      "widgets_values_named": {
+        "text": "TBG ETUR Upscaler and Tile Generator PRO is the first part of the ETUR three-node system: \nTiler -> Tile Overrides -> Refiner. \n\nIt can also be used as an independent tiled upscaler. Fastes way switch in TBG ETUR Labs Upscaler \"Only Upscale\" on so it will stop to generate tiles or promts\n\nIt chooses the upscale model/method, target tile size, overlap/context, segment handling, and tile prompt generation. Classical upscale models are fast and deterministic. Superresolution like SeedVR2 ... PiD/NVIDIA PiD 4x style VAE paths can upscale and synthesize detail, but need compatible models and much more VRAM.\n\nIt’s better to use PID in the REFINER stage rather than as an upscaler. PID will load all required models automatically, but you can still override the CLIP and VAE and Model for the tiler using the TBG ETUR Labs Upscaler node.\n\nTile prompt generation can describe each tile with a vision-language model. The prompt in this node is written for edit model Flux2 and QwenVL thinking behavior: short, literal descriptions of what is visible. \n\nEdit models usually need command-like prompts such as restore, remove blur, match color, preserve identity. But this should be part of the general promt of the Refiner node.\n\nFor local or online or local servers, use the Labs Upscaler node. It can point at an OpenAI-compatible endpoint such as Ollama, llama.cpp server, or another local API. Set the base URL, model name, and mode there this will be way faster than using the comftyui models.\n\nFusion modes: Soft Merge is closer to a USDU-style tile blend. NGTF (Neuro Generative Tile Fusion) is a stronger learned/finetuned fusion technique for seamless creative refinements and needs at least a free API key. \n\nReference margin is usfull to give the model more content but will be cut out later. 32\n\nFusion blur controls transition softness for the AI generated fusion area. 64-128\n\nStrength controls how much fusion generation. 0.95 \n\nFeather mask values are critical for Soft Merge, as they define the pyramidal Laplacian blending region where the tiles overlap. So 64-126 on soft merge and way lower in NGTF 0 to 16\n\nSoft Merge uses only a feather mask and the Magnific reference; all other settings belong to NGTF.\n\nVLM Process Selected Tile Only” means that if you don’t want to regenerate all prompts, but only need a new prompt for one or two tiles, you can simply enable this option and apply it just to those selected tiles.\n\nUse Optimize upscale factor to match full tile sizes to avoid excessively large tile overlaps.\n\nPreset if you dont need tiles set it to Full iamge\n\nFragmentation is a multiplyer for tile size so 0.5 is 50% tile-size 2 is 200% tile-size.\n\n\nSet your API keys not in the Node - it will be copyed into the workflow and iamges. Use a enviroment variable for it and leave the field empty."
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -1157,7 +1270,12 @@
         0.63,
         128,
         "AI luma guard"
-      ]
+      ],
+      "widgets_values_named": {
+        "high_freq_reduce": 0.63,
+        "low_freq_radius": 128,
+        "Generate_Difference_Image": "AI luma guard"
+      }
     },
     {
       "id": 204,
@@ -1191,8 +1309,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.24.0",
         "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 326,
@@ -1215,6 +1332,9 @@
       "widgets_values": [
         "Load Image is the original source image. The same image feeds the tiler and the cleanup branch.\n\nAI Source Pattern Cleanup removes destructive grit patterns often found in AI-generated or reprocessed images. It is useful for OpenAI-generated image artifacts, hidden grids, checker texture, or repeated high-frequency luma noise. Good starting values are around 0.5 strength and 128 radius/scale. Too much cleanup can soften real texture.\n\nLoad Image (as Mask) creates user-directed special tile areas. Every marked area over the input image becomes a separate segment tile. Use this for faces, hands, logos, fabric patches, or any important element that normal square tiles might cut in half. Segment tiles keep one face or object as one structure, which prevents texture or identity differences between neighboring normal tiles. ( pluged into the refiner )"
       ],
+      "widgets_values_named": {
+        "text": "Load Image is the original source image. The same image feeds the tiler and the cleanup branch.\n\nAI Source Pattern Cleanup removes destructive grit patterns often found in AI-generated or reprocessed images. It is useful for OpenAI-generated image artifacts, hidden grids, checker texture, or repeated high-frequency luma noise. Good starting values are around 0.5 strength and 128 radius/scale. Too much cleanup can soften real texture.\n\nLoad Image (as Mask) creates user-directed special tile areas. Every marked area over the input image becomes a separate segment tile. Use this for faces, hands, logos, fabric patches, or any important element that normal square tiles might cut in half. Segment tiles keep one face or object as one structure, which prevents texture or identity differences between neighboring normal tiles. ( pluged into the refiner )"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -1301,6 +1421,29 @@
         "",
         ""
       ],
+      "widgets_values_named": {
+        "presets": "NONE",
+        "Fragmentation": 1,
+        "tile_size_w": 1024,
+        "tile_size_h": 1024,
+        "upscale_model": "FAST/_lanczos",
+        "upscale_by": 2,
+        "Optimize_Upscale_Factor_For_Tile_Use": true,
+        "VLM_Model": "NONE",
+        "VLM_Quantization": "None (FP16)",
+        "VLM_Prompt": "You are an image description model. Your task is to describe the image in a very short and simple sentence.\n\nRules:\n\n* Always start your response with: \"the image shows\"\n\n* Keep the description short and minimal.\n\n* Describe only the most important visible elements.\n\n* If multiple objects exist, briefly mention their position (left, right, center, background).\n\n* Do not add explanations, opinions, or extra details.\n\n* Use plain language.\n\nExamples:\n\n* the image shows a arm\n\n* the image shows a face\n\n* the image shows the left hand and a cup on the right\n\n* the image shows two fingers on the left and a cup on the right with a jungle in the background\n\nNow describe the image following these rules.",
+        "VLM_Process_Selected_Tiles_Only": true,
+        "VLM_Selected_Tiles_Index_Numbers": "10",
+        "VLM_seed": 0,
+        "control_after_generate": "fixed",
+        "Fusion Mode": "Neuro_Generative_Tile_Fusion",
+        "Fusion Reference Margin": 32,
+        "Fusion Margin": 128,
+        "Fusion Strength": 0.95,
+        "Feather Mask": 16,
+        "PRO_api_token": "",
+        "TBG Web Panel": ""
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -1481,6 +1624,16 @@
         "unchanged",
         false
       ],
+      "widgets_values_named": {
+        "Rebuild_only_modified_tiles": true,
+        "requeue": 342,
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -1517,7 +1670,12 @@
         "qwen_3_8b_fp8mixed.safetensors",
         "flux2",
         "default"
-      ]
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen_3_8b_fp8mixed.safetensors",
+        "type": "flux2",
+        "device": "default"
+      }
     },
     {
       "id": 70,
@@ -1552,7 +1710,10 @@
       },
       "widgets_values": [
         "flux2-vae.safetensors"
-      ]
+      ],
+      "widgets_values_named": {
+        "vae_name": "flux2-vae.safetensors"
+      }
     },
     {
       "id": 248,
@@ -1611,7 +1772,24 @@
         "0-999",
         false,
         false
-      ]
+      ],
+      "widgets_values_named": {
+        "enabled": false,
+        "rf_mode": "rf_gamma",
+        "gamma": 0.5,
+        "pmi_alpha": 0,
+        "otip_strength": 0,
+        "otip_clip_norm": 20,
+        "beta": 2.5,
+        "high_scale_start": 1,
+        "high_scale_end": 0,
+        "low_scale_start": 1,
+        "low_scale_end": 1.4,
+        "adain_strength": 0.5,
+        "blocks": "0-999",
+        "rf_verbose": false,
+        "untwisting_verbose": false
+      }
     },
     {
       "id": 323,
@@ -1634,6 +1812,9 @@
       "widgets_values": [
         "0RF UntwistingRoPE Pipe - you need to install https://github.com/BigStationW/ComfyUi-Untwisting-RoPE\n\nTBG ETUR RF UntwistingRoPE Pipe is a model patch/control pipe for Flux/Flux 2 RoPE behavior. In simple terms its a style transfer node like redux or ip adapter.\n\nFor Flux 2 Klein, double blocks and single blocks are arranged differently than Flux 1. This workflow keeps the block range broad (0-999) so the patch can cover all relevant blocks. Use the enabled toggle to activate it, and feed the pipe into the Refiner PRO node.\n\nThe untwisting RoPE paper suggests patching only the single blocks on flux 1.\n\nFor flux 2 (e.g Klein 9b), the blocks are:\n- Double blocks: 0-7\n- Single blocks: 8-31\n\nPersonally, I find that it works best when all the blocks are enabled, therefore the default values range is 0-999\n\nBest quality/smoothness: flowturbo_pc\nBest speed/quality balance: rf_gamma_rk2\nFastest acceptable: rf_gamma\nrf_verbose: false\nuntwisting_verbose: false\n\n"
       ],
+      "widgets_values_named": {
+        "text": "0RF UntwistingRoPE Pipe - you need to install https://github.com/BigStationW/ComfyUi-Untwisting-RoPE\n\nTBG ETUR RF UntwistingRoPE Pipe is a model patch/control pipe for Flux/Flux 2 RoPE behavior. In simple terms its a style transfer node like redux or ip adapter.\n\nFor Flux 2 Klein, double blocks and single blocks are arranged differently than Flux 1. This workflow keeps the block range broad (0-999) so the patch can cover all relevant blocks. Use the enabled toggle to activate it, and feed the pipe into the Refiner PRO node.\n\nThe untwisting RoPE paper suggests patching only the single blocks on flux 1.\n\nFor flux 2 (e.g Klein 9b), the blocks are:\n- Double blocks: 0-7\n- Single blocks: 8-31\n\nPersonally, I find that it works best when all the blocks are enabled, therefore the default values range is 0-999\n\nBest quality/smoothness: flowturbo_pc\nBest speed/quality balance: rf_gamma_rk2\nFastest acceptable: rf_gamma\nrf_verbose: false\nuntwisting_verbose: false\n\n"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -1672,6 +1853,9 @@
       "widgets_values": [
         "RFNTILE. Match the color of image 1, Change the image to match the style of image 1. Transform the Image so that it matches Image 1 exactly in composition, structure, geometry, perspective, object placement, proportions, pose, alignment, scale, camera position, and spatial relationships.\n\nRefine and add detail to this upscaled tile. Restore the image quality and resolve it to a sharp, high-resolution result. Remove compression artifacts, banding, and noise, and clarify soft or blurred areas into crisp, clean edges and definition. Enrich existing textures and surfaces with fine, intricate, physically accurate detail, matching the existing grain, focus, and material properties of each surface. Keep in-focus areas crisp and sharp, keep softly blurred areas soft, and leave flat or evenly-toned areas clean and smooth. Recover detail only where detail is already present, and add no new objects, elements, or content — refine only what is already in the tile. Preserve the original lighting, colour, contrast, and composition exactly as shown. Produce a clean, photorealistic result faithful to the source."
       ],
+      "widgets_values_named": {
+        "value": "RFNTILE. Match the color of image 1, Change the image to match the style of image 1. Transform the Image so that it matches Image 1 exactly in composition, structure, geometry, perspective, object placement, proportions, pose, alignment, scale, camera position, and spatial relationships.\n\nRefine and add detail to this upscaled tile. Restore the image quality and resolve it to a sharp, high-resolution result. Remove compression artifacts, banding, and noise, and clarify soft or blurred areas into crisp, clean edges and definition. Enrich existing textures and surfaces with fine, intricate, physically accurate detail, matching the existing grain, focus, and material properties of each surface. Keep in-focus areas crisp and sharp, keep softly blurred areas soft, and leave flat or evenly-toned areas clean and smooth. Recover detail only where detail is already present, and add no new objects, elements, or content — refine only what is already in the tile. Preserve the original lighting, colour, contrast, and composition exactly as shown. Produce a clean, photorealistic result faithful to the source."
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -1708,6 +1892,9 @@
       "widgets_values": [
         "freckles, added freckles, new freckles"
       ],
+      "widgets_values_named": {
+        "value": "freckles, added freckles, new freckles"
+      },
       "color": "#322",
       "bgcolor": "#533"
     },
@@ -1743,7 +1930,10 @@
       },
       "widgets_values": [
         "`TBG non-structural` is the simple/general correction.\n\nIt compares the generated image/tile to the reference, then adjusts RGB and luma without trying to understand tile borders, masks, restore areas, or neighbors. It has  has a soft low-frequency `16x16` grid correction, so different regions can shift slightly differently. But it is still “global image correction”.\n\n`TBG non-structural tile-aware` is the special ETUR seam/segment correction.\n\nIt only activates for eligible API/member runs in `Neuro Generative Tile Fusion`. If not eligible, it falls back to `TBG non-structural`. It uses the actual tiling context: inpaint masks, protected/fusion borders, PiD restore masks, segment masks, and the fused pre-sampler tile/neighbor authority. Its goal is not just “make the whole tile look like the reference,” but “make this decoded tile or segment fit into the exact place where it will be stitched.”\n\nMain practical difference:\n\n- `TBG non-structural`\n  - available broadly\n  - standalone node uses this\n  - global RGB/luma + smooth `16x16` grid\n  - no mask/border/neighbor awareness\n  - safer and simpler\n  - good for general color drift\n\n- `TBG non-structural tile-aware`\n  - only inside ETUR refiner, not standalone\n  - only for NGTF + valid API/member access\n  - uses masks and tile/segment placement context\n  - corrects borders/restore footprints so copied or composited areas match\n  - also corrects inner areas with spatial/grid correction\n  - designed for PiD/VAE drift, segment seams, and neighbor-fusion color mismatch\n\nSo: use `TBG non-structural` as the normal color match. Use `TBG non-structural tile-aware` when unsin Flux2 or edit model and the problem is tile seams, segment borders, PiD edges, or neighbor overlap colors not matching."
-      ]
+      ],
+      "widgets_values_named": {
+        "value": "`TBG non-structural` is the simple/general correction.\n\nIt compares the generated image/tile to the reference, then adjusts RGB and luma without trying to understand tile borders, masks, restore areas, or neighbors. It has  has a soft low-frequency `16x16` grid correction, so different regions can shift slightly differently. But it is still “global image correction”.\n\n`TBG non-structural tile-aware` is the special ETUR seam/segment correction.\n\nIt only activates for eligible API/member runs in `Neuro Generative Tile Fusion`. If not eligible, it falls back to `TBG non-structural`. It uses the actual tiling context: inpaint masks, protected/fusion borders, PiD restore masks, segment masks, and the fused pre-sampler tile/neighbor authority. Its goal is not just “make the whole tile look like the reference,” but “make this decoded tile or segment fit into the exact place where it will be stitched.”\n\nMain practical difference:\n\n- `TBG non-structural`\n  - available broadly\n  - standalone node uses this\n  - global RGB/luma + smooth `16x16` grid\n  - no mask/border/neighbor awareness\n  - safer and simpler\n  - good for general color drift\n\n- `TBG non-structural tile-aware`\n  - only inside ETUR refiner, not standalone\n  - only for NGTF + valid API/member access\n  - uses masks and tile/segment placement context\n  - corrects borders/restore footprints so copied or composited areas match\n  - also corrects inner areas with spatial/grid correction\n  - designed for PiD/VAE drift, segment seams, and neighbor-fusion color mismatch\n\nSo: use `TBG non-structural` as the normal color match. Use `TBG non-structural tile-aware` when unsin Flux2 or edit model and the problem is tile seams, segment borders, PiD edges, or neighbor overlap colors not matching."
+      }
     },
     {
       "id": 295,
@@ -1778,6 +1968,9 @@
       "widgets_values": [
         "The SIFT drift protection works similarly to PixelDriftFix, but it is object-aware, so it does not introduce a grid pattern. Instead, it detects local geometry differences and shifts drifting details back toward the reference tile. This helps small linear elements, like necklaces, straps, edges, and fine contours, stay in the correct position.\n\nOff\ndisables geometry correction.\n\nx1\nuses classic SIFT alignment only. Fastest, but if SIFT fails it does nothing.\n\nx2 (x1 if fails x2...)\nuses expanded SIFT alignment with highpass, border, AKAZE, and RootSIFT attempts, plus a lightweight phase-translation fallback. Best default.\n\nx3 (x1 if fails x2 if fails x3 ...)\nuses the x2 chain, then tries reverse RGB optical-flow alignment if SIFT cannot find a safe correction. Slower, better for difficult local shifts.\n\nx4 (x1 if fails x2 if fails x3  if fails x4 ...)\nuses the strongest fallback chain, including the slower high-quality DeepFlow option when available. Slowest, best for hard cases."
       ],
+      "widgets_values_named": {
+        "value": "The SIFT drift protection works similarly to PixelDriftFix, but it is object-aware, so it does not introduce a grid pattern. Instead, it detects local geometry differences and shifts drifting details back toward the reference tile. This helps small linear elements, like necklaces, straps, edges, and fine contours, stay in the correct position.\n\nOff\ndisables geometry correction.\n\nx1\nuses classic SIFT alignment only. Fastest, but if SIFT fails it does nothing.\n\nx2 (x1 if fails x2...)\nuses expanded SIFT alignment with highpass, border, AKAZE, and RootSIFT attempts, plus a lightweight phase-translation fallback. Best default.\n\nx3 (x1 if fails x2 if fails x3 ...)\nuses the x2 chain, then tries reverse RGB optical-flow alignment if SIFT cannot find a safe correction. Slower, better for difficult local shifts.\n\nx4 (x1 if fails x2 if fails x3  if fails x4 ...)\nuses the strongest fallback chain, including the slower high-quality DeepFlow option when available. Slowest, best for hard cases."
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -1802,6 +1995,9 @@
       "widgets_values": [
         "Refiner PRO Main Tutorial\n\nModel-TYPE\n\nTBG ETUR Refiner PRO is the main generation node. The most important setting is Model Type. This node is model agnostic, so some controls only work for some model families. \nRedux is for Flux 1 family only. RF Untwisting is for compatible Flux/Flux 2 style models and must be fed by the RF pipe.\n\nVAE DECODE\nVAE Encoder/Decoder modes: Tiled Slow (Normal VAE) is the safest option, prioritizing stability and accuracy, but it runs slower. The Optimized/Faster VAE modes improve speed by trading off some precision, while still being tuned to preserve stable colors and deep blacks.\n\nThe NVIDIA PiD 4x VAE modes are designed specifically for compatible PiD-capable model families, such as Flux 2 and Z-Image–style setups. This PiD 4x path performs 4× upscaling and enhanced detail reconstruction, making it significantly more computationally expensive than standard decoding.\n\nFor normal usage, the fine-tuned and tested **Flux 1 and Flux 2 families** are fully supported and expected to perform reliably and consistently with these modes.\n\nDenoise methods\n\nDefault treats denoise like a step percentage. Normalized advanced treats denoise as a real sigma start value. The benefit is that sampler/scheduler changes drift less because all curves start from the chosen sigma. It’s easier to achieve the same effect across all sampler and scheduler settings.\n\nDenoise mask\n\nDenoise mask is a grayscale image at the same size as the full untiled input iamge. Each pixel becomes its own denoise multiplier, multiplied by the global denoise value. This means the run has one denoise value per pixel, not just one denoise value for the whole image. \n\nPer-pixel denoise\n\nis controling the strength of the Denoise mask\n\nImage Stabilizer \n\nImage Stabilizer automatically generates a complexity mask to protect uniform regions—such as skies or flat backgrounds—from tile-to-tile shifting artifacts.\nIn many cases, it’s a highly effective tool for achieving more consistent outputs. While it isn’t a ControlNet, its impact during upscaling can feel similar in practice.\nIt’s strongly recommended when working with large areas of sky or solid studio backdrops, as it helps prevent color bleeding and seams across tile boundaries.\n\n\nSmoother, Sharper, and Detail Enhancer \n\nare model injections controls ( not postporcessing) . Smoother reduces harsh micro-noise and transitions. Sharper restores edge clarity. Detail Enhancer boosts small material detail, but too high can create artefacts.\n\nRedux strength \n\ncontrols the redux strengt applies only when Redux models are used for Flux1 model family.\n\nControlNet strengt\n\nOverall ControlNet strength applies a multiplier to normal ControlNetsplugt into the Controlnet pipe, it is not applied to reference images or hooks.\n\nColor match\n\nIt’s a multi-step color correction setting, and you can choose the method you prefer. We recommend our new FLUX 2 color drift–optimized TBG Detail Preserving Tile Stabilizer methods , its align colors across tiles while preserving newly generated details. An additional tip node is available to support this process.\n\nBe careful with wavelet adaptive or LAB detail preservation on creative upscales where the new image is not the same as the original; those methods can create strong ghost effects.\n\nGeometric Drift Correction \n\nThis was originally only needed for edit models like Flux 2, but it served as a solid starting point for a study where inspiert from the PixelDriftFix node based on SIFT we improving feature detection toward more precise and consistent behavior.\n\nOn a single image, a failure isn’t a major issue, but across tiled processing it becomes much more noticeable and harmful. This node therefore uses four different correction methods, each progressively more GPU-expensive than the last. It starts with the simplest approach and, if that fails, moves through the next stages until a valid match is found to correct tile position and drift, while keeping structural changes as soft and non-destructive as possible. An additional tip node is available to support this process.\n\n\nFast Preview / Process selected tiles only \n\ntests settings on one tile, useful for finding seed/denoise without calculating everything. Process selected tiles only lets you test 2-3 tiles or redo a segment after a full run and it should fit in again into the full iamge. Enter selected tile indexes separated by commas. \n\nVRAM modes control memory strategy. Faster modes keep more in memory. Safer modes unload/cache more aggressively for lower VRAM systems.\n\n\nALL about the new nodes and feacher : https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433"
       ],
+      "widgets_values_named": {
+        "text": "Refiner PRO Main Tutorial\n\nModel-TYPE\n\nTBG ETUR Refiner PRO is the main generation node. The most important setting is Model Type. This node is model agnostic, so some controls only work for some model families. \nRedux is for Flux 1 family only. RF Untwisting is for compatible Flux/Flux 2 style models and must be fed by the RF pipe.\n\nVAE DECODE\nVAE Encoder/Decoder modes: Tiled Slow (Normal VAE) is the safest option, prioritizing stability and accuracy, but it runs slower. The Optimized/Faster VAE modes improve speed by trading off some precision, while still being tuned to preserve stable colors and deep blacks.\n\nThe NVIDIA PiD 4x VAE modes are designed specifically for compatible PiD-capable model families, such as Flux 2 and Z-Image–style setups. This PiD 4x path performs 4× upscaling and enhanced detail reconstruction, making it significantly more computationally expensive than standard decoding.\n\nFor normal usage, the fine-tuned and tested **Flux 1 and Flux 2 families** are fully supported and expected to perform reliably and consistently with these modes.\n\nDenoise methods\n\nDefault treats denoise like a step percentage. Normalized advanced treats denoise as a real sigma start value. The benefit is that sampler/scheduler changes drift less because all curves start from the chosen sigma. It’s easier to achieve the same effect across all sampler and scheduler settings.\n\nDenoise mask\n\nDenoise mask is a grayscale image at the same size as the full untiled input iamge. Each pixel becomes its own denoise multiplier, multiplied by the global denoise value. This means the run has one denoise value per pixel, not just one denoise value for the whole image. \n\nPer-pixel denoise\n\nis controling the strength of the Denoise mask\n\nImage Stabilizer \n\nImage Stabilizer automatically generates a complexity mask to protect uniform regions—such as skies or flat backgrounds—from tile-to-tile shifting artifacts.\nIn many cases, it’s a highly effective tool for achieving more consistent outputs. While it isn’t a ControlNet, its impact during upscaling can feel similar in practice.\nIt’s strongly recommended when working with large areas of sky or solid studio backdrops, as it helps prevent color bleeding and seams across tile boundaries.\n\n\nSmoother, Sharper, and Detail Enhancer \n\nare model injections controls ( not postporcessing) . Smoother reduces harsh micro-noise and transitions. Sharper restores edge clarity. Detail Enhancer boosts small material detail, but too high can create artefacts.\n\nRedux strength \n\ncontrols the redux strengt applies only when Redux models are used for Flux1 model family.\n\nControlNet strengt\n\nOverall ControlNet strength applies a multiplier to normal ControlNetsplugt into the Controlnet pipe, it is not applied to reference images or hooks.\n\nColor match\n\nIt’s a multi-step color correction setting, and you can choose the method you prefer. We recommend our new FLUX 2 color drift–optimized TBG Detail Preserving Tile Stabilizer methods , its align colors across tiles while preserving newly generated details. An additional tip node is available to support this process.\n\nBe careful with wavelet adaptive or LAB detail preservation on creative upscales where the new image is not the same as the original; those methods can create strong ghost effects.\n\nGeometric Drift Correction \n\nThis was originally only needed for edit models like Flux 2, but it served as a solid starting point for a study where inspiert from the PixelDriftFix node based on SIFT we improving feature detection toward more precise and consistent behavior.\n\nOn a single image, a failure isn’t a major issue, but across tiled processing it becomes much more noticeable and harmful. This node therefore uses four different correction methods, each progressively more GPU-expensive than the last. It starts with the simplest approach and, if that fails, moves through the next stages until a valid match is found to correct tile position and drift, while keeping structural changes as soft and non-destructive as possible. An additional tip node is available to support this process.\n\n\nFast Preview / Process selected tiles only \n\ntests settings on one tile, useful for finding seed/denoise without calculating everything. Process selected tiles only lets you test 2-3 tiles or redo a segment after a full run and it should fit in again into the full iamge. Enter selected tile indexes separated by commas. \n\nVRAM modes control memory strategy. Faster modes keep more in memory. Safer modes unload/cache more aggressively for lower VRAM systems.\n\n\nALL about the new nodes and feacher : https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -1826,6 +2022,9 @@
       "widgets_values": [
         "\nTBG ETUR Labs for Refiner is the laboratory for older, experimental, discarded, or test features and Overwrites.\n\nPrese settings are the best, and its a lab node for us to switch things on and off just keep it as it comes.\nThe only thing four you to use is \"Sampler overwrite\" than you can plufin a clown sampler for res2s. Sigma for custom sigmas.  Or if we dont have the right PiD mode you can load yor own.\n\n\nSampler overwrite \nlets you inject a sampler from another node instead of the normal refiner sampler. \n\ncropped positive/negative \nconditioning inputs are experimental tools for conditioning the cropped tile area directly. \n\nFusion end \ncan stop the fusion process early. The slider defines the step at which fusion stops, allowing the later steps more freedom. So with 10 steps, setting it to -1 stops at step 9 and gives the sampler full freedom to generate some chaos on the seam 😉\n\nFlux 2 sampler hook helps prevent Flux 2 from getting stuck when using inpainting features or differential diffusion. Now its off becouse we found a better way.\n\nColor Structure Stabilizer \n\nIt adds a grid of points where color and content are fixed, helping large image-model upscales keep their structure and color. Never fully add to the Refiner becouse the Image stabilizer is so much better....\n\nMax update size for segments \nSegments are upscaled by up to 1.5x or until there reach the normal tile size - this is wher you can override it.\nSet it to a size your VRAM and model can support.\n\nSegment background harmonization \ntries to make segment results match the surrounding tile/background after segment refinement. Testing done is always on , we could remove the switch.\n\nAll about the new nodes and feacher : https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433"
       ],
+      "widgets_values_named": {
+        "text": "\nTBG ETUR Labs for Refiner is the laboratory for older, experimental, discarded, or test features and Overwrites.\n\nPrese settings are the best, and its a lab node for us to switch things on and off just keep it as it comes.\nThe only thing four you to use is \"Sampler overwrite\" than you can plufin a clown sampler for res2s. Sigma for custom sigmas.  Or if we dont have the right PiD mode you can load yor own.\n\n\nSampler overwrite \nlets you inject a sampler from another node instead of the normal refiner sampler. \n\ncropped positive/negative \nconditioning inputs are experimental tools for conditioning the cropped tile area directly. \n\nFusion end \ncan stop the fusion process early. The slider defines the step at which fusion stops, allowing the later steps more freedom. So with 10 steps, setting it to -1 stops at step 9 and gives the sampler full freedom to generate some chaos on the seam 😉\n\nFlux 2 sampler hook helps prevent Flux 2 from getting stuck when using inpainting features or differential diffusion. Now its off becouse we found a better way.\n\nColor Structure Stabilizer \n\nIt adds a grid of points where color and content are fixed, helping large image-model upscales keep their structure and color. Never fully add to the Refiner becouse the Image stabilizer is so much better....\n\nMax update size for segments \nSegments are upscaled by up to 1.5x or until there reach the normal tile size - this is wher you can override it.\nSet it to a size your VRAM and model can support.\n\nSegment background harmonization \ntries to make segment results match the surrounding tile/background after segment refinement. Testing done is always on , we could remove the switch.\n\nAll about the new nodes and feacher : https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -1868,7 +2067,11 @@
       "widgets_values": [
         0,
         0.9
-      ]
+      ],
+      "widgets_values_named": {
+        "reference_index": 0,
+        "weight": 0.9
+      }
     },
     {
       "id": 310,
@@ -1909,7 +2112,11 @@
       "widgets_values": [
         1,
         0.9
-      ]
+      ],
+      "widgets_values_named": {
+        "reference_index": 1,
+        "weight": 0.9
+      }
     },
     {
       "id": 311,
@@ -1950,7 +2157,11 @@
       "widgets_values": [
         2,
         0.9
-      ]
+      ],
+      "widgets_values_named": {
+        "reference_index": 2,
+        "weight": 0.9
+      }
     },
     {
       "id": 180,
@@ -1985,7 +2196,7 @@
           "name": "sampler",
           "type": "SAMPLER",
           "links": [
-            454
+            466
           ]
         }
       ],
@@ -2000,7 +2211,14 @@
         217027348535275,
         "fixed",
         true
-      ]
+      ],
+      "widgets_values_named": {
+        "eta": 0.1,
+        "sampler_name": "multistep/res_2m",
+        "seed": 217027348535275,
+        "control_after_generate": "fixed",
+        "bongmath": true
+      }
     },
     {
       "id": 111,
@@ -2072,6 +2290,15 @@
         "None",
         "42lux-Hildegard Ref.Img + CFG Hook"
       ],
+      "widgets_values_named": {
+        "strength": 0.3,
+        "start": 0,
+        "end": 0.5,
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 150,
+        "preprocessor": "None",
+        "controlnet_mode": "42lux-Hildegard Ref.Img + CFG Hook"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -2149,100 +2376,19 @@
         0.1,
         0,
         0
-      ]
-    },
-    {
-      "id": 330,
-      "type": "TBG ETUR Labs for Refiner",
-      "pos": [
-        4000,
-        2050
       ],
-      "size": [
-        500,
-        466
-      ],
-      "flags": {},
-      "order": 38,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "PID Diffusion Model",
-          "name": "PID_Model",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "ColorMatch Debug Gates",
-          "name": "ColorMatch_Debug",
-          "shape": 7,
-          "type": "tbg_colormatch_debug",
-          "link": null
-        },
-        {
-          "label": "Sigmas with denoise 1",
-          "name": "Custom_Sigmas_!DENOISE=1",
-          "shape": 7,
-          "type": "SIGMAS",
-          "link": null
-        },
-        {
-          "label": "Overwrites the Sampler Name field",
-          "name": "Sampler",
-          "shape": 7,
-          "type": "SAMPLER",
-          "link": 454
-        },
-        {
-          "label": "Ideogram4 Guider",
-          "name": "Ideogram4_Guider",
-          "shape": 7,
-          "type": "GUIDER",
-          "link": null
-        },
-        {
-          "name": "cropped_positive",
-          "shape": 7,
-          "type": "CONDITIONING",
-          "link": null
-        },
-        {
-          "name": "cropped_negative",
-          "shape": 7,
-          "type": "CONDITIONING",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output_1",
-          "type": "labs_refiner",
-          "links": [
-            462
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
-        "Node name for S&R": "TBG ETUR Labs for Refiner"
-      },
-      "widgets_values": [
-        1,
-        0,
-        "Inpainting On with Noise Mask and Conditioning",
-        true,
-        true,
-        false,
-        0,
-        false,
-        "gpupyramid",
-        true,
-        "Inner Tile + Global Embedding",
-        2048,
-        true
-      ]
+      "widgets_values_named": {
+        "TBG_APP_ShutDown": "Close with Comfyui",
+        "Dev_Debug_Mode": "dev debug on",
+        "Tiler_Upscale_Cache": true,
+        "Only_Upscale": false,
+        "VLM_Server_Base_URL": "http://127.0.0.1:8080/v1",
+        "VLM_Server_Model": "",
+        "PID_VAE_Compatible_Model": "FLUX1",
+        "PID_degrade_sigma": 0.1,
+        "PRO_Tile_Fusion_shift_in_out": 0,
+        "PRO_Tile_Fusion_shift_top_left": 0
+      }
     },
     {
       "id": 332,
@@ -2329,7 +2475,7 @@
           "name": "labs_refiner",
           "shape": 7,
           "type": "labs_refiner",
-          "link": 462
+          "link": 467
         },
         {
           "name": "General_Prompt_Positive",
@@ -2417,6 +2563,36 @@
         "Low VRAM Cache (Unload Models)",
         ""
       ],
+      "widgets_values_named": {
+        "model_type": "FLUX2",
+        "cfg": 1,
+        "steps": 8,
+        "seed": 4,
+        "control_after_generate": "fixed",
+        "Flux_Guidance": 3.5,
+        "sampler_name": "euler",
+        "basic_scheduler": "simple",
+        "vae_encode": "tiled slow",
+        "tile_size_vae": 1024,
+        "General_Prompt_Positive": "",
+        "General_Prompt_Negative": "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        "denoise": 1,
+        "denoise_method": "normalized advanced",
+        "Per_Pixel_Denoise_Mask_Strength": 1,
+        "Image Stabilizer": 0,
+        "Smoother - Sharper": 0,
+        "Detail_Enhancer": 0,
+        "FLux_Redux_Krea2VL_strength": 0,
+        "Controlnet_Pipe_strength": 1,
+        "Color_Match": "TBG ETUR Detail-Preserving Tile Stabilizer",
+        "Scale-Invariant Feature Transform": true,
+        "Fusion Extra Steps": 0,
+        "Fast_1_Tile_Preview": false,
+        "Selected_Tiles_Only": false,
+        "Selected_Tiles_By_Numbers": "",
+        "VRAM_Profile": "Low VRAM Cache (Unload Models)",
+        "Seed": ""
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -2477,7 +2653,141 @@
             "url": "/api/view?filename=rgthree.compare._temp_pkapj_00004_.png&type=temp&subfolder=&rand=0.6794467356078291"
           }
         ]
-      ]
+      ],
+      "widgets_values_named": {
+        "rgthree_comparer": {
+          "images": [
+            {
+              "name": "A",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_pkapj_00003_.png&type=temp&subfolder=&rand=0.1589899996105506",
+              "img": {}
+            },
+            {
+              "name": "B",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_pkapj_00004_.png&type=temp&subfolder=&rand=0.6794467356078291",
+              "img": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 333,
+      "type": "TBG ETUR Labs for Refiner",
+      "pos": [
+        4000,
+        2050
+      ],
+      "size": [
+        500,
+        562
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "ColorMatch Debug Gates",
+          "name": "ColorMatch_Debug",
+          "shape": 7,
+          "type": "tbg_colormatch_debug",
+          "link": null
+        },
+        {
+          "label": "Sigmas with denoise 1",
+          "name": "Custom_Sigmas_!DENOISE=1",
+          "shape": 7,
+          "type": "SIGMAS",
+          "link": null
+        },
+        {
+          "label": "Overwrites the Sampler Name field",
+          "name": "Sampler",
+          "shape": 7,
+          "type": "SAMPLER",
+          "link": 466
+        },
+        {
+          "label": "Ideogram4 Guider",
+          "name": "Ideogram4_Guider",
+          "shape": 7,
+          "type": "GUIDER",
+          "link": null
+        },
+        {
+          "name": "cropped_positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "cropped_negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output_1",
+          "type": "labs_refiner",
+          "links": [
+            467
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Labs for Refiner"
+      },
+      "widgets_values": [
+        1,
+        0,
+        "Inpainting On with Noise Mask and Conditioning",
+        true,
+        false,
+        0,
+        0,
+        1,
+        true,
+        false,
+        0,
+        false,
+        "gpupyramid",
+        true,
+        "Inner Tile + Global Embedding",
+        2048,
+        true
+      ],
+      "widgets_values_named": {
+        "Tile_Fusion_Blend": 1,
+        "Fusion_end": 0,
+        "Fusion_conditioning": "Inpainting On with Noise Mask and Conditioning",
+        "Differential_Diffusion": true,
+        "Sigma_Jump_Enabled": false,
+        "Sigma_Jump_Strength": 0,
+        "Sigma_Jump_Start": 0,
+        "Sigma_Jump_End": 1,
+        "Flux2_Tile_Color_Correction": true,
+        "Flux2_Sampler_Hook": false,
+        "Color & Structure Stabilizer": 0,
+        "Save_Tiles_in_Temp_Folder": false,
+        "stitch_blending": "gpupyramid",
+        "Content_Aware_Laplacian_Seam": true,
+        "VL_Encoding_Mode": "Inner Tile + Global Embedding",
+        "max_upscale_size_segment": 2048,
+        "Segment_Background_Harmonization": true
+      }
     }
   ],
   "links": [
@@ -2674,14 +2984,6 @@
       "labs_upscaler"
     ],
     [
-      454,
-      180,
-      0,
-      330,
-      3,
-      "SAMPLER"
-    ],
-    [
       456,
       278,
       0,
@@ -2730,14 +3032,6 @@
       "RF_UntwistingRoPE_Pipe"
     ],
     [
-      462,
-      330,
-      0,
-      332,
-      10,
-      "labs_refiner"
-    ],
-    [
       463,
       137,
       0,
@@ -2760,6 +3054,22 @@
       83,
       0,
       "IMAGE"
+    ],
+    [
+      466,
+      180,
+      0,
+      333,
+      3,
+      "SAMPLER"
+    ],
+    [
+      467,
+      333,
+      0,
+      332,
+      10,
+      "labs_refiner"
     ]
   ],
   "groups": [
@@ -2877,11 +3187,11 @@
     "ds": {
       "scale": 0.3234918430760825,
       "offset": [
-        -53.471344508675884,
-        -148.37530144382504
+        -378.09289639348657,
+        -1098.343608235625
       ]
     },
-    "frontendVersion": "1.48.7",
+    "frontendVersion": "1.49.6",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,

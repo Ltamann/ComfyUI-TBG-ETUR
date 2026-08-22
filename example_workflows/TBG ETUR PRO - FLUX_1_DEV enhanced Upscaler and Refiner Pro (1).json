@@ -1,8 +1,8 @@
 {
   "id": "78e117ed-0d9a-411f-880a-200fe0e75ce9",
   "revision": 0,
-  "last_node_id": 78,
-  "last_link_id": 140,
+  "last_node_id": 79,
+  "last_link_id": 141,
   "nodes": [
     {
       "id": 1,
@@ -2004,7 +2004,7 @@
           "name": "labs_refiner",
           "shape": 7,
           "type": "labs_refiner",
-          "link": 140
+          "link": 141
         }
       ],
       "outputs": [
@@ -2112,7 +2112,7 @@
       }
     },
     {
-      "id": 78,
+      "id": 79,
       "type": "TBG ETUR Labs for Refiner",
       "pos": [
         3743.302706291963,
@@ -2179,7 +2179,7 @@
           "name": "output_1",
           "type": "labs_refiner",
           "links": [
-            140
+            141
           ]
         }
       ],
@@ -2454,8 +2454,8 @@
       "IMAGE"
     ],
     [
-      140,
-      78,
+      141,
+      79,
       0,
       77,
       10,

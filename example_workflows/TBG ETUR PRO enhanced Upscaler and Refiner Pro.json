@@ -1,8 +1,8 @@
 {
   "id": "78e117ed-0d9a-411f-880a-200fe0e75ce9",
   "revision": 0,
-  "last_node_id": 70,
-  "last_link_id": 117,
+  "last_node_id": 71,
+  "last_link_id": 120,
   "nodes": [
     {
       "id": 1,
@@ -42,7 +42,11 @@
       "widgets_values": [
         "ComfyUI_temp_czkgz_00001_.png",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "ComfyUI_temp_czkgz_00001_.png",
+        "upload": "image"
+      }
     },
     {
       "id": 5,
@@ -65,6 +69,9 @@
       "widgets_values": [
         "In certain situations, placing an object entirely within a single tile is essential for achieving consistent results. By applying a mask to an object, it can be sampled separately from the rest of the image. The masked area will then be upscaled to match the tile size, enhancing its detail.\n\nThis technique can also be used to repair or modify elements by applying different settings, prompts, or denoise values using the function.\n\nAfter the entire image is processed, the segmented areas will be handled. ImpactPack is compatible with TBG ETUR segmentation entries, making it possible to automate the selection process."
       ],
+      "widgets_values_named": {
+        "text": "In certain situations, placing an object entirely within a single tile is essential for achieving consistent results. By applying a mask to an object, it can be sampled separately from the rest of the image. The masked area will then be upscaled to match the tile size, enhancing its detail.\n\nThis technique can also be used to repair or modify elements by applying different settings, prompts, or denoise values using the function.\n\nAfter the entire image is processed, the segmented areas will be handled. ImpactPack is compatible with TBG ETUR segmentation entries, making it possible to automate the selection process."
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -167,6 +174,10 @@
         "QWEN\\Qwen-Image-Lightning-8steps-V1.0.safetensors",
         1.02
       ],
+      "widgets_values_named": {
+        "lora_name": "QWEN\\Qwen-Image-Lightning-8steps-V1.0.safetensors",
+        "strength_model": 1.02
+      },
       "color": "#223",
       "bgcolor": "#335"
     },
@@ -224,6 +235,9 @@
       "widgets_values": [
         3
       ],
+      "widgets_values_named": {
+        "shift": 3
+      },
       "color": "#223",
       "bgcolor": "#335"
     },
@@ -282,6 +296,10 @@
         1,
         false
       ],
+      "widgets_values_named": {
+        "strength": 1,
+        "pre_cfg": false
+      },
       "color": "#223",
       "bgcolor": "#335"
     },
@@ -326,7 +344,10 @@
       },
       "widgets_values": [
         "SDXL\\SDXL-Juggernaut-XI-byRunDiffusion.safetensors"
-      ]
+      ],
+      "widgets_values_named": {
+        "ckpt_name": "SDXL\\SDXL-Juggernaut-XI-byRunDiffusion.safetensors"
+      }
     },
     {
       "id": 19,
@@ -364,7 +385,11 @@
       "widgets_values": [
         "SDXL\\sdxl_lightning_8step_lora.safetensors",
         1
-      ]
+      ],
+      "widgets_values_named": {
+        "lora_name": "SDXL\\sdxl_lightning_8step_lora.safetensors",
+        "strength_model": 1
+      }
     },
     {
       "id": 20,
@@ -424,6 +449,11 @@
         "qwen_image",
         "default"
       ],
+      "widgets_values_named": {
+        "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "type": "qwen_image",
+        "device": "default"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -483,6 +513,9 @@
       "widgets_values": [
         "qwen_image_vae.safetensors"
       ],
+      "widgets_values_named": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
       "color": "#322",
       "bgcolor": "#533"
     },
@@ -519,7 +552,10 @@
       },
       "widgets_values": [
         "Flux\\Flux.1-dev-Controlnet-Upscaler.safetensors"
-      ]
+      ],
+      "widgets_values_named": {
+        "control_net_name": "Flux\\Flux.1-dev-Controlnet-Upscaler.safetensors"
+      }
     },
     {
       "id": 30,
@@ -555,7 +591,10 @@
       },
       "widgets_values": [
         "Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro-2.safetensors"
-      ]
+      ],
+      "widgets_values_named": {
+        "control_net_name": "Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro-2.safetensors"
+      }
     },
     {
       "id": 31,
@@ -596,7 +635,10 @@
       },
       "widgets_values": [
         "depth"
-      ]
+      ],
+      "widgets_values_named": {
+        "type": "depth"
+      }
     },
     {
       "id": 34,
@@ -629,7 +671,10 @@
       },
       "widgets_values": [
         "FLUX_upscale_diffusion_pytorch_model.safetensors"
-      ]
+      ],
+      "widgets_values_named": {
+        "control_net_name": "FLUX_upscale_diffusion_pytorch_model.safetensors"
+      }
     },
     {
       "id": 35,
@@ -665,8 +710,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.3.44",
         "Node name for S&R": "ConditioningZeroOut"
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 39,
@@ -689,6 +733,9 @@
       "widgets_values": [
         "You can add as many ControlNets as you like.\ncurrently, the only available preprocessors are Depth, Canny, Canny Edge, and None. We’ve excluded Pose because the subject will be divided into tiles, making pose estimation ineffective in the cnet pipe you can add pose conventionaly to the croped conditioning in the refiner.\n\nA global ControlNet strength modifier is available to help fine-tune all ControlNets at once.\n\nThe ControlNet preprocessor works directly on each tile, allowing it to operate at the tile's full resolution. This differs from other refiners like Ultimate Upscale, where the ControlNet input is cropped, and a tile only uses a small portion of the full ControlNet resolution. With our setup, each tile benefits from full-resolution preprocessing."
       ],
+      "widgets_values_named": {
+        "text": "You can add as many ControlNets as you like.\ncurrently, the only available preprocessors are Depth, Canny, Canny Edge, and None. We’ve excluded Pose because the subject will be divided into tiles, making pose estimation ineffective in the cnet pipe you can add pose conventionaly to the croped conditioning in the refiner.\n\nA global ControlNet strength modifier is available to help fine-tune all ControlNets at once.\n\nThe ControlNet preprocessor works directly on each tile, allowing it to operate at the tile's full resolution. This differs from other refiners like Ultimate Upscale, where the ControlNet input is cropped, and a tile only uses a small portion of the full ControlNet resolution. With our setup, each tile benefits from full-resolution preprocessing."
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -729,6 +776,12 @@
         "flux",
         "default"
       ],
+      "widgets_values_named": {
+        "clip_name1": "t5xxl_fp8_e4m3fn.safetensors",
+        "clip_name2": "Long-ViT-L-14-BEST-GmP-smooth-ft.safetensors",
+        "type": "flux",
+        "device": "default"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -779,14 +832,14 @@
           "name": "positive",
           "type": "CONDITIONING",
           "links": [
-            99
+            118
           ]
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
           "links": [
-            100
+            119
           ]
         }
       ],
@@ -799,7 +852,12 @@
         1,
         0,
         1
-      ]
+      ],
+      "widgets_values_named": {
+        "strength": 1,
+        "start_percent": 0,
+        "end_percent": 1
+      }
     },
     {
       "id": 53,
@@ -836,8 +894,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.3.44",
         "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 2,
@@ -876,7 +933,10 @@
       },
       "widgets_values": [
         "TBG_ETUR\\David_R1\\final_"
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "TBG_ETUR\\David_R1\\final_"
+      }
     },
     {
       "id": 43,
@@ -930,6 +990,11 @@
         0.14,
         1
       ],
+      "widgets_values_named": {
+        "lora_name": "FLUX\\FLUX.1-Turbo-Alpha-8Step.safetensors",
+        "strength_model": 0.14,
+        "strength_clip": 1
+      },
       "color": "#223",
       "bgcolor": "#335"
     },
@@ -969,6 +1034,9 @@
       "widgets_values": [
         "ae.safetensors"
       ],
+      "widgets_values_named": {
+        "vae_name": "ae.safetensors"
+      },
       "color": "#322",
       "bgcolor": "#533"
     },
@@ -1013,6 +1081,11 @@
         "",
         3.5
       ],
+      "widgets_values_named": {
+        "clip_l": "",
+        "t5xxl": "",
+        "guidance": 3.5
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -1048,6 +1121,9 @@
       "widgets_values": [
         "flex1_redux_siglip2_512.safetensors"
       ],
+      "widgets_values_named": {
+        "style_model_name": "flex1_redux_siglip2_512.safetensors"
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -1083,6 +1159,9 @@
       "widgets_values": [
         "siglip2-so400m-patch16-512.safetensors"
       ],
+      "widgets_values_named": {
+        "clip_name": "siglip2-so400m-patch16-512.safetensors"
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -1121,8 +1200,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.3.44",
         "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 36,
@@ -1156,8 +1234,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.7.0",
         "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 24,
@@ -1193,6 +1270,10 @@
         "FLUX\\flux1-dev-fp8.safetensors",
         "fp8_e4m3fn"
       ],
+      "widgets_values_named": {
+        "unet_name": "FLUX\\flux1-dev-fp8.safetensors",
+        "weight_dtype": "fp8_e4m3fn"
+      },
       "color": "#223",
       "bgcolor": "#335"
     },
@@ -1237,6 +1318,12 @@
         1024,
         1024
       ],
+      "widgets_values_named": {
+        "max_shift": 1.0000000000000002,
+        "base_shift": 0.5,
+        "width": 1024,
+        "height": 1024
+      },
       "color": "#223",
       "bgcolor": "#335"
     },
@@ -1309,7 +1396,16 @@
         150,
         "None",
         "ControlNet"
-      ]
+      ],
+      "widgets_values_named": {
+        "strength": 0.5,
+        "start": 0,
+        "end": 0.5,
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 150,
+        "preprocessor": "None",
+        "controlnet_mode": "ControlNet"
+      }
     },
     {
       "id": 55,
@@ -1380,7 +1476,16 @@
         150,
         "None",
         "ControlNet"
-      ]
+      ],
+      "widgets_values_named": {
+        "strength": 0.5,
+        "start": 0,
+        "end": 0.5,
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 150,
+        "preprocessor": "None",
+        "controlnet_mode": "ControlNet"
+      }
     },
     {
       "id": 56,
@@ -1451,7 +1556,16 @@
         150,
         "None",
         "ControlNet"
-      ]
+      ],
+      "widgets_values_named": {
+        "strength": 0.5,
+        "start": 0,
+        "end": 0.5,
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 150,
+        "preprocessor": "None",
+        "controlnet_mode": "ControlNet"
+      }
     },
     {
       "id": 23,
@@ -1474,6 +1588,9 @@
       "widgets_values": [
         "Why use Redux?\nRedux regenerates the image while preserving its overall composition and style.\nA value of 1 means full reconstruction with strict adherence to the original\nLower values allow more creative freedom in the output\nA value of 0 disables Redux entirely\nIf neither a Redux Clip nor a Style Model is connected, Redux will automatically be disabled\nRedux is particularly useful for preserving fine materials, textures, and structural composition. In many cases, it can serve as a lightweight alternative to ControlNets.\n"
       ],
+      "widgets_values_named": {
+        "text": "Why use Redux?\nRedux regenerates the image while preserving its overall composition and style.\nA value of 1 means full reconstruction with strict adherence to the original\nLower values allow more creative freedom in the output\nA value of 0 disables Redux entirely\nIf neither a Redux Clip nor a Style Model is connected, Redux will automatically be disabled\nRedux is particularly useful for preserving fine materials, textures, and structural composition. In many cases, it can serve as a lightweight alternative to ControlNets.\n"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -1516,7 +1633,11 @@
       "widgets_values": [
         "example.png",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "example.png",
+        "upload": "image"
+      }
     },
     {
       "id": 29,
@@ -1557,7 +1678,10 @@
       },
       "widgets_values": [
         "canny/lineart/anime_lineart/mlsd"
-      ]
+      ],
+      "widgets_values_named": {
+        "type": "canny/lineart/anime_lineart/mlsd"
+      }
     },
     {
       "id": 41,
@@ -1580,6 +1704,9 @@
       "widgets_values": [
         "Set the Lab Node to Only Upscale to turn this into a fully functional Tiled Upscaler.\nWe fine-tuned SeedVR2, Waifu, FlashVR, and others into a new multi-step Upscaler and Refiner with adaptive sigmas.\nGive them a try — they’re not the fastest option, but for consistent, high-quality upscaling, this is a solid solution.\n\nFor more details on what’s changed, please read the text field shown when creating the node and have a look into the Tooltips."
       ],
+      "widgets_values_named": {
+        "text": "Set the Lab Node to Only Upscale to turn this into a fully functional Tiled Upscaler.\nWe fine-tuned SeedVR2, Waifu, FlashVR, and others into a new multi-step Upscaler and Refiner with adaptive sigmas.\nGive them a try — they’re not the fastest option, but for consistent, high-quality upscaling, this is a solid solution.\n\nFor more details on what’s changed, please read the text field shown when creating the node and have a look into the Tooltips."
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -1668,7 +1795,30 @@
         16,
         "",
         ""
-      ]
+      ],
+      "widgets_values_named": {
+        "presets": "NONE",
+        "Fragmentation": 1,
+        "tile_size_w": 1024,
+        "tile_size_h": 1024,
+        "upscale_model": "NONE",
+        "upscale_by": 2,
+        "Optimize_Upscale_Factor_For_Tile_Use": false,
+        "VLM_Model": "NONE",
+        "VLM_Quantization": "None (FP16)",
+        "VLM_Prompt": "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        "VLM_Process_Selected_Tiles_Only": false,
+        "VLM_Selected_Tiles_Index_Numbers": "",
+        "VLM_seed": 0,
+        "control_after_generate": "fixed",
+        "Fusion Mode": "Neuro_Generative_Tile_Fusion",
+        "Fusion Reference Margin": 0,
+        "Fusion Margin": 64,
+        "Fusion Strength": 0.95,
+        "Feather Mask": 16,
+        "PRO_api_token": "",
+        "TBG Web Panel": ""
+      }
     },
     {
       "id": 63,
@@ -1745,7 +1895,19 @@
         0.1,
         0,
         0
-      ]
+      ],
+      "widgets_values_named": {
+        "TBG_APP_ShutDown": "Close with Comfyui",
+        "Dev_Debug_Mode": "dev debug on",
+        "Tiler_Upscale_Cache": true,
+        "Only_Upscale": false,
+        "VLM_Server_Base_URL": "http://127.0.0.1:8080/v1",
+        "VLM_Server_Model": "",
+        "PID_VAE_Compatible_Model": "FLUX1",
+        "PID_degrade_sigma": 0.1,
+        "PRO_Tile_Fusion_shift_in_out": 0,
+        "PRO_Tile_Fusion_shift_top_left": 0
+      }
     },
     {
       "id": 64,
@@ -1878,7 +2040,17 @@
         "",
         "unchanged",
         false
-      ]
+      ],
+      "widgets_values_named": {
+        "Rebuild_only_modified_tiles": true,
+        "requeue": 0,
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false
+      }
     },
     {
       "id": 58,
@@ -1955,7 +2127,19 @@
         16,
         0,
         0
-      ]
+      ],
+      "widgets_values_named": {
+        "TBG_APP_ShutDown": "Close with Comfyui",
+        "Dev_Debug_Mode": true,
+        "Tiler_Upscale_Cache": false,
+        "Only_Upscale": "http://127.0.0.1:8080/v1",
+        "VLM_Server_Base_URL": "",
+        "VLM_Server_Model": 0,
+        "PID_VAE_Compatible_Model": 0,
+        "PID_degrade_sigma": 16,
+        "PRO_Tile_Fusion_shift_in_out": 0,
+        "PRO_Tile_Fusion_shift_top_left": 0
+      }
     },
     {
       "id": 59,
@@ -1978,6 +2162,9 @@
       "widgets_values": [
         "We have three ways to load VLMs:\n\n1. **Standard** – Fully automatic setup. Supports all models except GGUF.\n\n2. **GGUF** – Often requires a manual llama.cpp server installation, which can be complicated for some configurations. We provide prebuilt wheels, and installation is only required if you select the GGUF option.\n\n3. **Fastest and Best Option: OpenAI-Compatible (Labs Server)** – Connect the Labs_upscaler node and enter the URL, port, and model name of your local or API-based Ollama or llama.cpp server with the Qwen GGUF model loaded.\n\n4. Florence has now been fixed to run on Transformer versions 5 and above.\n"
       ],
+      "widgets_values_named": {
+        "text": "We have three ways to load VLMs:\n\n1. **Standard** – Fully automatic setup. Supports all models except GGUF.\n\n2. **GGUF** – Often requires a manual llama.cpp server installation, which can be complicated for some configurations. We provide prebuilt wheels, and installation is only required if you select the GGUF option.\n\n3. **Fastest and Best Option: OpenAI-Compatible (Labs Server)** – Connect the Labs_upscaler node and enter the URL, port, and model name of your local or API-based Ollama or llama.cpp server with the Qwen GGUF model loaded.\n\n4. Florence has now been fixed to run on Transformer versions 5 and above.\n"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -2019,7 +2206,12 @@
         "Krea\\qwen3-vl-4b-heretic_int8.safetensors",
         "krea2",
         "default"
-      ]
+      ],
+      "widgets_values_named": {
+        "clip_name": "Krea\\qwen3-vl-4b-heretic_int8.safetensors",
+        "type": "krea2",
+        "device": "default"
+      }
     },
     {
       "id": 67,
@@ -2057,7 +2249,10 @@
       },
       "widgets_values": [
         "Wan2.1_VAE.pth"
-      ]
+      ],
+      "widgets_values_named": {
+        "vae_name": "Wan2.1_VAE.pth"
+      }
     },
     {
       "id": 65,
@@ -2096,7 +2291,11 @@
       "widgets_values": [
         "krea2\\raw.safetensors",
         "default"
-      ]
+      ],
+      "widgets_values_named": {
+        "unet_name": "krea2\\raw.safetensors",
+        "weight_dtype": "default"
+      }
     },
     {
       "id": 48,
@@ -2157,101 +2356,32 @@
         0.2,
         1,
         0
-      ]
-    },
-    {
-      "id": 68,
-      "type": "TBG ETUR Labs for Refiner",
-      "pos": [
-        3736.039359036641,
-        2350.1678648314255
       ],
-      "size": [
-        698.4978711547847,
-        466
-      ],
-      "flags": {},
-      "order": 42,
-      "mode": 4,
-      "inputs": [
-        {
-          "label": "PID Diffusion Model",
-          "name": "PID_Model",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "ColorMatch Debug Gates",
-          "name": "ColorMatch_Debug",
-          "shape": 7,
-          "type": "tbg_colormatch_debug",
-          "link": null
-        },
-        {
-          "label": "Sigmas with denoise 1",
-          "name": "Custom_Sigmas_!DENOISE=1",
-          "shape": 7,
-          "type": "SIGMAS",
-          "link": null
-        },
-        {
-          "label": "Overwrites the Sampler Name field",
-          "name": "Sampler",
-          "shape": 7,
-          "type": "SAMPLER",
-          "link": null
-        },
-        {
-          "label": "Ideogram4 Guider",
-          "name": "Ideogram4_Guider",
-          "shape": 7,
-          "type": "GUIDER",
-          "link": null
-        },
-        {
-          "name": "cropped_positive",
-          "shape": 7,
-          "type": "CONDITIONING",
-          "link": 99
-        },
-        {
-          "name": "cropped_negative",
-          "shape": 7,
-          "type": "CONDITIONING",
-          "link": 100
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output_1",
-          "type": "labs_refiner",
-          "links": [
-            110
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
-        "Node name for S&R": "TBG ETUR Labs for Refiner",
-        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
-      },
-      "widgets_values": [
-        1,
-        0,
-        "Inpainting On with Noise Mask and Conditioning",
-        true,
-        true,
-        false,
-        0,
-        false,
-        "gpupyramid",
-        true,
-        "Inner Tile + Global Embedding",
-        2048,
-        true
-      ]
+      "widgets_values_named": {
+        "Resharpener_active": true,
+        "Resharpener_strength": 0.5,
+        "resharpen_start": 0,
+        "resharpen_end": 1,
+        "detail_daemon_active": false,
+        "detail_amount": 1.17,
+        "detail_daemon_start": 0.12,
+        "detail_daemon_end": 0.3,
+        "detail_daemon_bias": 0.5,
+        "detail_daemon_exponent": 0.8,
+        "detail_daemon_start_offset": 0,
+        "detail_daemon_end_offset": 0,
+        "detail_daemon_fade": 0,
+        "detail_daemon_smooth": true,
+        "detail_daemon_cfg_scale": 1,
+        "tile_upscale_plus": "none",
+        "upscaler_method_inpainting": "bilinear",
+        "upscale_model_inpainting": "1x-Film-Degrainer-1-000.pth",
+        "upscale_tiles_by": 1,
+        "upscale_segments_by": 1,
+        "PRO_Fusion_Complexity_min_Denoise": 0.2,
+        "PRO_Fusion_Complexity_max_Denoise": 1,
+        "PRO_Fusion_Complexity_Mask_Blur": 0
+      }
     },
     {
       "id": 69,
@@ -2338,7 +2468,7 @@
           "name": "labs_refiner",
           "shape": 7,
           "type": "labs_refiner",
-          "link": 110
+          "link": 120
         }
       ],
       "outputs": [
@@ -2413,7 +2543,37 @@
         "",
         "Low VRAM Cache (Unload Models)",
         ""
-      ]
+      ],
+      "widgets_values_named": {
+        "model_type": "FLUX1",
+        "cfg": 1,
+        "steps": 30,
+        "seed": 4,
+        "control_after_generate": "fixed",
+        "Flux_Guidance": 3.5,
+        "sampler_name": "euler",
+        "basic_scheduler": "simple",
+        "vae_encode": "tiled slow",
+        "tile_size_vae": 1024,
+        "General_Prompt_Positive": "",
+        "General_Prompt_Negative": "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        "denoise": 0.27,
+        "denoise_method": "normalized advanced",
+        "Per_Pixel_Denoise_Mask_Strength": 1,
+        "Image Stabilizer": 0,
+        "Smoother - Sharper": 0,
+        "Detail_Enhancer": 0,
+        "FLux_Redux_Krea2VL_strength": 0.5,
+        "Controlnet_Pipe_strength": 1,
+        "Color_Match": "TBG ETUR Detail-Preserving Tile Stabilizer",
+        "Scale-Invariant Feature Transform": true,
+        "Fusion Extra Steps": 0,
+        "Fast_1_Tile_Preview": false,
+        "Selected_Tiles_Only": false,
+        "Selected_Tiles_By_Numbers": "",
+        "VRAM_Profile": "Low VRAM Cache (Unload Models)",
+        "Seed": ""
+      }
     },
     {
       "id": 70,
@@ -2497,7 +2657,147 @@
         16,
         "",
         ""
-      ]
+      ],
+      "widgets_values_named": {
+        "presets": "NONE",
+        "Fragmentation": 1,
+        "tile_size_w": 1024,
+        "tile_size_h": 1024,
+        "upscale_model": "FAST/_bilinear",
+        "upscale_by": 2,
+        "Optimize_Upscale_Factor_For_Tile_Use": false,
+        "VLM_Model": "NONE",
+        "VLM_Quantization": "None (FP16)",
+        "VLM_Prompt": "Provide a highly detailed description of the image, emphasizing materials and textures. Enhance every visual detail, including accurate colors, lighting, and stylistic elements. Also describe the artistic or photographic style, such as film type, camera style, era, or overall aesthetic.",
+        "VLM_Process_Selected_Tiles_Only": false,
+        "VLM_Selected_Tiles_Index_Numbers": "",
+        "VLM_seed": 0,
+        "control_after_generate": "fixed",
+        "Fusion Mode": "Neuro_Generative_Tile_Fusion",
+        "Fusion Reference Margin": 0,
+        "Fusion Margin": 64,
+        "Fusion Strength": 0.95,
+        "Feather Mask": 16,
+        "PRO_api_token": "",
+        "TBG Web Panel": ""
+      }
+    },
+    {
+      "id": 71,
+      "type": "TBG ETUR Labs for Refiner",
+      "pos": [
+        3736.039359036641,
+        2349.4574991999502
+      ],
+      "size": [
+        698.4978711547847,
+        562
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 4,
+      "inputs": [
+        {
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "ColorMatch Debug Gates",
+          "name": "ColorMatch_Debug",
+          "shape": 7,
+          "type": "tbg_colormatch_debug",
+          "link": null
+        },
+        {
+          "label": "Sigmas with denoise 1",
+          "name": "Custom_Sigmas_!DENOISE=1",
+          "shape": 7,
+          "type": "SIGMAS",
+          "link": null
+        },
+        {
+          "label": "Overwrites the Sampler Name field",
+          "name": "Sampler",
+          "shape": 7,
+          "type": "SAMPLER",
+          "link": null
+        },
+        {
+          "label": "Ideogram4 Guider",
+          "name": "Ideogram4_Guider",
+          "shape": 7,
+          "type": "GUIDER",
+          "link": null
+        },
+        {
+          "name": "cropped_positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 118
+        },
+        {
+          "name": "cropped_negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 119
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output_1",
+          "type": "labs_refiner",
+          "links": [
+            120
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "f4100caee44df04ec06ed85706c8df0d065e5f0b",
+        "Node name for S&R": "TBG ETUR Labs for Refiner",
+        "aux_id": "Ltamann/ComfyUI-TBG-ETUR"
+      },
+      "widgets_values": [
+        1,
+        0,
+        "Inpainting On with Noise Mask and Conditioning",
+        true,
+        false,
+        0,
+        0,
+        1,
+        true,
+        false,
+        0,
+        false,
+        "gpupyramid",
+        true,
+        "Inner Tile + Global Embedding",
+        2048,
+        true
+      ],
+      "widgets_values_named": {
+        "Tile_Fusion_Blend": 1,
+        "Fusion_end": 0,
+        "Fusion_conditioning": "Inpainting On with Noise Mask and Conditioning",
+        "Differential_Diffusion": true,
+        "Sigma_Jump_Enabled": false,
+        "Sigma_Jump_Strength": 0,
+        "Sigma_Jump_Start": 0,
+        "Sigma_Jump_End": 1,
+        "Flux2_Tile_Color_Correction": true,
+        "Flux2_Sampler_Hook": false,
+        "Color & Structure Stabilizer": 0,
+        "Save_Tiles_in_Temp_Folder": false,
+        "stitch_blending": "gpupyramid",
+        "Content_Aware_Laplacian_Seam": true,
+        "VL_Encoding_Mode": "Inner Tile + Global Embedding",
+        "max_upscale_size_segment": 2048,
+        "Segment_Background_Harmonization": true
+      }
     }
   ],
   "links": [
@@ -2678,22 +2978,6 @@
       "labs_upscaler"
     ],
     [
-      99,
-      47,
-      0,
-      68,
-      5,
-      "CONDITIONING"
-    ],
-    [
-      100,
-      47,
-      1,
-      68,
-      6,
-      "CONDITIONING"
-    ],
-    [
       102,
       42,
       0,
@@ -2758,14 +3042,6 @@
       "CLIP_VISION"
     ],
     [
-      110,
-      68,
-      0,
-      69,
-      10,
-      "labs_refiner"
-    ],
-    [
       111,
       69,
       0,
@@ -2820,6 +3096,30 @@
       64,
       0,
       "TBG_Pipe"
+    ],
+    [
+      118,
+      47,
+      0,
+      71,
+      5,
+      "CONDITIONING"
+    ],
+    [
+      119,
+      47,
+      1,
+      71,
+      6,
+      "CONDITIONING"
+    ],
+    [
+      120,
+      71,
+      0,
+      69,
+      10,
+      "labs_refiner"
     ]
   ],
   "groups": [
@@ -3067,14 +3367,14 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.34039406834424124,
+      "scale": 1.5641015487580228,
       "offset": [
-        1035.529080760525,
-        2.3745533712958267
+        -3264.2605317164816,
+        -2154.003920560908
       ]
     },
     "workflowRendererVersion": "LG",
-    "frontendVersion": "1.48.7",
+    "frontendVersion": "1.49.6",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
