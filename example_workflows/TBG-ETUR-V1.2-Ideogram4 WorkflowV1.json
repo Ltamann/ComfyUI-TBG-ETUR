@@ -1,8 +1,8 @@
 {
   "id": "c78cfdd3-2bd3-4e53-8af0-fd08fec6d829",
   "revision": 0,
-  "last_node_id": 402,
-  "last_link_id": 578,
+  "last_node_id": 403,
+  "last_link_id": 581,
   "nodes": [
     {
       "id": 130,
@@ -36,8 +36,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.22.0",
         "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 204,
@@ -71,8 +70,7 @@
         "cnr_id": "comfy-core",
         "ver": "0.24.0",
         "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 208,
@@ -122,7 +120,12 @@
         0.63,
         128,
         "AI luma guard"
-      ]
+      ],
+      "widgets_values_named": {
+        "high_freq_reduce": 0.63,
+        "low_freq_radius": 128,
+        "Generate_Difference_Image": "AI luma guard"
+      }
     },
     {
       "id": 213,
@@ -157,7 +160,12 @@
         "ComfyUI_temp_gpkbr_00001_.png",
         "red",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "ComfyUI_temp_gpkbr_00001_.png",
+        "channel": "red",
+        "upload": "image"
+      }
     },
     {
       "id": 225,
@@ -228,6 +236,15 @@
         "Canny Edge",
         "ControlNet"
       ],
+      "widgets_values_named": {
+        "strength": 0.5,
+        "start": 0,
+        "end": 0.4,
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 150,
+        "preprocessor": "Canny Edge",
+        "controlnet_mode": "ControlNet"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -300,6 +317,15 @@
         "DepthAnythingV2",
         "ControlNet"
       ],
+      "widgets_values_named": {
+        "strength": 0.4,
+        "start": 0,
+        "end": 0.4,
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 150,
+        "preprocessor": "DepthAnythingV2",
+        "controlnet_mode": "ControlNet"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -347,7 +373,13 @@
         1.5,
         false,
         0.1
-      ]
+      ],
+      "widgets_values_named": {
+        "strength": 0.73,
+        "start_percent": 1.5,
+        "end_percent": false,
+        "ramp_curve": 0.1
+      }
     },
     {
       "id": 282,
@@ -389,7 +421,13 @@
         0,
         1,
         1.5
-      ]
+      ],
+      "widgets_values_named": {
+        "strength": 0,
+        "start_percent": 0,
+        "end_percent": 1,
+        "ramp_curve": 1.5
+      }
     },
     {
       "id": 303,
@@ -465,7 +503,19 @@
         0.1,
         0,
         0
-      ]
+      ],
+      "widgets_values_named": {
+        "TBG_APP_ShutDown": "Close with Comfyui",
+        "Dev_Debug_Mode": "dev debug on",
+        "Tiler_Upscale_Cache": true,
+        "Only_Upscale": false,
+        "VLM_Server_Base_URL": "http://127.0.0.1:8080/v1",
+        "VLM_Server_Model": "",
+        "PID_VAE_Compatible_Model": "FLUX1",
+        "PID_degrade_sigma": 0.1,
+        "PRO_Tile_Fusion_shift_in_out": 0,
+        "PRO_Tile_Fusion_shift_top_left": 0
+      }
     },
     {
       "id": 316,
@@ -488,6 +538,9 @@
       "widgets_values": [
         "07 - Tile Overrides And Per-Tile Model Choices\n\nTBG ETUR Tile Overrides is optional but powerful. It lets you tune individual tiles or segments without changing the standard presets from the Refiner.\n\nThe node accepts three model overrides and three ControlNet pipeline overrides. Each tile can switch to one of those model/CNet choices with the model selector or CNet selector.\n\nPrompt behavior is per tile: you can add text to the general refiner prompt, or ignore the general prompt and write an independent tile prompt. You can also override denoise, seed, CFG, and ControlNet strength per tile.\n\nGrid Tile entries come first. If segment masks are used, segments appear after/with the tiles and show their mask in red below the tile preview. Use this to give faces a skin/detail LoRA, or give difficult drifting tiles the consistency LoRA/model path for a stronger hold."
       ],
+      "widgets_values_named": {
+        "text": "07 - Tile Overrides And Per-Tile Model Choices\n\nTBG ETUR Tile Overrides is optional but powerful. It lets you tune individual tiles or segments without changing the standard presets from the Refiner.\n\nThe node accepts three model overrides and three ControlNet pipeline overrides. Each tile can switch to one of those model/CNet choices with the model selector or CNet selector.\n\nPrompt behavior is per tile: you can add text to the general refiner prompt, or ignore the general prompt and write an independent tile prompt. You can also override denoise, seed, CFG, and ControlNet strength per tile.\n\nGrid Tile entries come first. If segment masks are used, segments appear after/with the tiles and show their mask in red below the tile preview. Use this to give faces a skin/detail LoRA, or give difficult drifting tiles the consistency LoRA/model path for a stronger hold."
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -536,7 +589,12 @@
         "match size",
         "center",
         "area"
-      ]
+      ],
+      "widgets_values_named": {
+        "resize_type": "match size",
+        "resize_type.crop": "center",
+        "scale_method": "area"
+      }
     },
     {
       "id": 322,
@@ -559,6 +617,9 @@
       "widgets_values": [
         "TBG Model Agnostic Color Anchor fixes color/content direction across sampling. It differs from Latent Anchor because it is about visual color/structure stability, while Latent Anchor behaves like the Input Tile CFG Hook and pulls the denoising path back toward the input tile.\n\nStart and end values are important. For creative generations, do not hold anchors until the very last step. Let the model spend the final part of sampling without the hook so details can settle naturally instead of looking constrained."
       ],
+      "widgets_values_named": {
+        "text": "TBG Model Agnostic Color Anchor fixes color/content direction across sampling. It differs from Latent Anchor because it is about visual color/structure stability, while Latent Anchor behaves like the Input Tile CFG Hook and pulls the denoising path back toward the input tile.\n\nStart and end values are important. For creative generations, do not hold anchors until the very last step. Let the model spend the final part of sampling without the hook so details can settle naturally instead of looking constrained."
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -583,6 +644,9 @@
       "widgets_values": [
         "TBG ETUR ControlNet pipeline for Flux 1 can be used with upscale, depth, and Canny ControlNets.\n\nSet the ControlNet preprocessor tie mode to “none” for tile or upscale ControlNets. If a depth ControlNet is used, enable the appropriate depth preprocessor.\nYou can try the Input Tile CFG Hooks for Flux 1 - but i think no need for it here.\n\n\nTBG ETUR ControlNet Pipeline for Flux 2 can be used in three practical modes:\n\nReference Image mode adds the input image as a normal reference image. Repeating it can strengthen prompt following and source fidelity; three reference images are stronger than one.\n\n42lux Hildegard mode creates three automatic reference images for each tile: 1) the input tile, 2) the tile with surrounding context, and 3) the full image. This helps Flux 2 Klein understand local detail, nearby continuity, and global composition. \n\nHildegard + Hook creates the three Hildegard references and also activates an input-tile CFG hook. The hook steers the model during sampling so the tile stays structurally tied to the original. Activate it by selecting the Hildegard Ref.Img + CFG Hook mode and loading the Hildegard LoRA upstream. ( so you can inject the input tile with more strength and cnet control )\n\nInput Tile CFG Hook mode is the hook concept by itself: it pulls the tile toward the source while still allowing denoise/detail generation. TBG Model Agnostic Latent Anchor is the same type of idea in model-agnostic form.\n\n! 42lux Hildegard mode will not work if you add more ref images !\n\nThe node can be chained ( for non edit models you can it to add cnets or model_patch and depth canny etc... with it) "
       ],
+      "widgets_values_named": {
+        "text": "TBG ETUR ControlNet pipeline for Flux 1 can be used with upscale, depth, and Canny ControlNets.\n\nSet the ControlNet preprocessor tie mode to “none” for tile or upscale ControlNets. If a depth ControlNet is used, enable the appropriate depth preprocessor.\nYou can try the Input Tile CFG Hooks for Flux 1 - but i think no need for it here.\n\n\nTBG ETUR ControlNet Pipeline for Flux 2 can be used in three practical modes:\n\nReference Image mode adds the input image as a normal reference image. Repeating it can strengthen prompt following and source fidelity; three reference images are stronger than one.\n\n42lux Hildegard mode creates three automatic reference images for each tile: 1) the input tile, 2) the tile with surrounding context, and 3) the full image. This helps Flux 2 Klein understand local detail, nearby continuity, and global composition. \n\nHildegard + Hook creates the three Hildegard references and also activates an input-tile CFG hook. The hook steers the model during sampling so the tile stays structurally tied to the original. Activate it by selecting the Hildegard Ref.Img + CFG Hook mode and loading the Hildegard LoRA upstream. ( so you can inject the input tile with more strength and cnet control )\n\nInput Tile CFG Hook mode is the hook concept by itself: it pulls the tile toward the source while still allowing denoise/detail generation. TBG Model Agnostic Latent Anchor is the same type of idea in model-agnostic form.\n\n! 42lux Hildegard mode will not work if you add more ref images !\n\nThe node can be chained ( for non edit models you can it to add cnets or model_patch and depth canny etc... with it) "
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -607,6 +671,9 @@
       "widgets_values": [
         "TBG ETUR Upscaler and Tile Generator PRO is the first part of the ETUR three-node system: \nTiler -> Tile Overrides -> Refiner. \n\nIt can also be used as an independent tiled upscaler. Fastes way switch in TBG ETUR Labs Upscaler \"Only Upscale\" on so it will stop to generate tiles or promts\n\nIt chooses the upscale model/method, target tile size, overlap/context, segment handling, and tile prompt generation. Classical upscale models are fast and deterministic. Superresolution like SeedVR2 ... PiD/NVIDIA PiD 4x style VAE paths can upscale and synthesize detail, but need compatible models and much more VRAM.\n\nIt’s better to use PID in the REFINER stage rather than as an upscaler. PID will load all required models automatically, but you can still override the CLIP and VAE and Model for the tiler using the TBG ETUR Labs Upscaler node.\n\nTile prompt generation can describe each tile with a vision-language model. The prompt in this node is written for edit model Flux2 and QwenVL thinking behavior: short, literal descriptions of what is visible. \n\nEdit models usually need command-like prompts such as restore, remove blur, match color, preserve identity. But this should be part of the general promt of the Refiner node.\n\nFor local or online or local servers, use the Labs Upscaler node. It can point at an OpenAI-compatible endpoint such as Ollama, llama.cpp server, or another local API. Set the base URL, model name, and mode there this will be way faster than using the comftyui models.\n\nFusion modes: Soft Merge is closer to a USDU-style tile blend. NGTF (Neuro Generative Tile Fusion) is a stronger learned/finetuned fusion technique for seamless creative refinements and needs at least a free API key. \n\nReference margin is usfull to give the model more content but will be cut out later. 32\n\nFusion blur controls transition softness for the AI generated fusion area. 64-128\n\nStrength controls how much fusion generation. 0.95 \n\nFeather mask values are critical for Soft Merge, as they define the pyramidal Laplacian blending region where the tiles overlap. So 64-126 on soft merge and way lower in NGTF 0 to 16\n\nSoft Merge uses only a feather mask and the Magnific reference; all other settings belong to NGTF.\n\nVLM Process Selected Tile Only” means that if you don’t want to regenerate all prompts, but only need a new prompt for one or two tiles, you can simply enable this option and apply it just to those selected tiles.\n\nUse Optimize upscale factor to match full tile sizes to avoid excessively large tile overlaps.\n\nPreset if you dont need tiles set it to Full iamge\n\nFragmentation is a multiplyer for tile size so 0.5 is 50% tile-size 2 is 200% tile-size.\n\n\nSet your API keys not in the Node - it will be copyed into the workflow and iamges. Use a enviroment variable for it and leave the field empty."
       ],
+      "widgets_values_named": {
+        "text": "TBG ETUR Upscaler and Tile Generator PRO is the first part of the ETUR three-node system: \nTiler -> Tile Overrides -> Refiner. \n\nIt can also be used as an independent tiled upscaler. Fastes way switch in TBG ETUR Labs Upscaler \"Only Upscale\" on so it will stop to generate tiles or promts\n\nIt chooses the upscale model/method, target tile size, overlap/context, segment handling, and tile prompt generation. Classical upscale models are fast and deterministic. Superresolution like SeedVR2 ... PiD/NVIDIA PiD 4x style VAE paths can upscale and synthesize detail, but need compatible models and much more VRAM.\n\nIt’s better to use PID in the REFINER stage rather than as an upscaler. PID will load all required models automatically, but you can still override the CLIP and VAE and Model for the tiler using the TBG ETUR Labs Upscaler node.\n\nTile prompt generation can describe each tile with a vision-language model. The prompt in this node is written for edit model Flux2 and QwenVL thinking behavior: short, literal descriptions of what is visible. \n\nEdit models usually need command-like prompts such as restore, remove blur, match color, preserve identity. But this should be part of the general promt of the Refiner node.\n\nFor local or online or local servers, use the Labs Upscaler node. It can point at an OpenAI-compatible endpoint such as Ollama, llama.cpp server, or another local API. Set the base URL, model name, and mode there this will be way faster than using the comftyui models.\n\nFusion modes: Soft Merge is closer to a USDU-style tile blend. NGTF (Neuro Generative Tile Fusion) is a stronger learned/finetuned fusion technique for seamless creative refinements and needs at least a free API key. \n\nReference margin is usfull to give the model more content but will be cut out later. 32\n\nFusion blur controls transition softness for the AI generated fusion area. 64-128\n\nStrength controls how much fusion generation. 0.95 \n\nFeather mask values are critical for Soft Merge, as they define the pyramidal Laplacian blending region where the tiles overlap. So 64-126 on soft merge and way lower in NGTF 0 to 16\n\nSoft Merge uses only a feather mask and the Magnific reference; all other settings belong to NGTF.\n\nVLM Process Selected Tile Only” means that if you don’t want to regenerate all prompts, but only need a new prompt for one or two tiles, you can simply enable this option and apply it just to those selected tiles.\n\nUse Optimize upscale factor to match full tile sizes to avoid excessively large tile overlaps.\n\nPreset if you dont need tiles set it to Full iamge\n\nFragmentation is a multiplyer for tile size so 0.5 is 50% tile-size 2 is 200% tile-size.\n\n\nSet your API keys not in the Node - it will be copyed into the workflow and iamges. Use a enviroment variable for it and leave the field empty."
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -631,6 +698,9 @@
       "widgets_values": [
         "Load Image is the original source image. The same image feeds the tiler and the cleanup branch.\n\nAI Source Pattern Cleanup removes destructive grit patterns often found in AI-generated or reprocessed images. It is useful for OpenAI-generated image artifacts, hidden grids, checker texture, or repeated high-frequency luma noise. Good starting values are around 0.5 strength and 128 radius/scale. Too much cleanup can soften real texture.\n\nLoad Image (as Mask) creates user-directed special tile areas. Every marked area over the input image becomes a separate segment tile. Use this for faces, hands, logos, fabric patches, or any important element that normal square tiles might cut in half. Segment tiles keep one face or object as one structure, which prevents texture or identity differences between neighboring normal tiles. ( pluged into the refiner )"
       ],
+      "widgets_values_named": {
+        "text": "Load Image is the original source image. The same image feeds the tiler and the cleanup branch.\n\nAI Source Pattern Cleanup removes destructive grit patterns often found in AI-generated or reprocessed images. It is useful for OpenAI-generated image artifacts, hidden grids, checker texture, or repeated high-frequency luma noise. Good starting values are around 0.5 strength and 128 radius/scale. Too much cleanup can soften real texture.\n\nLoad Image (as Mask) creates user-directed special tile areas. Every marked area over the input image becomes a separate segment tile. Use this for faces, hands, logos, fabric patches, or any important element that normal square tiles might cut in half. Segment tiles keep one face or object as one structure, which prevents texture or identity differences between neighboring normal tiles. ( pluged into the refiner )"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -666,7 +736,10 @@
       },
       "widgets_values": [
         "Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro.safetensors"
-      ]
+      ],
+      "widgets_values_named": {
+        "control_net_name": "Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro.safetensors"
+      }
     },
     {
       "id": 337,
@@ -705,7 +778,10 @@
       },
       "widgets_values": [
         "canny/lineart/anime_lineart/mlsd"
-      ]
+      ],
+      "widgets_values_named": {
+        "type": "canny/lineart/anime_lineart/mlsd"
+      }
     },
     {
       "id": 338,
@@ -744,7 +820,10 @@
       },
       "widgets_values": [
         "depth"
-      ]
+      ],
+      "widgets_values_named": {
+        "type": "depth"
+      }
     },
     {
       "id": 347,
@@ -795,7 +874,11 @@
       "widgets_values": [
         1024,
         "fixed"
-      ]
+      ],
+      "widgets_values_named": {
+        "value": 1024,
+        "fixed": "fixed"
+      }
     },
     {
       "id": 348,
@@ -846,7 +929,11 @@
       "widgets_values": [
         1024,
         "fixed"
-      ]
+      ],
+      "widgets_values_named": {
+        "value": 1024,
+        "fixed": "fixed"
+      }
     },
     {
       "id": 349,
@@ -912,7 +999,10 @@
       },
       "widgets_values": [
         "max(((a + 15) // 16) * 16, 256)"
-      ]
+      ],
+      "widgets_values_named": {
+        "expression": "max(((a + 15) // 16) * 16, 256)"
+      }
     },
     {
       "id": 350,
@@ -978,7 +1068,10 @@
       },
       "widgets_values": [
         "max(((a + 15) // 16) * 16, 256)"
-      ]
+      ],
+      "widgets_values_named": {
+        "expression": "max(((a + 15) // 16) * 16, 256)"
+      }
     },
     {
       "id": 351,
@@ -1027,8 +1120,7 @@
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
         "secondTabWidth": 65
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 352,
@@ -1078,7 +1170,11 @@
       "widgets_values": [
         "",
         "mu"
-      ]
+      ],
+      "widgets_values_named": {
+        "json_string": "",
+        "key": "mu"
+      }
     },
     {
       "id": 353,
@@ -1127,8 +1223,7 @@
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
         "secondTabWidth": 65
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 354,
@@ -1178,7 +1273,11 @@
       "widgets_values": [
         "{\n  \"Quality\": {\n    \"num_steps\": 48,\n    \"mu\": 0.0,\n    \"std\": 1.5,\n    \"preset_id\": \"V4_QUALITY_48\"\n  },\n  \"Default\": {\n    \"num_steps\": 20,\n    \"mu\": 0.0,\n    \"std\": 1.75,\n    \"preset_id\": \"V4_DEFAULT_20\"\n  },\n  \"Turbo\": {\n    \"num_steps\": 12,\n    \"mu\": 0.5,\n    \"std\": 1.75,\n    \"preset_id\": \"V4_TURBO_12\"\n  }\n}",
         "Default"
-      ]
+      ],
+      "widgets_values_named": {
+        "json_string": "{\n  \"Quality\": {\n    \"num_steps\": 48,\n    \"mu\": 0.0,\n    \"std\": 1.5,\n    \"preset_id\": \"V4_QUALITY_48\"\n  },\n  \"Default\": {\n    \"num_steps\": 20,\n    \"mu\": 0.0,\n    \"std\": 1.75,\n    \"preset_id\": \"V4_DEFAULT_20\"\n  },\n  \"Turbo\": {\n    \"num_steps\": 12,\n    \"mu\": 0.5,\n    \"std\": 1.75,\n    \"preset_id\": \"V4_TURBO_12\"\n  }\n}",
+        "key": "Default"
+      }
     },
     {
       "id": 355,
@@ -1233,7 +1332,12 @@
         "",
         "'",
         "\""
-      ]
+      ],
+      "widgets_values_named": {
+        "string": "",
+        "find": "'",
+        "replace": "\""
+      }
     },
     {
       "id": 356,
@@ -1283,7 +1387,11 @@
       "widgets_values": [
         "",
         "num_steps"
-      ]
+      ],
+      "widgets_values_named": {
+        "json_string": "",
+        "key": "num_steps"
+      }
     },
     {
       "id": 357,
@@ -1333,7 +1441,11 @@
       "widgets_values": [
         "",
         "std"
-      ]
+      ],
+      "widgets_values_named": {
+        "json_string": "",
+        "key": "std"
+      }
     },
     {
       "id": 358,
@@ -1382,8 +1494,7 @@
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
         "secondTabWidth": 65
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 346,
@@ -1433,7 +1544,12 @@
         "ideogram4\\qwen3vl_8b_fp8_scaled.safetensors",
         "ideogram4",
         "default"
-      ]
+      ],
+      "widgets_values_named": {
+        "clip_name": "ideogram4\\qwen3vl_8b_fp8_scaled.safetensors",
+        "type": "ideogram4",
+        "device": "default"
+      }
     },
     {
       "id": 341,
@@ -1482,7 +1598,12 @@
         "1:1 (Square)",
         1,
         8
-      ]
+      ],
+      "widgets_values_named": {
+        "aspect_ratio": "1:1 (Square)",
+        "megapixels": 1,
+        "multiple": 8
+      }
     },
     {
       "id": 332,
@@ -1515,7 +1636,10 @@
       },
       "widgets_values": [
         "Flux\\Flux.1-dev-Controlnet-Upscaler.safetensors"
-      ]
+      ],
+      "widgets_values_named": {
+        "control_net_name": "Flux\\Flux.1-dev-Controlnet-Upscaler.safetensors"
+      }
     },
     {
       "id": 111,
@@ -1587,6 +1711,15 @@
         "None",
         "ControlNet"
       ],
+      "widgets_values_named": {
+        "strength": 0.3,
+        "start": 0,
+        "end": 0.5,
+        "canny_low_threshold": 100,
+        "canny_high_threshold": 150,
+        "preprocessor": "None",
+        "controlnet_mode": "ControlNet"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -1638,7 +1771,15 @@
         "Default",
         "Turbo",
         ""
-      ]
+      ],
+      "widgets_values_named": {
+        "choice": "Quality",
+        "index": 0,
+        "option1": "Quality",
+        "option2": "Default",
+        "option3": "Turbo",
+        "option4": ""
+      }
     },
     {
       "id": 365,
@@ -1686,7 +1827,10 @@
       },
       "widgets_values": [
         "{\n    \"high_level_description\": \"A surreal streetwear mixed-media collage poster featuring a relaxed skateboarder mid-air against a vibrant blue sky, backed by giant puffy 3D letters spelling 'COMFY'. The composition blends retro magazine cutout aesthetics with grunge elements like torn paper banners and distressed red stamps, conveying an effortless, cozy vibe.\",\n    \"style_description\": {\n        \"aesthetics\": \"Retro magazine cutout style, mixed-media digital collage, high-contrast streetwear graphic, featuring rough ripped paper edges and distressed grunge textures.\",\n        \"lighting\": \"High-contrast flash mixed with harsh midday sunlight on the skater cutout, contrasting with flat, bright graphic lighting on the 3D typography.\",\n        \"photo\": \"Vintage grainy 35mm film with distressed halftone scan textures and subtle light leaks.\",\n        \"medium\": \"Mixed-media digital collage\",\n        \"color_palette\": [\"#1E73BE\", \"#FDFDFD\", \"#C82A2A\", \"#657C9C\", \"#EFEFEF\"]\n    },\n    \"compositional_deconstruction\": {\n        \"background\": \"A vibrant, clear blue sky layered with a vintage grainy film texture and subtle halftone dot patterns, transitioning down to an implied pale gray concrete ramp at the very bottom edge.\",\n        \"elements\": [\n            {\n                \"type\": \"obj\",\n                \"bbox\": [128, 149, 354, 810],\n                \"desc\": \"Massive 3D puffy, inflatable white typography spelling 'COMFY'. The letters stretch across the upper half of the canvas, acting as a surreal, soft cloud-like backdrop.\",\n                \"color_palette\": [\"#FDFDFD\", \"#E0E0E0\", \"#D3DBE2\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [459, 37, 727, 264],\n                \"desc\": \"A cluster of oversized, distressed red stamped circles and dots, applied loosely to the midground like a grunge ink stamp, partially obscuring the bottom left of the text.\",\n                \"color_palette\": [\"#C82A2A\", \"#A11D1D\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [23, 366, 153, 666],\n                \"desc\": \"A vertically oriented, torn paper side banner pinned to the left edge. The rough-edged paper displays the bold, stamped text 'STAY COZY' in high-contrast black ink.\",\n                \"color_palette\": [\"#EFEFEF\", \"#1A1A1A\", \"#C82A2A\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [287, 210, 756, 819],\n                \"desc\": \"A sharp photographic cutout of a skateboarder mid-air in a relaxed pose. He wears loose-fitting washed denim jeans and a plain white tee, appearing to effortlessly float above the concrete ramp. A distinct white cutout border surrounds his silhouette.\",\n                \"color_palette\": [\"#FDFDFD\", \"#657C9C\", \"#2B2B2B\", \"#DCA57D\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [773, 39, 973, 187],\n                \"desc\": \"A surreal, miniature floating skateboard cutout, positioned playfully in the upper right sky as if defying gravity.\",\n                \"color_palette\": [\"#D2A679\", \"#2B2B2B\", \"#C82A2A\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [105, 830, 905, 980],\n                \"desc\": \"A wide, horizontal strip of heavily textured torn paper spanning the lower third of the composition. It features the bold typographic phrase 'BEYOND THE COMFORT ZONE' intermixed with 'EFFORTLESS RIDE' alongside ripped edges that reveal the background.\",\n                \"color_palette\": [\"#EFEFEF\", \"#1A1A1A\", \"#999999\"]\n            }\n        ]\n    }\n}"
-      ]
+      ],
+      "widgets_values_named": {
+        "text": "{\n    \"high_level_description\": \"A surreal streetwear mixed-media collage poster featuring a relaxed skateboarder mid-air against a vibrant blue sky, backed by giant puffy 3D letters spelling 'COMFY'. The composition blends retro magazine cutout aesthetics with grunge elements like torn paper banners and distressed red stamps, conveying an effortless, cozy vibe.\",\n    \"style_description\": {\n        \"aesthetics\": \"Retro magazine cutout style, mixed-media digital collage, high-contrast streetwear graphic, featuring rough ripped paper edges and distressed grunge textures.\",\n        \"lighting\": \"High-contrast flash mixed with harsh midday sunlight on the skater cutout, contrasting with flat, bright graphic lighting on the 3D typography.\",\n        \"photo\": \"Vintage grainy 35mm film with distressed halftone scan textures and subtle light leaks.\",\n        \"medium\": \"Mixed-media digital collage\",\n        \"color_palette\": [\"#1E73BE\", \"#FDFDFD\", \"#C82A2A\", \"#657C9C\", \"#EFEFEF\"]\n    },\n    \"compositional_deconstruction\": {\n        \"background\": \"A vibrant, clear blue sky layered with a vintage grainy film texture and subtle halftone dot patterns, transitioning down to an implied pale gray concrete ramp at the very bottom edge.\",\n        \"elements\": [\n            {\n                \"type\": \"obj\",\n                \"bbox\": [128, 149, 354, 810],\n                \"desc\": \"Massive 3D puffy, inflatable white typography spelling 'COMFY'. The letters stretch across the upper half of the canvas, acting as a surreal, soft cloud-like backdrop.\",\n                \"color_palette\": [\"#FDFDFD\", \"#E0E0E0\", \"#D3DBE2\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [459, 37, 727, 264],\n                \"desc\": \"A cluster of oversized, distressed red stamped circles and dots, applied loosely to the midground like a grunge ink stamp, partially obscuring the bottom left of the text.\",\n                \"color_palette\": [\"#C82A2A\", \"#A11D1D\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [23, 366, 153, 666],\n                \"desc\": \"A vertically oriented, torn paper side banner pinned to the left edge. The rough-edged paper displays the bold, stamped text 'STAY COZY' in high-contrast black ink.\",\n                \"color_palette\": [\"#EFEFEF\", \"#1A1A1A\", \"#C82A2A\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [287, 210, 756, 819],\n                \"desc\": \"A sharp photographic cutout of a skateboarder mid-air in a relaxed pose. He wears loose-fitting washed denim jeans and a plain white tee, appearing to effortlessly float above the concrete ramp. A distinct white cutout border surrounds his silhouette.\",\n                \"color_palette\": [\"#FDFDFD\", \"#657C9C\", \"#2B2B2B\", \"#DCA57D\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [773, 39, 973, 187],\n                \"desc\": \"A surreal, miniature floating skateboard cutout, positioned playfully in the upper right sky as if defying gravity.\",\n                \"color_palette\": [\"#D2A679\", \"#2B2B2B\", \"#C82A2A\"]\n            },\n            {\n                \"type\": \"obj\",\n                \"bbox\": [105, 830, 905, 980],\n                \"desc\": \"A wide, horizontal strip of heavily textured torn paper spanning the lower third of the composition. It features the bold typographic phrase 'BEYOND THE COMFORT ZONE' intermixed with 'EFFORTLESS RIDE' alongside ripped edges that reveal the background.\",\n                \"color_palette\": [\"#EFEFEF\", \"#1A1A1A\", \"#999999\"]\n            }\n        ]\n    }\n}"
+      }
     },
     {
       "id": 343,
@@ -1733,7 +1877,10 @@
       },
       "widgets_values": [
         "flux2-vae.safetensors"
-      ]
+      ],
+      "widgets_values_named": {
+        "vae_name": "flux2-vae.safetensors"
+      }
     },
     {
       "id": 137,
@@ -1770,6 +1917,9 @@
       "widgets_values": [
         "RFNTILE. Match the color of image 1, Change the image to match the style of image 1. Transform the Image so that it matches Image 1 exactly in composition, structure, geometry, perspective, object placement, proportions, pose, alignment, scale, camera position, and spatial relationships.\n\nRefine and add detail to this upscaled tile. Restore the image quality and resolve it to a sharp, high-resolution result. Remove compression artifacts, banding, and noise, and clarify soft or blurred areas into crisp, clean edges and definition. Enrich existing textures and surfaces with fine, intricate, physically accurate detail, matching the existing grain, focus, and material properties of each surface. Keep in-focus areas crisp and sharp, keep softly blurred areas soft, and leave flat or evenly-toned areas clean and smooth. Recover detail only where detail is already present, and add no new objects, elements, or content — refine only what is already in the tile. Preserve the original lighting, colour, contrast, and composition exactly as shown. Produce a clean, photorealistic result faithful to the source."
       ],
+      "widgets_values_named": {
+        "value": "RFNTILE. Match the color of image 1, Change the image to match the style of image 1. Transform the Image so that it matches Image 1 exactly in composition, structure, geometry, perspective, object placement, proportions, pose, alignment, scale, camera position, and spatial relationships.\n\nRefine and add detail to this upscaled tile. Restore the image quality and resolve it to a sharp, high-resolution result. Remove compression artifacts, banding, and noise, and clarify soft or blurred areas into crisp, clean edges and definition. Enrich existing textures and surfaces with fine, intricate, physically accurate detail, matching the existing grain, focus, and material properties of each surface. Keep in-focus areas crisp and sharp, keep softly blurred areas soft, and leave flat or evenly-toned areas clean and smooth. Recover detail only where detail is already present, and add no new objects, elements, or content — refine only what is already in the tile. Preserve the original lighting, colour, contrast, and composition exactly as shown. Produce a clean, photorealistic result faithful to the source."
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -1794,6 +1944,9 @@
       "widgets_values": [
         "Refiner PRO Main Tutorial\n\nModel-TYPE\n\nTBG ETUR Refiner PRO is the main generation node. The most important setting is Model Type. This node is model agnostic, so some controls only work for some model families. \nRedux is for Flux 1 family only. RF Untwisting is for compatible Flux/Flux 2 style models and must be fed by the RF pipe.\n\nVAE DECODE\nVAE Encoder/Decoder modes: Tiled Slow (Normal VAE) is the safest option, prioritizing stability and accuracy, but it runs slower. The Optimized/Faster VAE modes improve speed by trading off some precision, while still being tuned to preserve stable colors and deep blacks.\n\nThe NVIDIA PiD 4x VAE modes are designed specifically for compatible PiD-capable model families, such as Flux 2 and Z-Image–style setups. This PiD 4x path performs 4× upscaling and enhanced detail reconstruction, making it significantly more computationally expensive than standard decoding.\n\nFor normal usage, the fine-tuned and tested **Flux 1 and Flux 2 families** are fully supported and expected to perform reliably and consistently with these modes.\n\nDenoise methods\n\nDefault treats denoise like a step percentage. Normalized advanced treats denoise as a real sigma start value. The benefit is that sampler/scheduler changes drift less because all curves start from the chosen sigma. It’s easier to achieve the same effect across all sampler and scheduler settings.\n\nDenoise mask\n\nDenoise mask is a grayscale image at the same size as the full untiled input iamge. Each pixel becomes its own denoise multiplier, multiplied by the global denoise value. This means the run has one denoise value per pixel, not just one denoise value for the whole image. \n\nPer-pixel denoise\n\nis controling the strength of the Denoise mask\n\nImage Stabilizer \n\nImage Stabilizer automatically generates a complexity mask to protect uniform regions—such as skies or flat backgrounds—from tile-to-tile shifting artifacts.\nIn many cases, it’s a highly effective tool for achieving more consistent outputs. While it isn’t a ControlNet, its impact during upscaling can feel similar in practice.\nIt’s strongly recommended when working with large areas of sky or solid studio backdrops, as it helps prevent color bleeding and seams across tile boundaries.\n\n\nSmoother, Sharper, and Detail Enhancer \n\nare model injections controls ( not postporcessing) . Smoother reduces harsh micro-noise and transitions. Sharper restores edge clarity. Detail Enhancer boosts small material detail, but too high can create artefacts.\n\nRedux strength \n\ncontrols the redux strengt applies only when Redux models are used for Flux1 model family.\n\nControlNet strengt\n\nOverall ControlNet strength applies a multiplier to normal ControlNetsplugt into the Controlnet pipe, it is not applied to reference images or hooks.\n\nColor match\n\nIt’s a multi-step color correction setting, and you can choose the method you prefer. We recommend our new FLUX 2 color drift–optimized TBG Detail Preserving Tile Stabilizer methods , its align colors across tiles while preserving newly generated details. An additional tip node is available to support this process.\n\nBe careful with wavelet adaptive or LAB detail preservation on creative upscales where the new image is not the same as the original; those methods can create strong ghost effects.\n\nGeometric Drift Correction \n\nThis was originally only needed for edit models like Flux 2, but it served as a solid starting point for a study where inspiert from the PixelDriftFix node based on SIFT we improving feature detection toward more precise and consistent behavior.\n\nOn a single image, a failure isn’t a major issue, but across tiled processing it becomes much more noticeable and harmful. This node therefore uses four different correction methods, each progressively more GPU-expensive than the last. It starts with the simplest approach and, if that fails, moves through the next stages until a valid match is found to correct tile position and drift, while keeping structural changes as soft and non-destructive as possible. An additional tip node is available to support this process.\n\n\nFast Preview / Process selected tiles only \n\ntests settings on one tile, useful for finding seed/denoise without calculating everything. Process selected tiles only lets you test 2-3 tiles or redo a segment after a full run and it should fit in again into the full iamge. Enter selected tile indexes separated by commas. \n\nVRAM modes control memory strategy. Faster modes keep more in memory. Safer modes unload/cache more aggressively for lower VRAM systems.\n\n\nALL about the new nodes and feacher : https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433"
       ],
+      "widgets_values_named": {
+        "text": "Refiner PRO Main Tutorial\n\nModel-TYPE\n\nTBG ETUR Refiner PRO is the main generation node. The most important setting is Model Type. This node is model agnostic, so some controls only work for some model families. \nRedux is for Flux 1 family only. RF Untwisting is for compatible Flux/Flux 2 style models and must be fed by the RF pipe.\n\nVAE DECODE\nVAE Encoder/Decoder modes: Tiled Slow (Normal VAE) is the safest option, prioritizing stability and accuracy, but it runs slower. The Optimized/Faster VAE modes improve speed by trading off some precision, while still being tuned to preserve stable colors and deep blacks.\n\nThe NVIDIA PiD 4x VAE modes are designed specifically for compatible PiD-capable model families, such as Flux 2 and Z-Image–style setups. This PiD 4x path performs 4× upscaling and enhanced detail reconstruction, making it significantly more computationally expensive than standard decoding.\n\nFor normal usage, the fine-tuned and tested **Flux 1 and Flux 2 families** are fully supported and expected to perform reliably and consistently with these modes.\n\nDenoise methods\n\nDefault treats denoise like a step percentage. Normalized advanced treats denoise as a real sigma start value. The benefit is that sampler/scheduler changes drift less because all curves start from the chosen sigma. It’s easier to achieve the same effect across all sampler and scheduler settings.\n\nDenoise mask\n\nDenoise mask is a grayscale image at the same size as the full untiled input iamge. Each pixel becomes its own denoise multiplier, multiplied by the global denoise value. This means the run has one denoise value per pixel, not just one denoise value for the whole image. \n\nPer-pixel denoise\n\nis controling the strength of the Denoise mask\n\nImage Stabilizer \n\nImage Stabilizer automatically generates a complexity mask to protect uniform regions—such as skies or flat backgrounds—from tile-to-tile shifting artifacts.\nIn many cases, it’s a highly effective tool for achieving more consistent outputs. While it isn’t a ControlNet, its impact during upscaling can feel similar in practice.\nIt’s strongly recommended when working with large areas of sky or solid studio backdrops, as it helps prevent color bleeding and seams across tile boundaries.\n\n\nSmoother, Sharper, and Detail Enhancer \n\nare model injections controls ( not postporcessing) . Smoother reduces harsh micro-noise and transitions. Sharper restores edge clarity. Detail Enhancer boosts small material detail, but too high can create artefacts.\n\nRedux strength \n\ncontrols the redux strengt applies only when Redux models are used for Flux1 model family.\n\nControlNet strengt\n\nOverall ControlNet strength applies a multiplier to normal ControlNetsplugt into the Controlnet pipe, it is not applied to reference images or hooks.\n\nColor match\n\nIt’s a multi-step color correction setting, and you can choose the method you prefer. We recommend our new FLUX 2 color drift–optimized TBG Detail Preserving Tile Stabilizer methods , its align colors across tiles while preserving newly generated details. An additional tip node is available to support this process.\n\nBe careful with wavelet adaptive or LAB detail preservation on creative upscales where the new image is not the same as the original; those methods can create strong ghost effects.\n\nGeometric Drift Correction \n\nThis was originally only needed for edit models like Flux 2, but it served as a solid starting point for a study where inspiert from the PixelDriftFix node based on SIFT we improving feature detection toward more precise and consistent behavior.\n\nOn a single image, a failure isn’t a major issue, but across tiled processing it becomes much more noticeable and harmful. This node therefore uses four different correction methods, each progressively more GPU-expensive than the last. It starts with the simplest approach and, if that fails, moves through the next stages until a valid match is found to correct tile position and drift, while keeping structural changes as soft and non-destructive as possible. An additional tip node is available to support this process.\n\n\nFast Preview / Process selected tiles only \n\ntests settings on one tile, useful for finding seed/denoise without calculating everything. Process selected tiles only lets you test 2-3 tiles or redo a segment after a full run and it should fit in again into the full iamge. Enter selected tile indexes separated by commas. \n\nVRAM modes control memory strategy. Faster modes keep more in memory. Safer modes unload/cache more aggressively for lower VRAM systems.\n\n\nALL about the new nodes and feacher : https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -1830,6 +1983,9 @@
       "widgets_values": [
         "freckles, added freckles, new freckles"
       ],
+      "widgets_values_named": {
+        "value": "freckles, added freckles, new freckles"
+      },
       "color": "#322",
       "bgcolor": "#533"
     },
@@ -1854,6 +2010,9 @@
       "widgets_values": [
         "Set the same size you use as Tilesize in the TBG ETUR Upscaler and Tile Generator PRO"
       ],
+      "widgets_values_named": {
+        "text": "Set the same size you use as Tilesize in the TBG ETUR Upscaler and Tile Generator PRO"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -2034,6 +2193,16 @@
         "unchanged",
         false
       ],
+      "widgets_values_named": {
+        "Rebuild_only_modified_tiles": true,
+        "requeue": 344,
+        "Filter by Indexes": "",
+        "Prompt": "",
+        "Denoise": "unchanged",
+        "Seed": "",
+        "CNet Strength": "unchanged",
+        "Reset": false
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -2082,8 +2251,7 @@
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
         "secondTabWidth": 65
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 363,
@@ -2133,7 +2301,11 @@
       "widgets_values": [
         "Ideogram4\\ideogram4_unconditional_fp8_scaled.safetensors",
         "default"
-      ]
+      ],
+      "widgets_values_named": {
+        "unet_name": "Ideogram4\\ideogram4_unconditional_fp8_scaled.safetensors",
+        "weight_dtype": "default"
+      }
     },
     {
       "id": 391,
@@ -2188,7 +2360,10 @@
       },
       "widgets_values": [
         7
-      ]
+      ],
+      "widgets_values_named": {
+        "cfg": 7
+      }
     },
     {
       "id": 362,
@@ -2239,7 +2414,11 @@
       "widgets_values": [
         "Ideogram4\\ideogram4_fp8_scaled.safetensors",
         "default"
-      ]
+      ],
+      "widgets_values_named": {
+        "unet_name": "Ideogram4\\ideogram4_fp8_scaled.safetensors",
+        "weight_dtype": "default"
+      }
     },
     {
       "id": 370,
@@ -2287,7 +2466,12 @@
         3,
         0.7,
         1
-      ]
+      ],
+      "widgets_values_named": {
+        "cfg": 3,
+        "start_percent": 0.7,
+        "end_percent": 1
+      }
     },
     {
       "id": 388,
@@ -2329,7 +2513,12 @@
         3,
         0.7,
         1
-      ]
+      ],
+      "widgets_values_named": {
+        "cfg": 3,
+        "start_percent": 0.7,
+        "end_percent": 1
+      }
     },
     {
       "id": 209,
@@ -2373,6 +2562,10 @@
         "ChatGPT Image Jun 13, 2026, 03_41_33 PM.png",
         "image"
       ],
+      "widgets_values_named": {
+        "image": "ChatGPT Image Jun 13, 2026, 03_41_33 PM.png",
+        "upload": "image"
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -2459,6 +2652,29 @@
         "",
         ""
       ],
+      "widgets_values_named": {
+        "presets": "NONE",
+        "Fragmentation": 1,
+        "tile_size_w": 1024,
+        "tile_size_h": 1024,
+        "upscale_model": "FAST/_lanczos",
+        "upscale_by": 2,
+        "Optimize_Upscale_Factor_For_Tile_Use": true,
+        "VLM_Model": "NONE",
+        "VLM_Quantization": "None (FP16)",
+        "VLM_Prompt": "You are an image description model. Your task is to describe the image in a very short and simple sentence.\n\nRules:\n\n* Always start your response with: \"the image shows\"\n\n* Keep the description short and minimal.\n\n* Describe only the most important visible elements.\n\n* If multiple objects exist, briefly mention their position (left, right, center, background).\n\n* Do not add explanations, opinions, or extra details.\n\n* Use plain language.\n\nExamples:\n\n* the image shows a arm\n\n* the image shows a face\n\n* the image shows the left hand and a cup on the right\n\n* the image shows two fingers on the left and a cup on the right with a jungle in the background\n\nNow describe the image following these rules.",
+        "VLM_Process_Selected_Tiles_Only": true,
+        "VLM_Selected_Tiles_Index_Numbers": "10",
+        "VLM_seed": 0,
+        "control_after_generate": "fixed",
+        "Fusion Mode": "Neuro_Generative_Tile_Fusion",
+        "Fusion Reference Margin": 32,
+        "Fusion Margin": 128,
+        "Fusion Strength": 0.95,
+        "Feather Mask": 16,
+        "PRO_api_token": "",
+        "TBG Web Panel": ""
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -2523,7 +2739,7 @@
           "name": "SIGMAS",
           "type": "SIGMAS",
           "links": [
-            565
+            579
           ]
         }
       ],
@@ -2545,7 +2761,14 @@
         1024,
         0.5,
         1.75
-      ]
+      ],
+      "widgets_values_named": {
+        "steps": 20,
+        "width": 1024,
+        "height": 1024,
+        "mu": 0.5,
+        "std": 1.75
+      }
     },
     {
       "id": 319,
@@ -2568,6 +2791,9 @@
       "widgets_values": [
         "What This Workflow Is And Required Models\n\nThis workflow is a Flux 1 ETUR upscaling and refinement setup. It loads an input image, optionally cleans destructive AI-source grit, splits the image into tiles and optional mask-defined segments, refines each tile with Flux 1, then fuses the result back into one high-resolution image.\n\nModels actually used by this workflow:\n- Main model: FLUX\\flux1-dev-fp8.safetensors -> https://huggingface.co/Comfy-Org/flux1-dev/blob/main/flux1-dev-fp8.safetensors\n- Text encoder 1: t5xxl_fp8_e4m3fn.safetensors -> https://huggingface.co/comfyanonymous/flux_text_encoders/blob/main/t5xxl_fp8_e4m3fn.safetensors\n- Text encoder 2 / CLIP-L: Long-ViT-L-14-BEST-GmP-smooth-ft.safetensors\n- VAE: ae.safetensors\n- Flux 1 upscale ControlNet: Flux\\Flux.1-dev-Controlnet-Upscaler.safetensors -> https://huggingface.co/jasperai/Flux.1-dev-Controlnet-Upscaler\n- Flux 1 ControlNet Union Pro: Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro.safetensors -> https://huggingface.co/Shakker-Labs/FLUX.1-dev-ControlNet-Union-Pro\n- Redux CLIP Vision: siglip2-so400m-patch16-512.safetensors -> https://huggingface.co/google/siglip2-so400m-patch16-512\n- Redux Style Model: flex1_redux_siglip2_512.safetensors -> https://huggingface.co/ostris/Flex.1-alpha-Redux\n\nInstall model files into the matching ComfyUI model folders used by your loaders, then reopen the workflow if ComfyUI shows missing model warnings."
       ],
+      "widgets_values_named": {
+        "text": "What This Workflow Is And Required Models\n\nThis workflow is a Flux 1 ETUR upscaling and refinement setup. It loads an input image, optionally cleans destructive AI-source grit, splits the image into tiles and optional mask-defined segments, refines each tile with Flux 1, then fuses the result back into one high-resolution image.\n\nModels actually used by this workflow:\n- Main model: FLUX\\flux1-dev-fp8.safetensors -> https://huggingface.co/Comfy-Org/flux1-dev/blob/main/flux1-dev-fp8.safetensors\n- Text encoder 1: t5xxl_fp8_e4m3fn.safetensors -> https://huggingface.co/comfyanonymous/flux_text_encoders/blob/main/t5xxl_fp8_e4m3fn.safetensors\n- Text encoder 2 / CLIP-L: Long-ViT-L-14-BEST-GmP-smooth-ft.safetensors\n- VAE: ae.safetensors\n- Flux 1 upscale ControlNet: Flux\\Flux.1-dev-Controlnet-Upscaler.safetensors -> https://huggingface.co/jasperai/Flux.1-dev-Controlnet-Upscaler\n- Flux 1 ControlNet Union Pro: Flux\\Shakker-LabsFLUX.1-dev-ControlNet-Union-Pro.safetensors -> https://huggingface.co/Shakker-Labs/FLUX.1-dev-ControlNet-Union-Pro\n- Redux CLIP Vision: siglip2-so400m-patch16-512.safetensors -> https://huggingface.co/google/siglip2-so400m-patch16-512\n- Redux Style Model: flex1_redux_siglip2_512.safetensors -> https://huggingface.co/ostris/Flex.1-alpha-Redux\n\nInstall model files into the matching ComfyUI model folders used by your loaders, then reopen the workflow if ComfyUI shows missing model warnings."
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -2604,6 +2830,9 @@
       "widgets_values": [
         "The SIFT drift protection works similarly to PixelDriftFix, but it is object-aware, so it does not introduce a grid pattern. Instead, it detects local geometry differences and shifts drifting details back toward the reference tile. This helps small linear elements, like necklaces, straps, edges, and fine contours, stay in the correct position.\n\nOff\ndisables geometry correction.\n\nx1\nuses classic SIFT alignment only. Fastest, but if SIFT fails it does nothing.\n\nx2 (x1 if fails x2...)\nuses expanded SIFT alignment with highpass, border, AKAZE, and RootSIFT attempts, plus a lightweight phase-translation fallback. Best default.\n\nx3 (x1 if fails x2 if fails x3 ...)\nuses the x2 chain, then tries reverse RGB optical-flow alignment if SIFT cannot find a safe correction. Slower, better for difficult local shifts.\n\nx4 (x1 if fails x2 if fails x3  if fails x4 ...)\nuses the strongest fallback chain, including the slower high-quality DeepFlow option when available. Slowest, best for hard cases."
       ],
+      "widgets_values_named": {
+        "value": "The SIFT drift protection works similarly to PixelDriftFix, but it is object-aware, so it does not introduce a grid pattern. Instead, it detects local geometry differences and shifts drifting details back toward the reference tile. This helps small linear elements, like necklaces, straps, edges, and fine contours, stay in the correct position.\n\nOff\ndisables geometry correction.\n\nx1\nuses classic SIFT alignment only. Fastest, but if SIFT fails it does nothing.\n\nx2 (x1 if fails x2...)\nuses expanded SIFT alignment with highpass, border, AKAZE, and RootSIFT attempts, plus a lightweight phase-translation fallback. Best default.\n\nx3 (x1 if fails x2 if fails x3 ...)\nuses the x2 chain, then tries reverse RGB optical-flow alignment if SIFT cannot find a safe correction. Slower, better for difficult local shifts.\n\nx4 (x1 if fails x2 if fails x3  if fails x4 ...)\nuses the strongest fallback chain, including the slower high-quality DeepFlow option when available. Slowest, best for hard cases."
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -2640,6 +2869,9 @@
       "widgets_values": [
         "`TBG non-structural` is the simple/general correction.\n\nIt compares the generated image/tile to the reference, then adjusts RGB and luma without trying to understand tile borders, masks, restore areas, or neighbors. It has  has a soft low-frequency `16x16` grid correction, so different regions can shift slightly differently. But it is still “global image correction”.\n\n`TBG non-structural tile-aware` is the special ETUR seam/segment correction.\n\nIt only activates for eligible API/member runs in `Neuro Generative Tile Fusion`. If not eligible, it falls back to `TBG non-structural`. It uses the actual tiling context: inpaint masks, protected/fusion borders, PiD restore masks, segment masks, and the fused pre-sampler tile/neighbor authority. Its goal is not just “make the whole tile look like the reference,” but “make this decoded tile or segment fit into the exact place where it will be stitched.”\n\nMain practical difference:\n\n- `TBG non-structural`\n  - available broadly\n  - standalone node uses this\n  - global RGB/luma + smooth `16x16` grid\n  - no mask/border/neighbor awareness\n  - safer and simpler\n  - good for general color drift\n\n- `TBG non-structural tile-aware`\n  - only inside ETUR refiner, not standalone\n  - only for NGTF + valid API/member access\n  - uses masks and tile/segment placement context\n  - corrects borders/restore footprints so copied or composited areas match\n  - also corrects inner areas with spatial/grid correction\n  - designed for PiD/VAE drift, segment seams, and neighbor-fusion color mismatch\n\nSo: use `TBG non-structural` as the normal color match. Use `TBG non-structural tile-aware` when unsin Flux2 or edit model and the problem is tile seams, segment borders, PiD edges, or neighbor overlap colors not matching."
       ],
+      "widgets_values_named": {
+        "value": "`TBG non-structural` is the simple/general correction.\n\nIt compares the generated image/tile to the reference, then adjusts RGB and luma without trying to understand tile borders, masks, restore areas, or neighbors. It has  has a soft low-frequency `16x16` grid correction, so different regions can shift slightly differently. But it is still “global image correction”.\n\n`TBG non-structural tile-aware` is the special ETUR seam/segment correction.\n\nIt only activates for eligible API/member runs in `Neuro Generative Tile Fusion`. If not eligible, it falls back to `TBG non-structural`. It uses the actual tiling context: inpaint masks, protected/fusion borders, PiD restore masks, segment masks, and the fused pre-sampler tile/neighbor authority. Its goal is not just “make the whole tile look like the reference,” but “make this decoded tile or segment fit into the exact place where it will be stitched.”\n\nMain practical difference:\n\n- `TBG non-structural`\n  - available broadly\n  - standalone node uses this\n  - global RGB/luma + smooth `16x16` grid\n  - no mask/border/neighbor awareness\n  - safer and simpler\n  - good for general color drift\n\n- `TBG non-structural tile-aware`\n  - only inside ETUR refiner, not standalone\n  - only for NGTF + valid API/member access\n  - uses masks and tile/segment placement context\n  - corrects borders/restore footprints so copied or composited areas match\n  - also corrects inner areas with spatial/grid correction\n  - designed for PiD/VAE drift, segment seams, and neighbor-fusion color mismatch\n\nSo: use `TBG non-structural` as the normal color match. Use `TBG non-structural tile-aware` when unsin Flux2 or edit model and the problem is tile seams, segment borders, PiD edges, or neighbor overlap colors not matching."
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -2664,101 +2896,11 @@
       "widgets_values": [
         "## TBG ETUR Labs for Refiner\n\nTBG ETUR Labs for Refiner is the laboratory for older, experimental, discarded, or test features and overwrites.\n\nThe preset settings are the best choice, and this is a lab node for us to switch things on and off. **Just leave it as it comes.**\n\nThe only things you may want to use are **Sampler Overwrite**, where you can plug in a Clown Sampler for res2s, **Sigma** for custom sigmas, or, if we don’t have the right **PiD mode**, you can load your own.\n\n### Sampler Overwrite\n\nLets you inject a sampler from another node instead of using the normal Refiner sampler.\n\n### Cropped Positive / Negative\n\nThese conditioning inputs are experimental tools for applying conditioning directly to the cropped tile area.\n\n### Fusion End\n\nCan stop the fusion process early. The slider defines the step at which fusion stops, allowing the later steps more freedom.\n\nFor example, with 10 steps, setting it to **-1** stops at step 9 and gives the sampler full freedom to generate some chaos on the seam. 😉\n\n### Flux 2 Sampler Hook\n\nHelps prevent Flux 2 from getting stuck when using inpainting features or differential diffusion.\n\nIt is currently **off** because we found a better way to handle this.\n\n### Color Structure Stabilizer\n\nAdds a grid of points where color and content are fixed, helping large image-model upscales preserve their structure and color.\n\n**Do not fully add this to the Refiner**, because the Image Stabilizer is much better.\n\n### Max Update Size for Segments\n\nSegments are upscaled by up to **1.5×**, or until they reach the normal tile size. This is where you can override that limit.\n\nSet it to a size that your VRAM and model can support.\n\n### Segment Background Harmonization\n\nTries to make segment results match the surrounding tile/background after segment refinement.\n\nTesting has always been done with this **on**, so we could probably remove the switch.\n\n### All About the New Nodes and Features\n\n[TBG ETUR Version — Patreon](https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433?utm_source=chatgpt.com)\n\n\nAll about the new nodes and feacher : https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433"
       ],
+      "widgets_values_named": {
+        "text": "## TBG ETUR Labs for Refiner\n\nTBG ETUR Labs for Refiner is the laboratory for older, experimental, discarded, or test features and overwrites.\n\nThe preset settings are the best choice, and this is a lab node for us to switch things on and off. **Just leave it as it comes.**\n\nThe only things you may want to use are **Sampler Overwrite**, where you can plug in a Clown Sampler for res2s, **Sigma** for custom sigmas, or, if we don’t have the right **PiD mode**, you can load your own.\n\n### Sampler Overwrite\n\nLets you inject a sampler from another node instead of using the normal Refiner sampler.\n\n### Cropped Positive / Negative\n\nThese conditioning inputs are experimental tools for applying conditioning directly to the cropped tile area.\n\n### Fusion End\n\nCan stop the fusion process early. The slider defines the step at which fusion stops, allowing the later steps more freedom.\n\nFor example, with 10 steps, setting it to **-1** stops at step 9 and gives the sampler full freedom to generate some chaos on the seam. 😉\n\n### Flux 2 Sampler Hook\n\nHelps prevent Flux 2 from getting stuck when using inpainting features or differential diffusion.\n\nIt is currently **off** because we found a better way to handle this.\n\n### Color Structure Stabilizer\n\nAdds a grid of points where color and content are fixed, helping large image-model upscales preserve their structure and color.\n\n**Do not fully add this to the Refiner**, because the Image Stabilizer is much better.\n\n### Max Update Size for Segments\n\nSegments are upscaled by up to **1.5×**, or until they reach the normal tile size. This is where you can override that limit.\n\nSet it to a size that your VRAM and model can support.\n\n### Segment Background Harmonization\n\nTries to make segment results match the surrounding tile/background after segment refinement.\n\nTesting has always been done with this **on**, so we could probably remove the switch.\n\n### All About the New Nodes and Features\n\n[TBG ETUR Version — Patreon](https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433?utm_source=chatgpt.com)\n\n\nAll about the new nodes and feacher : https://www.patreon.com/TB_LAAR/posts/tbg-etur-version-160118433"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
-    },
-    {
-      "id": 397,
-      "type": "TBG ETUR Labs for Refiner",
-      "pos": [
-        4208.982517021264,
-        2343.647043513585
-      ],
-      "size": [
-        500,
-        466
-      ],
-      "flags": {},
-      "order": 60,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "PID Diffusion Model",
-          "name": "PID_Model",
-          "shape": 7,
-          "type": "MODEL",
-          "link": null
-        },
-        {
-          "label": "ColorMatch Debug Gates",
-          "name": "ColorMatch_Debug",
-          "shape": 7,
-          "type": "tbg_colormatch_debug",
-          "link": null
-        },
-        {
-          "label": "Sigmas with denoise 1",
-          "name": "Custom_Sigmas_!DENOISE=1",
-          "shape": 7,
-          "type": "SIGMAS",
-          "link": 565
-        },
-        {
-          "label": "Overwrites the Sampler Name field",
-          "name": "Sampler",
-          "shape": 7,
-          "type": "SAMPLER",
-          "link": null
-        },
-        {
-          "label": "Ideogram4 Guider",
-          "name": "Ideogram4_Guider",
-          "shape": 7,
-          "type": "GUIDER",
-          "link": 566
-        },
-        {
-          "name": "cropped_positive",
-          "shape": 7,
-          "type": "CONDITIONING",
-          "link": null
-        },
-        {
-          "name": "cropped_negative",
-          "shape": 7,
-          "type": "CONDITIONING",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output_1",
-          "type": "labs_refiner",
-          "links": [
-            574
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "tbg-etur",
-        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
-        "Node name for S&R": "TBG ETUR Labs for Refiner"
-      },
-      "widgets_values": [
-        1,
-        0,
-        "Inpainting On with Noise Mask and Conditioning",
-        true,
-        true,
-        false,
-        0,
-        false,
-        "gpupyramid",
-        true,
-        "Inner Tile + Global Embedding",
-        2048,
-        true
-      ]
     },
     {
       "id": 339,
@@ -2793,6 +2935,9 @@
       "widgets_values": [
         "You can add 4x VAE uspcale here in vAE encode"
       ],
+      "widgets_values_named": {
+        "value": "You can add 4x VAE uspcale here in vAE encode"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -2817,6 +2962,9 @@
       "widgets_values": [
         "Not fully.\n\nFor the new `Ideogram4` branch, the precedence is:\n\n- `Ideogram4_Guider` becomes the thing that supplies CFG guidance.\n- `Custom_Sigmas_!DENOISE=1` overwrites the normal per-tile sigma curve if connected, because ETUR already stores that in `tbg.KSAMPLER.custom_sigmas`.\n- `SamplerCustomAdvanced` uses:\n  - `noise`\n  - `guider`\n  - `sampler`\n  - `sigmas`\n  - `latent_image`\n\nSo in that branch:\n\n- `cfg` from the refiner node is effectively not used directly by ETUR\n- `scheduler` from the refiner node is effectively not used directly by ETUR\n- `steps` still matter indirectly because they are what ETUR uses to build the `sigmas` curve, unless the custom sigma overwrite input is connected\n- `sampler` still matters because ETUR passes `tbg.KSAMPLER.sampler` into `SamplerCustomAdvanced`\n\nIn plain English:\n\n- If the guider input is connected, the new path takes over guidance.\n- If the sigma overwrite input is connected, that takes over the sigma schedule.\n- The normal refiner `cfg` and `scheduler` do not get passed into the native advanced sampler branch.\n- The refiner `steps` still matter unless the sigma overwrite input replaces them.\n\nIf you want, I can make the branch even stricter so it clearly logs:\n- `Ideogram4 branch using guider`\n- `using custom sigmas`\n- `ignoring refiner cfg/scheduler in advanced sampler path`\n\nThat would make the behavior much easier to debug.\nYou can still use the refiners denois to recalculate the sigmas"
       ],
+      "widgets_values_named": {
+        "text": "Not fully.\n\nFor the new `Ideogram4` branch, the precedence is:\n\n- `Ideogram4_Guider` becomes the thing that supplies CFG guidance.\n- `Custom_Sigmas_!DENOISE=1` overwrites the normal per-tile sigma curve if connected, because ETUR already stores that in `tbg.KSAMPLER.custom_sigmas`.\n- `SamplerCustomAdvanced` uses:\n  - `noise`\n  - `guider`\n  - `sampler`\n  - `sigmas`\n  - `latent_image`\n\nSo in that branch:\n\n- `cfg` from the refiner node is effectively not used directly by ETUR\n- `scheduler` from the refiner node is effectively not used directly by ETUR\n- `steps` still matter indirectly because they are what ETUR uses to build the `sigmas` curve, unless the custom sigma overwrite input is connected\n- `sampler` still matters because ETUR passes `tbg.KSAMPLER.sampler` into `SamplerCustomAdvanced`\n\nIn plain English:\n\n- If the guider input is connected, the new path takes over guidance.\n- If the sigma overwrite input is connected, that takes over the sigma schedule.\n- The normal refiner `cfg` and `scheduler` do not get passed into the native advanced sampler branch.\n- The refiner `steps` still matter unless the sigma overwrite input replaces them.\n\nIf you want, I can make the branch even stricter so it clearly logs:\n- `Ideogram4 branch using guider`\n- `using custom sigmas`\n- `ignoring refiner cfg/scheduler in advanced sampler path`\n\nThat would make the behavior much easier to debug.\nYou can still use the refiners denois to recalculate the sigmas"
+      },
       "color": "#243447",
       "bgcolor": "rgba(21,28,38,.94)"
     },
@@ -2863,7 +3011,7 @@
           "name": "GUIDER",
           "type": "GUIDER",
           "links": [
-            566
+            580
           ]
         }
       ],
@@ -2881,7 +3029,10 @@
       },
       "widgets_values": [
         7
-      ]
+      ],
+      "widgets_values_named": {
+        "cfg": 7
+      }
     },
     {
       "id": 401,
@@ -2968,7 +3119,7 @@
           "name": "labs_refiner",
           "shape": 7,
           "type": "labs_refiner",
-          "link": 574
+          "link": 581
         },
         {
           "name": "General_Prompt_Positive",
@@ -3057,6 +3208,36 @@
         "Low VRAM Cache (Unload Models)",
         ""
       ],
+      "widgets_values_named": {
+        "model_type": "Ideogram4",
+        "cfg": 7,
+        "steps": 20,
+        "seed": 4,
+        "control_after_generate": "fixed",
+        "Flux_Guidance": 3.5,
+        "sampler_name": "euler",
+        "basic_scheduler": "simple",
+        "vae_encode": "tiled slow",
+        "tile_size_vae": 1024,
+        "General_Prompt_Positive": "",
+        "General_Prompt_Negative": "低质量，模糊，噪点，失焦，曝光不良，过度曝光，欠曝光，重影，漂浮的物体，穿模，错误的结构，解剖错误，多余的肢体，多余的手指，缺少手指，手指融合，肢体融合，奇怪的骨骼，扭曲的身体，不自然的姿势，不自然的动作，不对称，身体比例不正确，脸部变形，重复的脸，五官错位，眼睛不对称，视线错误，面部畸形，表情僵硬，卡通化，非真实皮肤纹理，塑料感皮肤，过度光滑，噪点伪影，阴影错误，光照不一致，颜色溢出，奇怪的反射，重复的图案，破碎结构，AI 痕迹，水印，文字，logo，二维码，杂乱背景，物体穿插，图像缺损，像素化，低分辨率，乱色块，扭曲纹理，异常的毛发，不自然的布料褶皱，边缘锯齿，锐化过度，发光边缘，异常色彩，噪声纹理",
+        "denoise": 0.6,
+        "denoise_method": "normalized advanced",
+        "Per_Pixel_Denoise_Mask_Strength": 0,
+        "Image Stabilizer": 0,
+        "Smoother - Sharper": 0,
+        "Detail_Enhancer": 0,
+        "FLux_Redux_Krea2VL_strength": 0,
+        "Controlnet_Pipe_strength": 0,
+        "Color_Match": "TBG ETUR Detail-Preserving Tile Stabilizer",
+        "Scale-Invariant Feature Transform": true,
+        "Fusion Extra Steps": 0,
+        "Fast_1_Tile_Preview": false,
+        "Selected_Tiles_Only": false,
+        "Selected_Tiles_By_Numbers": "",
+        "VRAM_Profile": "Low VRAM Cache (Unload Models)",
+        "Seed": ""
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -3090,11 +3271,15 @@
       ],
       "properties": {
         "cnr_id": "comfy-core",
-        "ver": "0.31.1"
+        "ver": "0.31.1",
+        "Node name for S&R": "SaveImage"
       },
       "widgets_values": [
         "TBGETUR/Ideogram4_"
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "TBGETUR/Ideogram4_"
+      }
     },
     {
       "id": 399,
@@ -3129,6 +3314,9 @@
       "widgets_values": [
         "### Tile Fusion Blend — Rebuild / v1.2.12\n\n**Preset before v1.2.12: 0 → New preset: 1**\n\nThis feature shifts the influence of already generated neighboring tiles.\n\nIn our Tile Fusion system, every tile receives border information from the tiles that have already been generated. This means the sampling is not bound only to the original input image—it also respects the already generated context. This border information tells the new generation how it needs to connect and fuse with the neighboring tile seamlessly.\n\nThe **Tile Fusion Blend** setting controls where this generated neighboring content influences the new tile, shifting the conditioning **inward or outward** relative to the tile being generated.\n\nBefore version **1.2.12**, the preset was **0**. At this setting, the Fusion Blend was located within the **Fusion Reference Margin** and gradually faded into the **Fusion Blur** area.\n\nWith the new preset of **1**, the Fusion Blend information is shifted further inward. It now occupies the full **Fusion Reference Margin + Fusion Blur** area and then fades into the inner tile, restricted by the overall tile overlap.\n\nWe changed the default preset mainly because of models such as **Krea 2**. Flux was already working very well with more distant neighboring-tile conditioning, but Krea 2 had some difficulties achieving a perfect fusion with the neighboring tiles. We tested shifting the conditioning further inward and got significantly better results.\n\nWe then tested the same setting with older models and found that the results were also good, so we decided to keep **1 as the new general preset**.\n\n**If you prefer the old behavior for your workflow, simply set Tile Fusion Blend back to 0.**\n"
       ],
+      "widgets_values_named": {
+        "value": "### Tile Fusion Blend — Rebuild / v1.2.12\n\n**Preset before v1.2.12: 0 → New preset: 1**\n\nThis feature shifts the influence of already generated neighboring tiles.\n\nIn our Tile Fusion system, every tile receives border information from the tiles that have already been generated. This means the sampling is not bound only to the original input image—it also respects the already generated context. This border information tells the new generation how it needs to connect and fuse with the neighboring tile seamlessly.\n\nThe **Tile Fusion Blend** setting controls where this generated neighboring content influences the new tile, shifting the conditioning **inward or outward** relative to the tile being generated.\n\nBefore version **1.2.12**, the preset was **0**. At this setting, the Fusion Blend was located within the **Fusion Reference Margin** and gradually faded into the **Fusion Blur** area.\n\nWith the new preset of **1**, the Fusion Blend information is shifted further inward. It now occupies the full **Fusion Reference Margin + Fusion Blur** area and then fades into the inner tile, restricted by the overall tile overlap.\n\nWe changed the default preset mainly because of models such as **Krea 2**. Flux was already working very well with more distant neighboring-tile conditioning, but Krea 2 had some difficulties achieving a perfect fusion with the neighboring tiles. We tested shifting the conditioning further inward and got significantly better results.\n\nWe then tested the same setting with older models and found that the results were also good, so we decided to keep **1 as the new general preset**.\n\n**If you prefer the old behavior for your workflow, simply set Tile Fusion Blend back to 0.**\n"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -3165,6 +3353,9 @@
       "widgets_values": [
         "**Fusion Internal Steps Preset 0** enables additional internal Fusion model calls to refine tile-fusion borders and create more seamless joints in our TBG ETUR pipeline.\n\nDifferent models have different capabilities when it comes to fusion. For example, **FLUX1 performs very well**, while **Krea2 can sometimes be more reluctant to make the necessary changes**.\n\nIf tiles do not fuse correctly, you may notice texture changes at the borders. At very high creativity settings, the tiles can even start drifting toward visibly different content—for example, different micro-details in each tile or different rain drops appearing from tile to tile. This setting provides a way to improve consistency by adding additional internal Fusion steps along the borders.\n\nThe trade-off is additional model calls and therefore additional processing time:\n\n* **0** = 1 model call\n* **2** = 1 initial call + 2 internal Fusion calls = roughly **3× the sampling time**\n\nThe benefit is that Fusion can work much deeper into the individual tiles, giving it more freedom to adapt the content and achieve better semantic and visual consistency across tile borders.\n\nFor testing, try using **Denoise = 1**, where the result is intentionally difficult to fit together. With **FLUX1 at 0 internal steps**, you may see that some borders blend together nicely, while others remain difficult to join—especially when the content is semantically hard to connect.\n\nNow set **Fusion Internal Steps to 5** with FLUX1. You should see a significant difference: more content will find a way to **semantically connect across the border**, and the surrounding image content will adapt more strongly to create a coherent transition between tiles.\n\nIn other words, higher internal Fusion steps give the model more opportunities to modify and reconcile the tile content, resulting in much stronger tile-to-tile consistency.\n"
       ],
+      "widgets_values_named": {
+        "value": "**Fusion Internal Steps Preset 0** enables additional internal Fusion model calls to refine tile-fusion borders and create more seamless joints in our TBG ETUR pipeline.\n\nDifferent models have different capabilities when it comes to fusion. For example, **FLUX1 performs very well**, while **Krea2 can sometimes be more reluctant to make the necessary changes**.\n\nIf tiles do not fuse correctly, you may notice texture changes at the borders. At very high creativity settings, the tiles can even start drifting toward visibly different content—for example, different micro-details in each tile or different rain drops appearing from tile to tile. This setting provides a way to improve consistency by adding additional internal Fusion steps along the borders.\n\nThe trade-off is additional model calls and therefore additional processing time:\n\n* **0** = 1 model call\n* **2** = 1 initial call + 2 internal Fusion calls = roughly **3× the sampling time**\n\nThe benefit is that Fusion can work much deeper into the individual tiles, giving it more freedom to adapt the content and achieve better semantic and visual consistency across tile borders.\n\nFor testing, try using **Denoise = 1**, where the result is intentionally difficult to fit together. With **FLUX1 at 0 internal steps**, you may see that some borders blend together nicely, while others remain difficult to join—especially when the content is semantically hard to connect.\n\nNow set **Fusion Internal Steps to 5** with FLUX1. You should see a significant difference: more content will find a way to **semantically connect across the border**, and the surrounding image content will adapt more strongly to create a coherent transition between tiles.\n\nIn other words, higher internal Fusion steps give the model more opportunities to modify and reconcile the tile content, resulting in much stronger tile-to-tile consistency.\n"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -3225,7 +3416,141 @@
             "url": "/api/view?filename=rgthree.compare._temp_pkapj_00006_.png&type=temp&subfolder=&rand=0.6897989909125454"
           }
         ]
-      ]
+      ],
+      "widgets_values_named": {
+        "rgthree_comparer": {
+          "images": [
+            {
+              "name": "A",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_pkapj_00005_.png&type=temp&subfolder=&rand=0.6408136732397434",
+              "img": {}
+            },
+            {
+              "name": "B",
+              "selected": true,
+              "url": "/api/view?filename=rgthree.compare._temp_pkapj_00006_.png&type=temp&subfolder=&rand=0.6897989909125454",
+              "img": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 403,
+      "type": "TBG ETUR Labs for Refiner",
+      "pos": [
+        4208.982517021264,
+        2343.647043513585
+      ],
+      "size": [
+        500,
+        562
+      ],
+      "flags": {},
+      "order": 60,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "PID Diffusion Model",
+          "name": "PID_Model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "label": "ColorMatch Debug Gates",
+          "name": "ColorMatch_Debug",
+          "shape": 7,
+          "type": "tbg_colormatch_debug",
+          "link": null
+        },
+        {
+          "label": "Sigmas with denoise 1",
+          "name": "Custom_Sigmas_!DENOISE=1",
+          "shape": 7,
+          "type": "SIGMAS",
+          "link": 579
+        },
+        {
+          "label": "Overwrites the Sampler Name field",
+          "name": "Sampler",
+          "shape": 7,
+          "type": "SAMPLER",
+          "link": null
+        },
+        {
+          "label": "Ideogram4 Guider",
+          "name": "Ideogram4_Guider",
+          "shape": 7,
+          "type": "GUIDER",
+          "link": 580
+        },
+        {
+          "name": "cropped_positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "cropped_negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output_1",
+          "type": "labs_refiner",
+          "links": [
+            581
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "tbg-etur",
+        "ver": "34ddb6fb1f46fc6c5e2d7a9eb3e7f2af22f06c12",
+        "Node name for S&R": "TBG ETUR Labs for Refiner"
+      },
+      "widgets_values": [
+        1,
+        0,
+        "Inpainting On with Noise Mask and Conditioning",
+        true,
+        false,
+        0,
+        0,
+        1,
+        true,
+        false,
+        0,
+        false,
+        "gpupyramid",
+        true,
+        "Inner Tile + Global Embedding",
+        2048,
+        true
+      ],
+      "widgets_values_named": {
+        "Tile_Fusion_Blend": 1,
+        "Fusion_end": 0,
+        "Fusion_conditioning": "Inpainting On with Noise Mask and Conditioning",
+        "Differential_Diffusion": true,
+        "Sigma_Jump_Enabled": false,
+        "Sigma_Jump_Strength": 0,
+        "Sigma_Jump_Start": 0,
+        "Sigma_Jump_End": 1,
+        "Flux2_Tile_Color_Correction": true,
+        "Flux2_Sampler_Hook": false,
+        "Color & Structure Stabilizer": 0,
+        "Save_Tiles_in_Temp_Folder": false,
+        "stitch_blending": "gpupyramid",
+        "Content_Aware_Laplacian_Seam": true,
+        "VL_Encoding_Mode": "Inner Tile + Global Embedding",
+        "max_upscale_size_segment": 2048,
+        "Segment_Background_Harmonization": true
+      }
     }
   ],
   "links": [
@@ -3622,22 +3947,6 @@
       "MODEL"
     ],
     [
-      565,
-      345,
-      0,
-      397,
-      2,
-      "SIGMAS"
-    ],
-    [
-      566,
-      373,
-      0,
-      397,
-      4,
-      "GUIDER"
-    ],
-    [
       568,
       360,
       0,
@@ -3686,14 +3995,6 @@
       "Controlnet_Pipe"
     ],
     [
-      574,
-      397,
-      0,
-      401,
-      10,
-      "labs_refiner"
-    ],
-    [
       575,
       137,
       0,
@@ -3724,6 +4025,30 @@
       402,
       0,
       "IMAGE"
+    ],
+    [
+      579,
+      345,
+      0,
+      403,
+      2,
+      "SIGMAS"
+    ],
+    [
+      580,
+      373,
+      0,
+      403,
+      4,
+      "GUIDER"
+    ],
+    [
+      581,
+      403,
+      0,
+      401,
+      10,
+      "labs_refiner"
     ]
   ],
   "groups": [
@@ -3899,13 +4224,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.18260271200149134,
+      "scale": 0.26734863064138353,
       "offset": [
-        2994.5977084973174,
-        1158.1463727622918
+        311.75135061896526,
+        -284.43417517126636
       ]
     },
-    "frontendVersion": "1.48.7",
+    "frontendVersion": "1.49.6",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,

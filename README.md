@@ -1,5 +1,5 @@
 # TBG ETUR Version 1.2 dropped - What's New?
-**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.2.9**
+**TBG_Enhanced Tiled Upscaler & Refiner FLUX PRO V1.2.12**
 
   ![TBG ETUR 1.2 Patreon image](img/TBG_ETUR_1.2.9_Patreon.png)
 **Keep in mind this is still a beta version, and we're updating and fine-tuning it daily. So do the same**
@@ -7,7 +7,10 @@
 Tutorials of old version and highlights available at [Youtube@TBG_AI](https://www.youtube.com/@TBG_AI)). 
 
 and at [patreon@TB_LAAR](https://www.patreon.com/TB_LAAR)). 
+## TBG ETUR 1.2.12
 
+Krea 2 Support, VL visual token Encode for Qwen3VL , Qwen2.5VL
+[Whats New](https://www.patreon.com/TB_LAAR/posts/tbg-etur-1-2-12-167083406?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=postshare_creator&utm_content=join_link)). 
 
 ## TBG ETUR 1.2.9
 
