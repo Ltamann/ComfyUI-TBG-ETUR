@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - TBG_ETUR_v1-1-0
+      - TBG_ETUR_v1-2-12
     paths:
       - "pyproject.toml"
 
