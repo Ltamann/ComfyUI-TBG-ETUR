@@ -102,6 +102,9 @@ class TBGKSampler():
         return wrapper
 
     def _run_lanpaint(self, self_x0, x, sigma, latent_mask, model_options, seed):
+        if self._is_nested_latent:
+            return self._call_model_function(self_x0, x, sigma, model_options, seed)
+
         flow_t = sigma
         abt = (1 - flow_t) ** 2 / ((1 - flow_t) ** 2 + flow_t ** 2)
         ve_sigma = flow_t / (1 - flow_t)
@@ -413,7 +416,7 @@ class TBGKSampler():
 
     def prepare_noise(self, latent_image, noise_seed, disable_noise, batch_inds=None):
         if disable_noise:
-            return torch.zeros_like(latent_image)
+            return comfy.sample.prepare_empty_noise(latent_image)
         if batch_inds is None and isinstance(latent_image, dict):
             batch_inds = latent_image.get("batch_index")
 
@@ -435,6 +438,7 @@ class TBGKSampler():
         self.use_lanpaint = True  # Always active when mask is present
         self.inpaint_start = inpaint_start
         self.inpaint_end = inpaint_end
+        self._is_nested_latent = getattr(latent_image.get("samples"), "is_nested", False)
 
 
         model_sampling = self.model.get_model_object("model_sampling")
@@ -507,6 +511,7 @@ class TBGKSampler():
                     callback=callback,
                     disable_pbar=disable_pbar,
                     seed=seed,
+                    sigmas=self.full_sigmas if sigmas is not None else None,
                 )
 
             out_latent = samples.to(comfy.model_management.intermediate_device())
@@ -553,6 +558,7 @@ class TBG_KSamplerAdvancedSplitAware_Copy:
                 "inpaint_end": ("INT", {"default": 10000, "min": 0, "max": 10000,"tooltip": "Step number where inpainting injection ends. Set to a high value (e.g., 1000) to inpaint through all steps. Lower values allow later steps to refine without mask constraints. Works with inpaint_start to define the inpainting window."}),
                 "smoother_sharper": ("FLOAT", {"default": 0, "min":-1.0, "max": 1.0,"display": "slider", "tooltip": "Dual-stage adaptive sharpening. At high sigma (early steps), adds structured noise for detail invention. At low sigma (late steps), applies high-pass edge sharpening. Positive values sharpen and add details. Negative values soften and blur. Zero disables sharpening. Higher absolute values create stronger effects."}),
                 "detail_enhancer": ("FLOAT", {"default": 0, "min": -1.0, "max": 1.0, "display": "slider", "tooltip": "Substep evaluation for detail control. Positive values (0.1-1.0): lookahead to next sigma, adds coherent details and refinement, reduces variation. Negative values (-0.1 to -1.0): lookback to previous sigma, adds creative variation and texture complexity. Zero = disabled (single pass, fastest). Performance cost: 2x slower on affected steps."}),
+                "lanpaint_steps": ("INT", {"default": 5, "min": 0, "max": 100, "tooltip": "Number of internal LanPaint refinement steps used during masked inpainting. Higher values improve refinement but increase runtime."}),
                 "return_with_leftover_noise": ("BOOLEAN", {"default": False,"tooltip": "Enable: keeps noise for sampler chaining. Disable: fully denoise output. Use 'enable' for split workflows, 'disable' for final step."}),
                 #"better_inpainting": ("BOOLEAN",{"default": False, "tooltip": "Reduces Lattend Grid artifacts in unmasked areas, but slightly alters the masked output."}),
 
@@ -582,8 +588,15 @@ class TBG_KSamplerAdvancedSplitAware_Copy:
         disable_noise = add_noise == False
         noise_mask = flux2_differential.latent_mask(latent_image)
 
-        latent_samples = latent_image.get("samples", None).to(device).clone()
-        latent_samples = comfy.sample.fix_empty_latent_channels(model, latent_samples)
+        sampling_latent = latent_image.copy()
+        latent_samples = sampling_latent.get("samples", None).to(device)
+        latent_samples = comfy.sample.fix_empty_latent_channels(
+            model,
+            latent_samples,
+            sampling_latent.get("downscale_ratio_spacial", None),
+            sampling_latent.get("downscale_ratio_temporal", None),
+        )
+        sampling_latent["samples"] = latent_samples
 
         sampler = TBGKSampler(
             model=model,
@@ -604,7 +617,7 @@ class TBG_KSamplerAdvancedSplitAware_Copy:
             noise=noise,
             positive=positive,
             negative=negative,
-            latent_image=latent_image,
+            latent_image=sampling_latent,
             cfg=cfg,
             sampler_name=sampler_name,
             denoise=denoise,
